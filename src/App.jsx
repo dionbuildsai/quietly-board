@@ -38,16 +38,38 @@ export default function App() {
   const [lastSync, setLastSync] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [syncStatus, setSyncStatus] = useState("offline");
+  
+  // Track if we need to save (only true after user action)
+  const needsSave = useRef(false);
+  const saveTimeout = useRef(null);
+  
   const weekKey = getWeekKey();
   const day = getDaysSinceStart();
   const phase = day < 14 ? 1 : day < 45 ? 2 : 3;
   const inputRef = useRef(null);
 
-  // ========== PERSISTENCE ==========
-  // Load data on mount
+  // ========== SAVE FUNCTION ==========
+  const saveToSupabase = useCallback(async (dataToSave) => {
+    if (!isSupabaseConfigured()) return;
+    
+    try {
+      setSyncStatus("syncing");
+      const { error } = await supabase
+        .from('board_data')
+        .upsert({ id: 'main', data: dataToSave, updated_at: new Date().toISOString() });
+      
+      if (error) throw error;
+      setLastSync(new Date());
+      setSyncStatus("synced");
+    } catch (e) {
+      console.error("Supabase save failed:", e);
+      setSyncStatus("error");
+    }
+  }, []);
+
+  // ========== LOAD ON MOUNT ==========
   useEffect(() => {
     const loadData = async () => {
-      // Try Supabase first
       if (isSupabaseConfigured()) {
         try {
           const { data: rows, error } = await supabase
@@ -68,7 +90,6 @@ export default function App() {
         }
       }
       
-      // Fallback to localStorage
       try {
         const saved = localStorage.getItem(STORE_KEY);
         if (saved) {
@@ -81,90 +102,88 @@ export default function App() {
     loadData();
   }, []);
 
-  // Real-time disabled to prevent sync loops
-  // Data syncs on save only
-
-  // Save data on change
+  // ========== SAVE WHEN NEEDED ==========
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !needsSave.current) return;
     
-    const saveData = async () => {
-      // Always save to localStorage as backup
+    // Clear any pending save
+    if (saveTimeout.current) {
+      clearTimeout(saveTimeout.current);
+    }
+    
+    // Debounced save
+    saveTimeout.current = setTimeout(() => {
+      // Save to localStorage
       try {
         localStorage.setItem(STORE_KEY, JSON.stringify(data));
       } catch (e) {}
-
-      // Save to Supabase if configured
-      if (isSupabaseConfigured()) {
-        try {
-          setSyncStatus("syncing");
-          const { error } = await supabase
-            .from('board_data')
-            .upsert({ id: 'main', data, updated_at: new Date().toISOString() });
-          
-          if (error) throw error;
-          setLastSync(new Date());
-          setSyncStatus("synced");
-        } catch (e) {
-          console.error("Supabase save failed:", e);
-          setSyncStatus("error");
-        }
+      
+      // Save to Supabase
+      saveToSupabase(data);
+      needsSave.current = false;
+    }, 1000);
+    
+    return () => {
+      if (saveTimeout.current) {
+        clearTimeout(saveTimeout.current);
       }
     };
+  }, [data, loaded, saveToSupabase]);
 
-    const debounce = setTimeout(saveData, 1000);
-    return () => clearTimeout(debounce);
-  }, [data, loaded]);
-
-  // ========== DATA MUTATIONS ==========
-  const addTask = useCallback((text, owner = "Dion") => {
-    if (!text.trim()) return;
-    setData(d => ({ ...d, tasks: [...d.tasks, { id: Date.now().toString(), text, owner, created: new Date().toISOString() }] }));
+  // ========== DATA MUTATIONS (all set needsSave) ==========
+  const updateData = useCallback((updater) => {
+    needsSave.current = true;
+    setData(updater);
   }, []);
 
+  const addTask = useCallback((text, owner = "Dion") => {
+    if (!text.trim()) return;
+    updateData(d => ({ ...d, tasks: [...d.tasks, { id: Date.now().toString(), text, owner, created: new Date().toISOString() }] }));
+  }, [updateData]);
+
   const toggleTask = useCallback((id) => {
-    setData(d => {
+    updateData(d => {
       const task = d.tasks.find(t => t.id === id);
       if (!task) return d;
       return { ...d, tasks: d.tasks.filter(t => t.id !== id), completed: [...d.completed, { ...task, completedAt: new Date().toISOString() }] };
     });
-  }, []);
+  }, [updateData]);
 
   const deleteTask = useCallback((id) => {
-    setData(d => ({ ...d, tasks: d.tasks.filter(t => t.id !== id) }));
-  }, []);
+    updateData(d => ({ ...d, tasks: d.tasks.filter(t => t.id !== id) }));
+  }, [updateData]);
 
   const uncompleteTask = useCallback((id) => {
-    setData(d => {
+    updateData(d => {
       const task = d.completed.find(t => t.id === id);
       if (!task) return d;
       return { ...d, completed: d.completed.filter(t => t.id !== id), tasks: [...d.tasks, { id: task.id, text: task.text, owner: task.owner, created: task.created }] };
     });
-  }, []);
+  }, [updateData]);
 
   const updateScore = useCallback((idx, val) => {
-    setData(d => ({ ...d, scores: { ...d.scores, [idx]: val } }));
-  }, []);
+    updateData(d => ({ ...d, scores: { ...d.scores, [idx]: val } }));
+  }, [updateData]);
 
   const setNorthStarValue = useCallback((val) => {
-    setData(d => ({ ...d, northStar: { ...d.northStar, [weekKey]: val } }));
-  }, [weekKey]);
+    updateData(d => ({ ...d, northStar: { ...d.northStar, [weekKey]: val } }));
+  }, [weekKey, updateData]);
 
   const setExperimentsValue = useCallback((val) => {
-    setData(d => ({ ...d, experiments: { ...d.experiments, [weekKey]: val } }));
-  }, [weekKey]);
+    updateData(d => ({ ...d, experiments: { ...d.experiments, [weekKey]: val } }));
+  }, [weekKey, updateData]);
 
   const toggleExpDone = useCallback((expId) => {
-    setData(d => ({ ...d, expDone: { ...d.expDone, [expId]: !d.expDone?.[expId] } }));
-  }, []);
+    updateData(d => ({ ...d, expDone: { ...d.expDone, [expId]: !d.expDone?.[expId] } }));
+  }, [updateData]);
 
   const setTopPriorities = useCallback((val) => {
-    setData(d => ({ ...d, topPriorities: { ...d.topPriorities, [weekKey]: val } }));
-  }, [weekKey]);
+    updateData(d => ({ ...d, topPriorities: { ...d.topPriorities, [weekKey]: val } }));
+  }, [weekKey, updateData]);
 
   const setBlockers = useCallback((val) => {
-    setData(d => ({ ...d, blockers: { ...d.blockers, [weekKey]: val } }));
-  }, [weekKey]);
+    updateData(d => ({ ...d, blockers: { ...d.blockers, [weekKey]: val } }));
+  }, [weekKey, updateData]);
 
   // ========== TODAY'S EXPERIMENTS ==========
   const getTodayExperiments = () => {
@@ -272,8 +291,7 @@ export default function App() {
     const labels = { synced: "Synced", syncing: "Syncing...", error: "Sync error", local: "Local only", offline: "Offline" };
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: colors[syncStatus], 
-          animation: syncStatus === "syncing" ? "pulse 1s infinite" : "none" }} />
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: colors[syncStatus] }} />
         <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{labels[syncStatus]}</span>
       </div>
     );
@@ -300,7 +318,6 @@ export default function App() {
     }}>
       <style>{`
         .task-row:hover { border-color: var(--accent) !important; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
       `}</style>
 
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 20px" }}>
