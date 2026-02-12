@@ -1,4 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase setup
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 const STORE_KEY = "quietly-board-v12";
 const START_DATE = "2026-02-11";
@@ -801,13 +807,43 @@ export default function Board() {
   const quote = quotes[(() => { const d = dk(); let h = 0; for(let i=0;i<d.length;i++) h = ((h<<5)-h)+d.charCodeAt(i); return Math.abs(h) % quotes.length; })()];
 
   const load = useCallback(async () => {
+    // Try Supabase first
+    if (supabase) {
+      try {
+        const { data: rows, error } = await supabase
+          .from('board_data')
+          .select('*')
+          .eq('id', 'main')
+          .single();
+        
+        if (!error && rows?.data) {
+          setData(prev => ({ ...prev, ...rows.data }));
+          setLastSync(new Date());
+          setLoading(false);
+          return;
+        }
+      } catch(e) {
+        console.log("Supabase load failed:", e?.message);
+      }
+    }
+    
+    // Fallback to localStorage
     try {
-      const r = await window.storage.get(STORE_KEY, true);
-      if (r?.value) setData(prev => ({ ...prev, ...JSON.parse(r.value) }));
-      setLastSync(new Date());
+      const saved = localStorage.getItem(STORE_KEY);
+      if (saved) setData(prev => ({ ...prev, ...JSON.parse(saved) }));
     } catch(e) {
-      // Key doesn't exist yet — that's fine, use defaults
-      console.log("Storage load:", e?.message || "new board");
+      console.log("localStorage load:", e?.message);
+    }
+    
+    // Fallback to window.storage (Claude artifacts)
+    if (window.storage) {
+      try {
+        const r = await window.storage.get(STORE_KEY, true);
+        if (r?.value) setData(prev => ({ ...prev, ...JSON.parse(r.value) }));
+        setLastSync(new Date());
+      } catch(e) {
+        console.log("Storage load:", e?.message || "new board");
+      }
     }
     setLoading(false);
   }, []);
@@ -815,12 +851,36 @@ export default function Board() {
 
   const save = useCallback(async (d) => {
     setData(d); setSyncing(true);
+    
+    // Save to localStorage as backup
     try {
-      await window.storage.set(STORE_KEY, JSON.stringify(d), true);
-      setLastSync(new Date());
-    } catch(e) {
-      console.error("Storage save failed:", e);
+      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+    } catch(e) {}
+    
+    // Save to Supabase if configured
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('board_data')
+          .upsert({ id: 'main', data: d, updated_at: new Date().toISOString() });
+        
+        if (error) throw error;
+        setLastSync(new Date());
+      } catch(e) {
+        console.error("Supabase save failed:", e);
+      }
     }
+    
+    // Fallback to window.storage (Claude artifacts)
+    if (window.storage) {
+      try {
+        await window.storage.set(STORE_KEY, JSON.stringify(d), true);
+        setLastSync(new Date());
+      } catch(e) {
+        console.error("Storage save failed:", e);
+      }
+    }
+    
     setSyncing(false);
   }, []);
 
