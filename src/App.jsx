@@ -38,7 +38,7 @@ export default function App() {
   const [lastSync, setLastSync] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [syncStatus, setSyncStatus] = useState("offline");
-  const skipNextSave = useRef(false);
+  const lastSavedData = useRef(null);
   const weekKey = getWeekKey();
   const day = getDaysSinceStart();
   const phase = day < 14 ? 1 : day < 45 ? 2 : 3;
@@ -92,9 +92,13 @@ export default function App() {
         { event: '*', schema: 'public', table: 'board_data', filter: 'id=eq.main' },
         (payload) => {
           if (payload.new && payload.new.data) {
-            skipNextSave.current = true;
-            setData(payload.new.data);
-            setLastSync(new Date());
+            const newDataStr = JSON.stringify(payload.new.data);
+            // Only update if this is different from what we last saved
+            if (newDataStr !== lastSavedData.current) {
+              lastSavedData.current = newDataStr;
+              setData(payload.new.data);
+              setLastSync(new Date());
+            }
             setSyncStatus("synced");
           }
         }
@@ -110,9 +114,10 @@ export default function App() {
   useEffect(() => {
     if (!loaded) return;
     
-    // Skip if this change came from real-time sync
-    if (skipNextSave.current) {
-      skipNextSave.current = false;
+    const currentDataStr = JSON.stringify(data);
+    
+    // Skip if data hasn't changed from last save
+    if (currentDataStr === lastSavedData.current) {
       return;
     }
     
@@ -131,6 +136,7 @@ export default function App() {
             .upsert({ id: 'main', data, updated_at: new Date().toISOString() });
           
           if (error) throw error;
+          lastSavedData.current = currentDataStr;
           setLastSync(new Date());
           setSyncStatus("synced");
         } catch (e) {
