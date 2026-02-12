@@ -38,6 +38,7 @@ export default function App() {
   const [lastSync, setLastSync] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [syncStatus, setSyncStatus] = useState("offline");
+  const skipNextSave = useRef(false);
   const weekKey = getWeekKey();
   const day = getDaysSinceStart();
   const phase = day < 14 ? 1 : day < 45 ? 2 : 3;
@@ -91,6 +92,7 @@ export default function App() {
         { event: '*', schema: 'public', table: 'board_data', filter: 'id=eq.main' },
         (payload) => {
           if (payload.new && payload.new.data) {
+            skipNextSave.current = true;
             setData(payload.new.data);
             setLastSync(new Date());
             setSyncStatus("synced");
@@ -107,6 +109,12 @@ export default function App() {
   // Save data on change
   useEffect(() => {
     if (!loaded) return;
+    
+    // Skip if this change came from real-time sync
+    if (skipNextSave.current) {
+      skipNextSave.current = false;
+      return;
+    }
     
     const saveData = async () => {
       // Always save to localStorage as backup
