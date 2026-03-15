@@ -213,17 +213,18 @@ Located in `sql/` directory. Run in order:
 
 ## Current Architecture (2026-03-14 rebuild)
 
-The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with **5 modular sub-workflows**:
+The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with **4 active sub-workflows** (90 nodes total):
 
 ### Workflow Files (in `workflows/` directory)
 
 | Workflow | n8n ID | Nodes | Purpose |
 |----------|--------|-------|---------|
-| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 45 | Receives messages from all channels, normalizes, looks up tenant, hands off to AI Agent |
+| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 42 | Receives messages from all channels, normalizes, looks up tenant, hands off to AI Agent. Also handles callback dispatch flow (vendor lookup, preview, confirm). |
 | **[AI] Conversation Agent** | `5WW7m5IiqvJoHWZ1` | 23 | Claude Sonnet 4 AI agent — classifies, generates tickets, decides urgency, notifies landlord |
-| **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 8 | Routes AI response back to correct channel (Telegram, Email, SMS) |
-| **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 17 | Handles callback buttons (dispatch/manual), vendor lookup, confirmation flow |
-| **Ticket & Vendor Dispatch** | `3EfPAdyF5VRCpjLc` | 20 | Vendor message generation, email dispatch, owner notification |
+| **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 8 | Routes AI response back to correct channel (Telegram, Email, SMS, WhatsApp) |
+| **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 17 | Webhook API for ticket creation, escalation, lookup, video search |
+
+> **Note:** `Ticket & Vendor Dispatch` (`3EfPAdyF5VRCpjLc`) is archived — vendor dispatch is handled directly in the Intake callback flow.
 
 ### Data Flow
 ```
@@ -233,7 +234,7 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
                                        ↓
                          [Callback buttons: Auto Dispatch / Show Contractors]
                                        ↓
-                              [Ticket Management] → [Vendor Dispatch]
+                              [Intake callback branch → Vendor Dispatch → Email/SMS vendor]
 ```
 
 ### AI Models Used
@@ -244,17 +245,22 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 | Haiku Dispatch | Claude Haiku 4.5 | Vendor message generation |
 | Haiku Confirm | Claude Haiku 4.5 | Confirmation message generation |
 
-### Key Fixes Applied (2026-03-14)
+### Production Fixes Applied (2026-03-14/15)
 - [x] Removed Check Duplicate / Is New Message nodes (bypassed dedup that depended on missing `external_message_id` column)
 - [x] All Telegram send nodes use `parse_mode: HTML` (fixes MarkdownV2 entity parsing errors with underscores, hyphens, etc.)
 - [x] Create Ticket SQL: all text fields escaped with `.replace(/'/g, "''")` (fixes SQL injection from apostrophes like "doesn't")
-- [x] Log Inbound Message: removed `external_message_id` column reference
+- [x] Log Inbound Message / Log AI Response / Link Messages: all SQL fields properly escaped
 - [x] Haiku Dispatch/Confirm switched from Sonnet 4.5 to Haiku 4.5 (was 33s per dispatch, now ~5-8s)
 - [x] Normalize nodes route directly to Lookup Tenant (dedup nodes removed)
+- [x] Removed dangerous `Clear Messages` + `Clear Tickets` nodes (DELETE FROM queries — dev-only, unsafe for production)
+- [x] Removed orphan manual trigger node
+- [x] Vendor Dispatch workflow: fixed broken `$('Merge Data')` references → `$('Start')`
+- [x] Full audit: 0 critical, 0 high, 0 warnings across all 4 active workflows
 
-### Known Issues
+### Known Limitations
 - Telegram webhook must be re-registered via n8n UI toggle when workflow is deactivated/reactivated via API
 - `external_message_id` column not yet added to messages table (dedup disabled for now)
+- WhatsApp channel configured but not yet tested end-to-end
 
 ## Deployment Steps
 1. ~~Run SQL scripts~~ (DONE)

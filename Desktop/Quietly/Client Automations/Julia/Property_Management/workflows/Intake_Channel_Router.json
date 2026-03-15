@@ -676,63 +676,6 @@
       "name": "Send AI Response"
     },
     {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM messages; SELECT 'messages cleared' as result;",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [
-        -896,
-        -400
-      ],
-      "id": "411c4fd5-0bc7-430e-a708-f519c0fd593f",
-      "name": "Clear Messages",
-      "credentials": {
-        "postgres": {
-          "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM maintenance_requests; SELECT 'maintenance_requests cleared' as result;",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [
-        -608,
-        -400
-      ],
-      "id": "16df9ea9-d597-45c3-9d81-3e028da287e1",
-      "name": "Clear Tickets",
-      "credentials": {
-        "postgres": {
-          "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## Dev: Clear Test Data\nPOST /webhook/clear-test-data\nDeletes ALL rows from messages + maintenance_requests only.",
-        "height": 80,
-        "width": 350
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -1216,
-        -528
-      ],
-      "id": "6a3a5409-f101-424d-8a17-64b58e359fde",
-      "name": "Clear Note"
-    },
-    {
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -1432,31 +1375,9 @@
         ]
       ]
     },
-    "Clear Messages": {
-      "main": [
-        [
-          {
-            "node": "Clear Tickets",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Clear Tickets": {
-      "main": [
-        []
-      ]
-    },
     "When clicking \u2018Execute workflow\u2019": {
       "main": [
-        [
-          {
-            "node": "Clear Messages",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Remove Buttons": {

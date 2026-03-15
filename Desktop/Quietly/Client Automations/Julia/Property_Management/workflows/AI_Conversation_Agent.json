@@ -89,7 +89,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO messages (chat_id, telegram_id, sender, message_text, channel, created_at) VALUES ('{{ $json.chat_id }}', '{{ $json.telegram_id || '' }}', 'Julia AI', '{{ $json.response_text.replace(/'/g, \"''\") }}', '{{ $json.channel }}', NOW()) RETURNING *",
+        "query": "INSERT INTO messages (chat_id, telegram_id, sender, message_text, channel, created_at) VALUES ('{{ ($json.chat_id || '').replace(/'/g, \"''\") }}', '{{ $json.telegram_id || '' }}', 'Julia AI', '{{ ($json.response_text || '').replace(/'/g, \"''\") }}', '{{ $json.channel || '' }}', NOW()) RETURNING *",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -398,7 +398,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE messages SET ticket_id = '{{ $json.ticket_id }}' WHERE chat_id = '{{ $('Format Output').item.json.chat_id }}' AND ticket_id IS NULL RETURNING *",
+        "query": "UPDATE messages SET ticket_id = '{{ $json.ticket_id }}' WHERE chat_id = '{{ ($('Format Output').item.json.chat_id || '').replace(/'/g, \"''\") }}' AND ticket_id IS NULL RETURNING *",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -481,7 +481,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE messages \nSET ticket_id = (\n  SELECT ticket_id FROM maintenance_requests \n  WHERE (phone = '{{ $('Format Output').item.json.phone }}' OR tenant_email = '{{ $('Format Output').item.json.email }}')\n  AND status NOT IN ('closed', 'declined') \n  ORDER BY created_at DESC LIMIT 1\n)\nWHERE chat_id = '{{ $('Format Output').item.json.chat_id }}'\nAND ticket_id IS NULL\nRETURNING *",
+        "query": "UPDATE messages \nSET ticket_id = (\n  SELECT ticket_id FROM maintenance_requests \n  WHERE (phone = '{{ ($('Format Output').item.json.phone || '').replace(/'/g, \"''\") }}' OR tenant_email = '{{ ($('Format Output').item.json.email || '').replace(/'/g, \"''\") }}')\n  AND status NOT IN ('closed', 'resolved')\n  ORDER BY created_at DESC LIMIT 1\n)\nWHERE chat_id = '{{ ($('Format Output').item.json.chat_id || '').replace(/'/g, \"''\") }}'\nAND ticket_id IS NULL\nRETURNING *",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
