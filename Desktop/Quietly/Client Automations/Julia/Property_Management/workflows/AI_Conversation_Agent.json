@@ -40,7 +40,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT ticket_id, category, summary, status, created_at FROM maintenance_requests WHERE (phone = '{{ $('When Called').item.json.phone }}' OR tenant_email = '{{ $('When Called').item.json.email }}') AND status NOT IN ('closed') ORDER BY created_at DESC LIMIT 5",
+        "query": "SELECT DISTINCT ticket_id, category, summary, status, created_at FROM maintenance_requests WHERE (phone = '{{ $('When Called').item.json.phone }}' OR tenant_email = '{{ $('When Called').item.json.email }}' OR phone LIKE '%' || RIGHT('{{ $('When Called').item.json.phone }}', 10) || '%') AND status NOT IN ('closed', 'resolved') ORDER BY created_at DESC LIMIT 10",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
