@@ -56,7 +56,8 @@
     {
       "parameters": {
         "path": "sms-intake",
-        "options": {}
+        "options": {},
+        "httpMethod": "POST"
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -533,13 +534,13 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO messages (chat_id, message_id, telegram_id, sender, message_text, channel, created_at, external_message_id) VALUES ('{{ ($('Normalize Telegram')?.item?.json?.chat_id || $('Normalize Email')?.item?.json?.chat_id || $('Normalize SMS')?.item?.json?.chat_id || '').replace(/'/g, \"''\") }}', '', '{{ ($json.telegram_id || '').replace(/'/g, \"''\") }}', '{{ ($json.name || $json.tenant_name || '').replace(/'/g, \"''\") }}', '{{ ($('Normalize Telegram')?.item?.json?.message || $('Normalize Email')?.item?.json?.message || $('Normalize SMS')?.item?.json?.message || '').replace(/'/g, \"''\") }}', '{{ $('Normalize Telegram')?.item?.json?.channel || $('Normalize Email')?.item?.json?.channel || $('Normalize SMS')?.item?.json?.channel || '' }}', NOW(), '{{ ($('Normalize Telegram')?.item?.json?.external_message_id || $('Normalize Email')?.item?.json?.external_message_id || $('Normalize SMS')?.item?.json?.external_message_id || '').replace(/'/g, \"''\") }}') ON CONFLICT (external_message_id) WHERE external_message_id != '' DO NOTHING RETURNING *",
+        "query": "INSERT INTO messages (chat_id, message_id, telegram_id, sender, message_text, channel, created_at, external_message_id) VALUES ('{{ ($json.norm_chat_id || '').replace(/'/g, \"''\") }}', '', '{{ ($json.telegram_id || '').replace(/'/g, \"''\") }}', '{{ ($json.name || $json.tenant_name || '').replace(/'/g, \"''\") }}', '{{ ($json.norm_message || '').replace(/'/g, \"''\") }}', '{{ $json.norm_channel || '' }}', NOW(), '{{ ($json.norm_ext_id || '').replace(/'/g, \"''\") }}') ON CONFLICT (external_message_id) WHERE external_message_id != '' DO NOTHING RETURNING *",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        720,
+        860,
         512
       ],
       "id": "bf704c66-ce66-4c81-b038-f648eee202ce",
@@ -1164,6 +1165,61 @@
       ],
       "id": "9195d528-3fa9-47cd-a88b-8f154a97049f",
       "name": "Send Preview HTTP"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM messages; SELECT 'messages cleared' as result;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -896,
+        -400
+      ],
+      "id": "97f36eb7-5928-4c52-855d-84f47b5316fd",
+      "name": "Clear Messages",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM maintenance_requests; SELECT 'maintenance_requests cleared' as result;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -608,
+        -400
+      ],
+      "id": "4459cc6e-4058-447f-b99a-1a09d99b68f1",
+      "name": "Clear Tickets",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge normalized message data with tenant data\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      normalized = {};\n    }\n  }\n}\n\nconst tenant = $('Lookup Tenant').item.json;\n\nreturn [{\n  json: {\n    ...tenant,\n    norm_chat_id: normalized.chat_id || tenant.telegram_id || '',\n    norm_message: normalized.message || '',\n    norm_channel: normalized.channel || '',\n    norm_ext_id: normalized.external_message_id || '',\n    norm_subject: normalized.subject || '',\n    norm_sender_identifier: normalized.sender_identifier || '',\n    norm_has_media: normalized.has_media || false,\n    norm_media_type: normalized.media_type || '',\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        512
+      ],
+      "id": "merge-data",
+      "name": "Merge Tenant + Message"
     }
   ],
   "connections": {
@@ -1317,7 +1373,7 @@
       "main": [
         [
           {
-            "node": "Log Inbound Message",
+            "node": "Merge Tenant + Message",
             "type": "main",
             "index": 0
           }
@@ -1377,7 +1433,13 @@
     },
     "When clicking \u2018Execute workflow\u2019": {
       "main": [
-        []
+        [
+          {
+            "node": "Clear Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Remove Buttons": {
@@ -1564,6 +1626,28 @@
         [
           {
             "node": "Send Preview HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Messages": {
+      "main": [
+        [
+          {
+            "node": "Clear Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Tenant + Message": {
+      "main": [
+        [
+          {
+            "node": "Log Inbound Message",
             "type": "main",
             "index": 0
           }
