@@ -293,7 +293,7 @@
             {
               "id": "da85de0e-ca38-4d52-a55b-978c26551fb4",
               "name": "sender_identifier",
-              "value": "={{ $json.From }}",
+              "value": "={{ ($json.From || '').includes('<') ? ($json.From || '').match(/<([^>]+)>/)?.[1] || $json.From : $json.From }}",
               "type": "string"
             },
             {
@@ -311,7 +311,7 @@
             {
               "id": "21cb1347-9e4d-482e-b753-279f7437c076",
               "name": "chat_id",
-              "value": "={{ $json.From }}",
+              "value": "={{ ($json.From || '').includes('<') ? ($json.From || '').match(/<([^>]+)>/)?.[1] || $json.From : $json.From }}",
               "type": "string"
             },
             {
@@ -478,7 +478,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.*, t.name AS tenant_name, t.phone, t.unit_number, t.email, p.address AS property, t.emergency_contact, t.telegram_id, t.language_pref FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE CASE WHEN '{{ $json.channel }}' = 'email' THEN t.email = '{{ $json.sender_identifier.replace(/'/g, \"''\") }}' WHEN '{{ $json.channel }}' = 'sms' THEN t.phone LIKE '%' || '{{ $json.sender_identifier.replace(/'/g, \"''\") }}' || '%' WHEN '{{ $json.channel }}' = 'telegram' THEN t.telegram_id = '{{ $json.sender_identifier.replace(/'/g, \"''\") }}' WHEN '{{ $json.channel }}' = 'whatsapp' THEN t.phone LIKE '%' || RIGHT('{{ $json.sender_identifier.replace(/'/g, \"''\") }}', 10) || '%' END LIMIT 1",
+        "query": "SELECT t.*, t.name AS tenant_name, t.phone, t.unit_number, t.email, p.address AS property, t.emergency_contact, t.telegram_id, t.language_pref FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE CASE WHEN '{{ $json.channel }}' = 'email' THEN LOWER(t.email) = LOWER('{{ $json.sender_identifier.replace(/'/g, \"''\") }}') WHEN '{{ $json.channel }}' = 'sms' THEN t.phone LIKE '%' || '{{ $json.sender_identifier.replace(/'/g, \"''\") }}' || '%' WHEN '{{ $json.channel }}' = 'telegram' THEN t.telegram_id = '{{ $json.sender_identifier.replace(/'/g, \"''\") }}' WHEN '{{ $json.channel }}' = 'whatsapp' THEN t.phone LIKE '%' || RIGHT('{{ $json.sender_identifier.replace(/'/g, \"''\") }}', 10) || '%' END LIMIT 1",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
