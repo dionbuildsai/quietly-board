@@ -533,7 +533,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO messages (chat_id, message_id, telegram_id, sender, message_text, channel, created_at) VALUES ('{{ ($('Normalize Telegram')?.item?.json?.chat_id || $('Normalize Email')?.item?.json?.chat_id || $('Normalize SMS')?.item?.json?.chat_id || '').replace(/'/g, \"''\") }}', '', '{{ ($json.telegram_id || '').replace(/'/g, \"''\") }}', '{{ ($json.name || '').replace(/'/g, \"''\") }}', '{{ ($('Normalize Telegram')?.item?.json?.message || $('Normalize Email')?.item?.json?.message || $('Normalize SMS')?.item?.json?.message || '').replace(/'/g, \"''\") }}', '{{ $('Normalize Telegram')?.item?.json?.channel || $('Normalize Email')?.item?.json?.channel || $('Normalize SMS')?.item?.json?.channel || '' }}', NOW()) RETURNING *",
+        "query": "INSERT INTO messages (chat_id, message_id, telegram_id, sender, message_text, channel, created_at, external_message_id) VALUES ('{{ ($json.chat_id || '').replace(/'/g, \"''\") }}', '', '{{ ($json.telegram_id || '').replace(/'/g, \"''\") }}', '{{ ($json.name || $json.tenant_name || '').replace(/'/g, \"''\") }}', '{{ ($json.message || '').replace(/'/g, \"''\") }}', '{{ $json.channel || '' }}', NOW(), '{{ ($json.external_message_id || '').replace(/'/g, \"''\") }}') ON CONFLICT (external_message_id) WHERE external_message_id != '' DO NOTHING RETURNING *",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",

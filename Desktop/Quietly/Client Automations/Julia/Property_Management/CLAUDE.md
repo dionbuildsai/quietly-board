@@ -257,9 +257,13 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 - [x] Vendor Dispatch workflow: fixed broken `$('Merge Data')` references → `$('Start')`
 - [x] Full audit: 0 critical, 0 high, 0 warnings across all 4 active workflows
 
+### Dedup Strategy
+- `external_message_id` column added to messages table with partial unique index (WHERE != '')
+- Log Inbound Message uses `INSERT ... ON CONFLICT (external_message_id) DO NOTHING`
+- Each channel generates unique IDs: email=Gmail ID, telegram=`tg_{msg_id}_{chat_id}`, sms=`sms_{timestamp}_{phone}`
+
 ### Known Limitations
 - Telegram webhook must be re-registered via n8n UI toggle when workflow is deactivated/reactivated via API
-- `external_message_id` column not yet added to messages table (dedup disabled for now)
 - WhatsApp channel configured but not yet tested end-to-end
 
 ## Deployment Steps
@@ -269,7 +273,7 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 4. ~~Run 008_add_manager_id.sql~~ (DONE)
 5. ~~Rebuild into 5 sub-workflows~~ (DONE)
 6. ~~End-to-end testing: Telegram → AI → Response~~ (DONE - working)
-7. [ ] Add `external_message_id` column to messages table and re-enable dedup
+7. ~~Add `external_message_id` column + unique index + ON CONFLICT dedup~~ (DONE)
 8. [ ] Test Email and SMS channels end-to-end
 9. [ ] WhatsApp channel integration
 
