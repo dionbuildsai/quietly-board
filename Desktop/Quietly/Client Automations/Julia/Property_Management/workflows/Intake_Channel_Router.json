@@ -820,7 +820,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT vendor_name, email, phone FROM vendors WHERE LOWER(category) LIKE LOWER('%{{ $json.category }}%')",
+        "query": "SELECT vendor_name, email, phone FROM vendors WHERE LOWER(category) LIKE LOWER('%{{ $json.category }}%') LIMIT 10",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -927,7 +927,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT vendor_name, email, phone FROM vendors WHERE LOWER(category) LIKE LOWER('%{{ $json.category }}%')",
+        "query": "SELECT vendor_name, email, phone FROM vendors WHERE LOWER(category) LIKE LOWER('%{{ $json.category }}%') LIMIT 10",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",

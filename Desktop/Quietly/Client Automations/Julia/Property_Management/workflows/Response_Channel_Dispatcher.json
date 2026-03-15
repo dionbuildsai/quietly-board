@@ -189,7 +189,7 @@
             },
             {
               "name": "text",
-              "value": "={{ $json.response_text }}"
+              "value": "={{ ($json.response_text || '').substring(0, 4090) }}"
             }
           ]
         },

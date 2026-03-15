@@ -270,11 +270,27 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 - Landlord views all tickets in NocoDB `maintenance_requests` table, sorted by urgency
 
 ### Log Inbound Message
-- Uses `$('Normalize Telegram')?.item?.json` references (not `$json`) because `$json` at that point is the Lookup Tenant result, not the message data
+- Uses "Merge Tenant + Message" Code node (try/catch) to combine normalized data + tenant data before INSERT
+- Required because `$('Normalize Telegram')?.item?.json` throws error when node hasn't executed (SMS/Email paths)
+- The merged `$json` has `norm_message`, `norm_channel`, `norm_chat_id`, `norm_ext_id` fields
+
+### Production Hardening (2026-03-15)
+- Vendor queries (Lookup Vendor, Get Contractors) capped with LIMIT 10
+- Telegram response truncated to 4090 chars (API limit is 4096)
+- SMS Webhook set to POST method
+- Normalize Email extracts email from "Name <email>" Gmail format
+- Lookup Tenant email match is case-insensitive
+
+### Known Risks (accepted)
+- Telegram bot token hardcoded in 4 HTTP Request nodes (Send Telegram, Send List, Dispatch Ack, Notify Non-Urgent) — would need refactoring to use credential node
+- Ticket Management webhooks have no auth (called internally by AI Agent tools)
+- SMS Webhook has no auth (called by Twilio)
+- If Claude API goes down, tenant gets no reply (no fallback message handler)
+- Race condition: two simultaneous messages could create duplicate tickets (low probability)
 
 ### Known Limitations
 - Telegram webhook must be re-registered via n8n UI toggle when workflow is deactivated/reactivated via API
-- WhatsApp channel configured but not yet tested end-to-end
+- WhatsApp channel configured in Response Dispatcher but not wired up on intake side
 
 ## Deployment Steps
 1. ~~Run SQL scripts~~ (DONE)
@@ -284,8 +300,8 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 5. ~~Rebuild into 5 sub-workflows~~ (DONE)
 6. ~~End-to-end testing: Telegram → AI → Response~~ (DONE - working)
 7. ~~Add `external_message_id` column + unique index + ON CONFLICT dedup~~ (DONE)
-8. [ ] Test Email and SMS channels end-to-end
-9. [ ] WhatsApp channel integration
+8. ~~Test Email and SMS channels end-to-end~~ (DONE - both verified with ticket creation)
+9. [ ] WhatsApp channel integration (intake side)
 
 ### Properties Table (updated)
 - id (uuid PK), name, address, manager_name, manager_email, manager_phone, twilio_number, faq_doc_url, **manager_id** (text, default '6216258938'), created_at
