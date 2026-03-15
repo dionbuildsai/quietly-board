@@ -252,8 +252,7 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 - [x] Log Inbound Message / Log AI Response / Link Messages: all SQL fields properly escaped
 - [x] Haiku Dispatch/Confirm switched from Sonnet 4.5 to Haiku 4.5 (was 33s per dispatch, now ~5-8s)
 - [x] Normalize nodes route directly to Lookup Tenant (dedup nodes removed)
-- [x] Removed dangerous `Clear Messages` + `Clear Tickets` nodes (DELETE FROM queries — dev-only, unsafe for production)
-- [x] Removed orphan manual trigger node
+- [x] Removed orphan manual trigger node (Clear Messages/Tickets kept for manual dev use)
 - [x] Vendor Dispatch workflow: fixed broken `$('Merge Data')` references → `$('Start')`
 - [x] Full audit: 0 critical, 0 high, 0 warnings across all 4 active workflows
 
@@ -261,6 +260,17 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 - `external_message_id` column added to messages table with partial unique index (WHERE != '')
 - Log Inbound Message uses `INSERT ... ON CONFLICT (external_message_id) DO NOTHING`
 - Each channel generates unique IDs: email=Gmail ID, telegram=`tg_{msg_id}_{chat_id}`, sms=`sms_{timestamp}_{phone}`
+
+### Ticket Classification
+- ALL tenant messages create tickets (except greetings/thank yous)
+- **Urgency levels:** `urgent`, `not_urgent`, `info_request`
+- **Maintenance categories:** plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance
+- **Non-maintenance categories:** `lease_admin` (lease copies, renewals), `parking`, `general_inquiry`
+- Only `urgent` tickets trigger landlord Telegram notification
+- Landlord views all tickets in NocoDB `maintenance_requests` table, sorted by urgency
+
+### Log Inbound Message
+- Uses `$('Normalize Telegram')?.item?.json` references (not `$json`) because `$json` at that point is the Lookup Tenant result, not the message data
 
 ### Known Limitations
 - Telegram webhook must be re-registered via n8n UI toggle when workflow is deactivated/reactivated via API
