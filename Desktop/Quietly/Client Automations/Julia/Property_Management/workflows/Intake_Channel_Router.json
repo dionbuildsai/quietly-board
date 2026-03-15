@@ -554,7 +554,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get tenant from Lookup Tenant\nconst tenant = $('Lookup Tenant').item.json;\n\n// Get normalized message data - try each channel's normalize node\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      normalized = {};\n    }\n  }\n}\n\nreturn {\n  json: {\n    tenant_id: tenant.id || '',\n    tenant_name: tenant.name || tenant.tenant_name || '',\n    phone: tenant.phone || '',\n    unit: tenant.unit_number || '',\n    property: tenant.property || '',\n    email: tenant.email || '',\n    telegram_id: tenant.telegram_id || '',\n    language_pref: tenant.language_pref || 'fr',\n    channel: normalized.channel || '',\n    message: normalized.message || '',\n    subject: normalized.subject || '',\n    chat_id: normalized.chat_id || tenant.telegram_id || '',\n    sender_identifier: normalized.sender_identifier || '',\n    has_media: normalized.has_media || false,\n    media_type: normalized.media_type || '',\n    media_id: normalized.media_id || '',\n    external_message_id: normalized.external_message_id || '',\n    message_db_id: $('Log Inbound Message').item.json.id || ''\n  }\n};"
+        "jsCode": "// Get tenant from Lookup Tenant\nconst tenant = $('Lookup Tenant').item.json;\n\n// Get normalized message data - try each channel's normalize node\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\nreturn {\n  json: {\n    tenant_id: tenant.id || '',\n    tenant_name: tenant.name || tenant.tenant_name || '',\n    phone: tenant.phone || '',\n    unit: tenant.unit_number || '',\n    property: tenant.property || '',\n    email: tenant.email || '',\n    telegram_id: tenant.telegram_id || '',\n    language_pref: tenant.language_pref || 'fr',\n    channel: normalized.channel || '',\n    message: normalized.message || '',\n    subject: normalized.subject || '',\n    chat_id: normalized.chat_id || tenant.telegram_id || '',\n    sender_identifier: normalized.sender_identifier || '',\n    has_media: normalized.has_media || false,\n    media_type: normalized.media_type || '',\n    media_id: normalized.media_id || '',\n    external_message_id: normalized.external_message_id || '',\n    message_db_id: $('Log Inbound Message').item.json.id || ''\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -595,7 +595,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get normalized data from whichever normalize node ran\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      normalized = {};\n    }\n  }\n}\n\nreturn {\n  json: {\n    channel: normalized.channel || '',\n    chat_id: normalized.chat_id || '',\n    sender_identifier: normalized.sender_identifier || '',\n    phone: normalized.sender_identifier || '',\n    email: normalized.sender_identifier || '',\n    response_text: \"Bonjour, nous n'avons pas pu identifier votre compte locataire. Veuillez contacter Julia Inc au 438-900-9998.\\n\\nHello, we couldn't identify your tenant account. Please contact Julia Inc at 438-900-9998.\"\n  }\n};"
+        "jsCode": "// Get normalized data from whichever normalize node ran\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\nreturn {\n  json: {\n    channel: normalized.channel || '',\n    chat_id: normalized.chat_id || '',\n    sender_identifier: normalized.sender_identifier || '',\n    phone: normalized.sender_identifier || '',\n    email: normalized.sender_identifier || '',\n    response_text: \"Bonjour, nous n'avons pas pu identifier votre compte locataire. Veuillez contacter Julia Inc au 438-900-9998.\\n\\nHello, we couldn't identify your tenant account. Please contact Julia Inc at 438-900-9998.\"\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1210,7 +1210,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge normalized message data with tenant data\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      normalized = {};\n    }\n  }\n}\n\nconst tenant = $('Lookup Tenant').item.json;\n\nreturn [{\n  json: {\n    ...tenant,\n    norm_chat_id: normalized.chat_id || tenant.telegram_id || '',\n    norm_message: normalized.message || '',\n    norm_channel: normalized.channel || '',\n    norm_ext_id: normalized.external_message_id || '',\n    norm_subject: normalized.subject || '',\n    norm_sender_identifier: normalized.sender_identifier || '',\n    norm_has_media: normalized.has_media || false,\n    norm_media_type: normalized.media_type || '',\n  }\n}];"
+        "jsCode": "// Merge normalized message data with tenant data\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\nconst tenant = $('Lookup Tenant').item.json;\n\nreturn [{\n  json: {\n    ...tenant,\n    norm_chat_id: normalized.chat_id || tenant.telegram_id || '',\n    norm_message: normalized.message || '',\n    norm_channel: normalized.channel || '',\n    norm_ext_id: normalized.external_message_id || '',\n    norm_subject: normalized.subject || '',\n    norm_sender_identifier: normalized.sender_identifier || '',\n    norm_has_media: normalized.has_media || false,\n    norm_media_type: normalized.media_type || '',\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1220,6 +1220,134 @@
       ],
       "id": "merge-data",
       "name": "Merge Tenant + Message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wa-ch",
+              "name": "channel",
+              "value": "whatsapp",
+              "type": "string"
+            },
+            {
+              "id": "wa-sender",
+              "name": "sender_identifier",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "wa-msg",
+              "name": "message",
+              "value": "={{ $json.text || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "wa-subj",
+              "name": "subject",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "wa-chat",
+              "name": "chat_id",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "wa-media",
+              "name": "has_media",
+              "value": "={{ $json.has_image || $json.has_video || false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "wa-mtype",
+              "name": "media_type",
+              "value": "={{ $json.has_image ? 'image' : ($json.has_video ? 'video' : '') }}",
+              "type": "string"
+            },
+            {
+              "id": "wa-extid",
+              "name": "external_message_id",
+              "value": "=wa_{{ $json.message_id || $now.toMillis() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        700
+      ],
+      "id": "wa-normalize",
+      "name": "Normalize WhatsApp"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract message from Meta WhatsApp webhook payload\nconst body = $input.first().json.body || $input.first().json;\nconst entry = body.entry?.[0];\nconst change = entry?.changes?.[0];\nconst value = change?.value;\nconst message = value?.messages?.[0];\n\nif (!message || !message.from) {\n  // Status update or no message - stop flow\n  return [];\n}\n\nreturn [{\n  json: {\n    from: message.from,\n    message_id: message.id || '',\n    text: message.text?.body || message.caption || '',\n    type: message.type || 'text',\n    has_image: !!message.image,\n    has_video: !!message.video,\n    contact_name: value?.contacts?.[0]?.profile?.name || '',\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        600
+      ],
+      "id": "wa-parse",
+      "name": "Parse WhatsApp"
+    },
+    {
+      "parameters": {
+        "path": "whatsapp-intake",
+        "httpMethod": "GET",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        750
+      ],
+      "id": "58e00d1a-826b-4195-9032-a5377a6c418d",
+      "name": "WA Verify",
+      "webhookId": "7bddd1ed-f08c-4aad-a2ed-d489878aea07"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -960,
+        750
+      ],
+      "id": "cdd45f3d-399d-41ea-9508-08725810fb86",
+      "name": "Return Challenge"
+    },
+    {
+      "parameters": {
+        "path": "whatsapp-intake",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        600
+      ],
+      "id": "3e08f34b-d101-42de-902f-2a1cbc79674f",
+      "name": "WhatsApp Incoming",
+      "webhookId": "9babb4fd-4025-4f09-ade8-5562cf5c7909"
     }
   ],
   "connections": {
@@ -1648,6 +1776,50 @@
         [
           {
             "node": "Log Inbound Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Normalize WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WA Verify": {
+      "main": [
+        [
+          {
+            "node": "Return Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Incoming": {
+      "main": [
+        [
+          {
+            "node": "Parse WhatsApp",
             "type": "main",
             "index": 0
           }

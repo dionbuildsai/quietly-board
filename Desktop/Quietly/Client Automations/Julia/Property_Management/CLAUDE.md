@@ -219,7 +219,7 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 
 | Workflow | n8n ID | Nodes | Purpose |
 |----------|--------|-------|---------|
-| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 42 | Receives messages from all channels, normalizes, looks up tenant, hands off to AI Agent. Also handles callback dispatch flow (vendor lookup, preview, confirm). |
+| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 50 | Receives messages from all channels (Telegram, Email, SMS, WhatsApp), normalizes, looks up tenant, hands off to AI Agent. Also handles callback dispatch flow. |
 | **[AI] Conversation Agent** | `5WW7m5IiqvJoHWZ1` | 23 | Claude Sonnet 4 AI agent — classifies, generates tickets, decides urgency, notifies landlord |
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 8 | Routes AI response back to correct channel (Telegram, Email, SMS, WhatsApp) |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 17 | Webhook API for ticket creation, escalation, lookup, video search |
@@ -290,7 +290,9 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 
 ### Known Limitations
 - Telegram webhook must be re-registered via n8n UI toggle when workflow is deactivated/reactivated via API
-- WhatsApp channel configured in Response Dispatcher but not wired up on intake side
+- Webhook nodes created via API need `webhookId` field set (UUID) to register in production mode
+- WhatsApp app is in **Development mode** on Meta — only app admins/developers/testers can send messages. Switch to **Live mode** for production.
+- WhatsApp uses test number (+1 555 183 0681) — need a production number for real deployment
 
 ## Deployment Steps
 1. ~~Run SQL scripts~~ (DONE)
@@ -301,7 +303,7 @@ The old 135-node monolith (`Tenant Message Handler.json`) has been replaced with
 6. ~~End-to-end testing: Telegram → AI → Response~~ (DONE - working)
 7. ~~Add `external_message_id` column + unique index + ON CONFLICT dedup~~ (DONE)
 8. ~~Test Email and SMS channels end-to-end~~ (DONE - both verified with ticket creation)
-9. [ ] WhatsApp channel integration (intake side)
+9. ~~WhatsApp channel integration~~ (DONE - intake + response working, Meta webhook verified)
 
 ### Properties Table (updated)
 - id (uuid PK), name, address, manager_name, manager_email, manager_phone, twilio_number, faq_doc_url, **manager_id** (text, default '6216258938'), created_at
