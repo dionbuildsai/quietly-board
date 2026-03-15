@@ -1,0 +1,319 @@
+{
+  "name": "[Response] Channel Dispatcher",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        304
+      ],
+      "id": "668a52af-ef47-40ef-a356-4a7cfb60dfc1",
+      "name": "When Called"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c572d61d-9d8a-46b8-8c41-808c643b9988",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cbbaede3-07f7-4afa-877a-f4fdf8c35e23",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "sms",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sms"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a2ce2bdb-c9de-4925-a783-151c19b90688",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "579a45a1-f1cb-4951-b3f3-62c9d0b53766",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -160,
+        304
+      ],
+      "id": "c01a3161-692b-4bea-8574-843cd9432bf1",
+      "name": "Channel Dispatcher"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Re: {{ $json.subject || 'Julia Inc - Property Management' }}",
+        "message": "={{ $json.response_text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        128,
+        112
+      ],
+      "id": "25357a1c-dac1-4e42-9ac1-f7fd4a1e845d",
+      "name": "Send Email",
+      "webhookId": "1b7d3adf-8847-44e9-89b2-b4e578d6067c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ws18m1zty0x1WwiD",
+          "name": "dionfwang"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+14389009998",
+        "to": "={{ $json.phone }}",
+        "message": "={{ $json.response_text.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        128,
+        288
+      ],
+      "id": "2b482fed-42eb-4e37-a72b-b7800a575230",
+      "name": "Send SMS",
+      "credentials": {
+        "twilioApi": {
+          "id": "ijmhKNa9AFRv7Rjr",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $json.chat_id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.response_text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        464
+      ],
+      "id": "d84a5eac-d539-4def-92de-a42f5d5d24c7",
+      "name": "Send Telegram",
+      "webhookId": "164700ae-d6b8-467d-a146-210891c41f2d"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1002910989571888",
+        "recipientPhoneNumber": "={{ $json.phone.replace(/[^0-9]/g, '') }}",
+        "textBody": "={{ $json.response_text.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        640
+      ],
+      "id": "475a1441-01c0-40bc-9d2e-ed1d93afc1b3",
+      "name": "Send WhatsApp",
+      "webhookId": "47d625fa-fa0d-416e-85e2-f6d2e306cf83",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "we3yhVhUwWRnkTGz",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## [Response] Channel Dispatcher\n\nSends AI response back via the same channel the tenant used.\nChannels: Email, SMS, Telegram, WhatsApp\nFuture: ElevenLabs Voice TTS",
+        "height": 120,
+        "width": 350
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        112
+      ],
+      "id": "37f258e6-6c29-41b0-8714-a96274272942",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Unknown channel - log and return\nconst input = $input.item.json;\nconsole.log('Unknown channel: ' + (input.channel || 'undefined'));\nreturn { json: { error: 'Unknown channel: ' + (input.channel || ''), ...input } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        816
+      ],
+      "id": "f1a2b3c4-d5e6-7890-abcd-fallback00001",
+      "name": "Log Unknown Channel"
+    }
+  ],
+  "connections": {
+    "When Called": {
+      "main": [
+        [
+          {
+            "node": "Channel Dispatcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Channel Dispatcher": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Log Unknown Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

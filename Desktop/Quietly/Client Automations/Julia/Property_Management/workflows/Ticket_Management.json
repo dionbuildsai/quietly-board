@@ -1,0 +1,744 @@
+{
+  "name": "[Ticket] Management",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "tool-create-ticket",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        200
+      ],
+      "id": "8dd0eb55-db55-44e9-a253-477d41190091",
+      "name": "Create Ticket Webhook"
+    },
+    {
+      "parameters": {
+        "path": "tool-escalate-urgent",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        500
+      ],
+      "id": "fe5a9653-871e-44b3-b22e-423d76b2aa0e",
+      "name": "Escalate Urgent Webhook"
+    },
+    {
+      "parameters": {
+        "path": "tool-lookup-tickets",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        800
+      ],
+      "id": "54579b8f-5ee2-46c9-aa58-305616ddcd1d",
+      "name": "Lookup Tickets Webhook"
+    },
+    {
+      "parameters": {
+        "path": "tool-search-videos",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        1100
+      ],
+      "id": "bf9d55cc-a24f-43bc-9baf-da238b415e62",
+      "name": "Search Videos Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';\nlet id = 'TK-';\nfor (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];\nreturn { json: { ...($input.item.json.body || $input.item.json), ticket_id: id } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        200
+      ],
+      "id": "3959a40f-44bc-4987-ac64-52f11471344e",
+      "name": "Generate Ticket ID"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "maintenance_requests",
+          "mode": "list",
+          "cachedResultName": "maintenance_requests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ticket_id": "={{ $json.ticket_id }}",
+            "tenant_name": "={{ $json.tenant_name }}",
+            "phone": "={{ $json.phone }}",
+            "property": "={{ $json.property }}",
+            "unit": "={{ $json.unit }}",
+            "channel": "={{ $json.channel }}",
+            "type": "={{ $json.urgency }}",
+            "category": "={{ $json.category }}",
+            "summary": "={{ $json.summary }}",
+            "status": "open",
+            "keywords": "={{ $json.keyword }}",
+            "tenant_message": "={{ $json.tenant_message }}",
+            "telegram_id": "={{ $json.telegram_id || '' }}",
+            "tenant_email": "={{ $json.email || '' }}",
+            "created_at": "={{ $now.toISO() }}",
+            "updated_at": "={{ $now.toISO() }}",
+            "urgency": "={{ $json.urgency }}",
+            "description": "={{ $json.summary }}",
+            "tenant_phone": "={{ $json.phone }}",
+            "unit_number": "={{ $json.unit }}",
+            "self_service_attempt": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_name",
+              "displayName": "tenant_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property",
+              "displayName": "property",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "unit",
+              "displayName": "unit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "keywords",
+              "displayName": "keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_message",
+              "displayName": "tenant_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telegram_id",
+              "displayName": "telegram_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_email",
+              "displayName": "tenant_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_phone",
+              "displayName": "tenant_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "unit_number",
+              "displayName": "unit_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "self_service_attempt",
+              "displayName": "self_service_attempt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -40,
+        200
+      ],
+      "id": "f0860769-2240-4652-9c9b-34c209ff2768",
+      "name": "Create Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, ticket_id: $json.ticket_id, message: 'Ticket ' + $json.ticket_id + ' created successfully' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        200
+      ],
+      "id": "084975f6-9b0e-4e94-9a02-9474e56c90c9",
+      "name": "Respond Create Ticket"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';\nlet id = 'TK-';\nfor (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];\nreturn { json: { ...($input.item.json.body || $input.item.json), ticket_id: id, status: 'wait_for_approval', urgency: 'urgent' } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        500
+      ],
+      "id": "cebccdd2-7225-49ef-8be2-808a4d48fe76",
+      "name": "Generate Urgent Ticket ID"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "maintenance_requests",
+          "mode": "list",
+          "cachedResultName": "maintenance_requests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ticket_id": "={{ $json.ticket_id }}",
+            "tenant_name": "={{ $json.tenant_name }}",
+            "phone": "={{ $json.phone }}",
+            "property": "={{ $json.property }}",
+            "unit": "={{ $json.unit }}",
+            "channel": "={{ $json.channel }}",
+            "type": "urgent",
+            "category": "={{ $json.category }}",
+            "summary": "={{ $json.summary }}",
+            "status": "={{ $json.status }}",
+            "keywords": "={{ $json.keyword }}",
+            "tenant_message": "={{ $json.tenant_message }}",
+            "telegram_id": "={{ $json.telegram_id || '' }}",
+            "tenant_email": "={{ $json.email || '' }}",
+            "created_at": "={{ $now.toISO() }}",
+            "updated_at": "={{ $now.toISO() }}",
+            "urgency": "urgent",
+            "description": "={{ $json.summary }}",
+            "tenant_phone": "={{ $json.phone }}",
+            "unit_number": "={{ $json.unit }}",
+            "self_service_attempt": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -40,
+        500
+      ],
+      "id": "7f396dbd-780c-4a3f-929a-79f5fff1d9ea",
+      "name": "Create Urgent Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT vendor_name, email, phone FROM vendors WHERE category = '{{ $json.category }}' LIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        200,
+        500
+      ],
+      "id": "70801163-7858-4a8e-bbf3-2bf052265895",
+      "name": "Lookup Vendor",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "6216258938",
+        "text": "=URGENT TICKET {{ $('Create Urgent Ticket').item.json.ticket_id }}\n\nTenant: {{ $('Create Urgent Ticket').item.json.tenant_name }}\nUnit: {{ $('Create Urgent Ticket').item.json.unit }}\nProperty: {{ $('Create Urgent Ticket').item.json.property }}\nCategory: {{ $('Create Urgent Ticket').item.json.category }}\n\n{{ $('Create Urgent Ticket').item.json.summary }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        500
+      ],
+      "id": "19b8e696-d6a8-471b-bcd9-5df70d1499c9",
+      "name": "Notify Landlord",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, ticket_id: $('Create Urgent Ticket').item.json.ticket_id, message: 'URGENT ticket created and landlord notified', vendor: $('Lookup Vendor').item.json.vendor_name || 'No vendor found' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        500
+      ],
+      "id": "9e03aa2b-af49-47ca-9293-7a43f60dca7b",
+      "name": "Respond Escalate"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ticket_id, category, summary, status, urgency, created_at FROM maintenance_requests WHERE (phone = '{{ ($json.body.phone || '').replace(/'/g, \"''\") }}' OR tenant_email = '{{ ($json.body.email || '').replace(/'/g, \"''\") }}') AND status NOT IN ('closed') ORDER BY created_at DESC LIMIT 5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -320,
+        800
+      ],
+      "id": "cc47dcba-0f40-40f9-82c9-33a093920703",
+      "name": "Query Tickets",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        800
+      ],
+      "id": "de821cb9-deae-4ff2-bcc8-1b5f75b999dc",
+      "name": "Respond Tickets"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT title, video_url, description FROM repair_videos WHERE LOWER(title) LIKE '%' || LOWER('{{ ($json.body.query || '').replace(/'/g, \"''\") }}') || '%' OR LOWER(description) LIKE '%' || LOWER('{{ ($json.body.query || '').replace(/'/g, \"''\") }}') || '%' LIMIT 5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -320,
+        1100
+      ],
+      "id": "570edd30-7352-47d8-9ff7-2f252270238a",
+      "name": "Query Videos",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        1100
+      ],
+      "id": "7586c642-b787-409b-89d6-3a521f480015",
+      "name": "Respond Videos"
+    },
+    {
+      "parameters": {
+        "content": "## [Ticket] Management\n\nHandles ticket CRUD, vendor dispatch, landlord notifications.\nAlso serves as webhook endpoints for the AI Agent's tools:\n- /tool-create-ticket\n- /tool-escalate-urgent\n- /tool-lookup-tickets\n- /tool-search-videos",
+        "width": 400,
+        "height": 160
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        0
+      ],
+      "id": "f52ed448-98aa-4647-8191-fcb98de822b2",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Create Ticket Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate Ticket ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalate Urgent Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate Urgent Ticket ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Tickets Webhook": {
+      "main": [
+        [
+          {
+            "node": "Query Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Videos Webhook": {
+      "main": [
+        [
+          {
+            "node": "Query Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Ticket ID": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Respond Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Urgent Ticket ID": {
+      "main": [
+        [
+          {
+            "node": "Create Urgent Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Urgent Ticket": {
+      "main": [
+        [
+          {
+            "node": "Lookup Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Vendor": {
+      "main": [
+        [
+          {
+            "node": "Notify Landlord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Landlord": {
+      "main": [
+        [
+          {
+            "node": "Respond Escalate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Tickets": {
+      "main": [
+        [
+          {
+            "node": "Respond Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Videos": {
+      "main": [
+        [
+          {
+            "node": "Respond Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

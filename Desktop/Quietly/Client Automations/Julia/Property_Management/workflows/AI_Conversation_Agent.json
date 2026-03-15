@@ -1,0 +1,757 @@
+{
+  "name": "[AI] Conversation Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        208
+      ],
+      "id": "e505e879-3a52-4cba-9638-9fdbc1004dbc",
+      "name": "When Called"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sender, message_text, channel, created_at FROM messages WHERE chat_id = '{{ $json.chat_id }}' ORDER BY created_at DESC LIMIT 20",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -576,
+        208
+      ],
+      "id": "da036ead-0ebd-4a07-acfb-6ceba33e84aa",
+      "name": "Get Conversation History",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ticket_id, category, summary, status, created_at FROM maintenance_requests WHERE (phone = '{{ $('When Called').item.json.phone }}' OR tenant_email = '{{ $('When Called').item.json.email }}') AND status NOT IN ('closed') ORDER BY created_at DESC LIMIT 5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -352,
+        208
+      ],
+      "id": "fd1d0600-64cd-43b3-a650-d8d6d31a99dc",
+      "name": "Get Open Tickets",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Called').item.json;\nconst history = $('Get Conversation History').all().map(item => item.json);\nconst tickets = $('Get Open Tickets').all().map(item => item.json);\n\n// Count tenant messages only (not Julia AI responses)\nconst tenantMessages = history.filter(m => m.sender !== 'Julia AI');\nconst messageCount = tenantMessages.length; // includes current message logged earlier\n\n// Format conversation history (reverse to chronological)\nconst historyText = history.reverse().map(m => {\n  const role = m.sender === 'Julia AI' ? 'Julia' : 'Tenant';\n  return role + ': ' + (m.message_text || '');\n}).join('\\n');\n\n// Format open tickets\nconst ticketsText = tickets.length > 0 && tickets[0].json !== undefined\n  ? tickets.filter(t => t.ticket_id).map(t => '- ' + t.ticket_id + ': ' + t.category + ' - ' + t.summary + ' (' + t.status + ')').join('\\n')\n  : 'No open tickets';\n\nconst contextMessage = '## Tenant Info\\n' +\n  'Name: ' + (input.tenant_name || '') + '\\n' +\n  'Unit: ' + (input.unit || '') + '\\n' +\n  'Property: ' + (input.property || '') + '\\n' +\n  'Language: ' + (input.language_pref || 'fr') + '\\n' +\n  'Channel: ' + (input.channel || '') + '\\n\\n' +\n  '## Message Count\\n' +\n  'This is tenant message #' + messageCount + ' in this conversation.\\n' +\n  'You have 3 exchanges total to diagnose and resolve.\\n' +\n  (messageCount >= 3 ? 'THIS IS THE FINAL MESSAGE. You MUST wrap up now.\\n' : '') + '\\n' +\n  '## Open Tickets\\n' + ticketsText + '\\n\\n' +\n  '## Recent Conversation\\n' + (historyText || 'No previous messages') + '\\n\\n' +\n  '## Current Message\\n' + (input.message || '');\n\nreturn {\n  json: {\n    ...input,\n    context_message: contextMessage,\n    history_text: historyText,\n    tickets_text: ticketsText,\n    message_count: messageCount\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        208
+      ],
+      "id": "a2a04d57-b096-4dd2-ad7b-2ac6704c1427",
+      "name": "Format Context"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Called').item.json;\nconst aiOutput = $('Julia AI').item.json.response || $('Julia AI').item.json.text || '';\n\nreturn {\n  json: {\n    ...input,\n    response_text: aiOutput,\n    channel: input.channel,\n    chat_id: input.chat_id,\n    phone: input.phone,\n    email: input.email,\n    tenant_name: input.tenant_name\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        208
+      ],
+      "id": "9817ef2e-31de-4f76-bae9-7e7c66d97266",
+      "name": "Format Output"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO messages (chat_id, telegram_id, sender, message_text, channel, created_at) VALUES ('{{ $json.chat_id }}', '{{ $json.telegram_id || '' }}', 'Julia AI', '{{ $json.response_text.replace(/'/g, \"''\") }}', '{{ $json.channel }}', NOW()) RETURNING *",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        208
+      ],
+      "id": "8c25e2df-70b8-4870-adea-3e22e3c8fe53",
+      "name": "Log AI Response",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## [AI] Conversation Agent\n\nThe brain of the system. Claude Sonnet 4 with:\n- Full conversation history (last 20 messages)\n- Open ticket awareness\n- Image analysis capability\n- Tools: lookup tickets, search videos, create ticket, escalate urgent\n\nReplaces: all classification nodes, all template nodes, video matching",
+        "height": 200,
+        "width": 450
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        112
+      ],
+      "id": "f36acc7f-88cb-4cd5-9dc7-94b5cc434703",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.context_message }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are Julia, a bilingual (French/English) AI property management assistant for Julia Inc, operating in Quebec.\n\n## Conversation Structure\nYou have exactly 3 exchanges with the tenant to understand their issue:\n- Message 1: Greet them, acknowledge the issue, ask 1-2 key diagnostic questions. Mention you'll ask a couple of quick questions to better understand the situation.\n- Message 2: Based on their answer, ask any final clarifying questions or confirm your understanding.\n- Message 3 (FINAL): Thank them for the information. Let them know the issue has been noted and someone will be in touch. Keep it simple and warm.\n\nIf the context says \"THIS IS THE FINAL MESSAGE\", you MUST wrap up. Do not ask more questions.\n\n## IMPORTANT RULES\n- NEVER say \"this is the landlord's responsibility\" or \"this falls under tenant responsibility\"\n- NEVER promise specific timelines (\"within 24 hours\", \"in 1-3 business days\")\n- NEVER give out phone numbers\n- NEVER reference the Civil Code or legal obligations\n- Stay warm but slightly ambiguous about next steps \u2014 just say \"we'll look into it\" or \"someone will be in touch\"\n- Do NOT over-promise or set expectations about response times\n\n## Guidelines\n- Respond in the tenant's preferred language (language_pref: fr=French, en=English)\n- Be warm, professional, and empathetic\n- Keep responses concise (2-4 sentences)\n- Focus on understanding the issue, not making promises\n- For dangerous situations (gas smell, flooding, fire, electrical sparking), tell them to evacuate and call 911\n- Sign off as Julia"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        96,
+        208
+      ],
+      "id": "086043e4-1688-400d-8c01-2dc683e896d1",
+      "name": "Julia AI"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {
+          "maxTokensToSample": 512,
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        168,
+        432
+      ],
+      "id": "ed3f3231-9422-480f-8f0a-bf2683cfdc28",
+      "name": "Claude Sonnet 4",
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tenant message: {{ $('Format Output').item.json.message }}\nJulia AI response: {{ $('Format Output').item.json.response_text }}\nTenant message count: {{ $('Format Context').item.json.message_count }}\n\nExisting open tickets for this tenant:\n{{ $('Get Open Tickets').all().map(t => t.json.ticket_id + ': ' + t.json.category + ' - ' + t.json.summary + ' (' + t.json.status + ')').join('\\n') || 'None' }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a classifier. Based on the tenant message, the AI response, existing tickets, and message count, determine what action to take.\n\nRespond ONLY with valid JSON:\n{\"create_ticket\": true/false, \"upgrade_urgency\": true/false, \"urgency\": \"urgent\"/\"not_urgent\"/\"none\", \"category\": \"plumbing\"/\"electrical\"/\"hvac\"/\"appliance\"/\"pest_control\"/\"locksmith\"/\"general_maintenance\"/\"none\", \"summary\": \"brief summary of the full conversation\", \"keyword\": \"2-6 word label\"}\n\nRULES:\n1. Do NOT create a ticket if there is already an open ticket for the SAME category/issue \u2014 set create_ticket: false\n2. If there IS an existing ticket but the situation has ESCALATED (e.g. small leak became flooding, pest sighting became infestation, minor issue became safety hazard), set upgrade_urgency: true and urgency: \"urgent\"\n3. If message count is 3 or more AND no ticket exists yet, you MUST create one\n4. Greetings, thank yous, status checks = NEVER create ticket, never upgrade\n5. For the summary, summarize the ENTIRE conversation\n\nUPGRADE URGENCY when new info reveals:\n- Water damage spreading or worsening\n- Electrical issue posing fire risk\n- Health hazard (mold spreading, pest infestation worsening)\n- Tenant safety at risk\n- Issue preventing habitability\n\nURGENT: water leak, flooding, gas smell, electrical hazard, no heat in winter, fire, security breach, sewage\nNOT_URGENT: routine repairs, slow drain, cosmetic issues, pest control, non-critical appliance\nNONE: greetings, follow-ups, questions unrelated to maintenance"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        896,
+        208
+      ],
+      "id": "9362a32b-512e-47f5-9a76-4e1cce9a721b",
+      "name": "Classify Action"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        904,
+        432
+      ],
+      "id": "e4558b49-03ff-4a46-8b78-b61119a80fe0",
+      "name": "Haiku Classifier",
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\": \"object\", \"properties\": {\"create_ticket\": {\"type\": \"boolean\"}, \"upgrade_urgency\": {\"type\": \"boolean\"}, \"urgency\": {\"type\": \"string\"}, \"category\": {\"type\": \"string\"}, \"summary\": {\"type\": \"string\"}, \"keyword\": {\"type\": \"string\"}}}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        1032,
+        432
+      ],
+      "id": "5d7bc039-8047-4ba0-a307-c4300c6780ce",
+      "name": "Action Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1e96b275-0985-4097-b813-13eab465a59d",
+              "leftValue": "={{ $json.output?.create_ticket === true || $json.output?.upgrade_urgency === true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        208
+      ],
+      "id": "60c1f361-c311-43e2-9127-4f494697c7a1",
+      "name": "Create Ticket?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';\nlet id = 'TK-';\nfor (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];\n\nconst input = $('Format Output').item.json;\nconst action = $('Classify Action').item.json.output || $('Classify Action').item.json;\nconst isUpgrade = action.upgrade_urgency === true && !action.create_ticket;\n\n// If upgrading, find the existing ticket ID\nlet ticketId = id;\nif (isUpgrade) {\n  const tickets = $('Get Open Tickets').all().map(t => t.json);\n  const existing = tickets.find(t => t.ticket_id && t.status !== 'closed');\n  if (existing) ticketId = existing.ticket_id;\n}\n\nreturn {\n  json: {\n    ticket_id: ticketId,\n    is_upgrade: isUpgrade,\n    tenant_name: input.tenant_name,\n    phone: input.phone,\n    property: input.property,\n    unit: input.unit,\n    channel: input.channel,\n    email: input.email,\n    telegram_id: input.telegram_id || '',\n    chat_id: input.chat_id || '',\n    urgency: action.urgency || 'not_urgent',\n    category: action.category || 'general_maintenance',\n    summary: action.summary || input.message,\n    keyword: action.keyword || '',\n    tenant_message: input.message,\n    status: action.urgency === 'urgent' ? 'wait_for_approval' : 'open'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        208
+      ],
+      "id": "5561fbf2-72fc-49dd-a652-0e9501da20ba",
+      "name": "Generate Ticket"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.is_upgrade ? \n\"UPDATE maintenance_requests SET urgency = 'urgent', status = 'wait_for_approval', summary = '\" + $json.summary.replace(/'/g, \"''\") + \"', updated_at = NOW() WHERE ticket_id = '\" + $json.ticket_id + \"' RETURNING *\"\n:\n\"INSERT INTO maintenance_requests (ticket_id, tenant_name, phone, property, unit, channel, type, category, summary, status, keywords, tenant_message, telegram_id, tenant_email, created_at, updated_at, urgency, description, tenant_phone, unit_number, self_service_attempt) VALUES ('\" + $json.ticket_id + \"', '\" + ($json.tenant_name || '').replace(/'/g, \"''\") + \"', '\" + ($json.phone || '').replace(/'/g, \"''\") + \"', '\" + ($json.property || '').replace(/'/g, \"''\") + \"', '\" + ($json.unit || '').replace(/'/g, \"''\") + \"', '\" + ($json.channel || '') + \"', '\" + ($json.urgency || '') + \"', '\" + ($json.category || '') + \"', '\" + ($json.summary || '').replace(/'/g, \"''\") + \"', '\" + ($json.status || 'open') + \"', '\" + ($json.keyword || '').replace(/'/g, \"''\") + \"', '\" + ($json.tenant_message || '').replace(/'/g, \"''\") + \"', '\" + ($json.telegram_id || '') + \"', '\" + ($json.email || '') + \"', NOW(), NOW(), '\" + ($json.urgency || '') + \"', '\" + ($json.summary || '').replace(/'/g, \"''\") + \"', '\" + ($json.phone || '').replace(/'/g, \"''\") + \"', '\" + ($json.unit || '').replace(/'/g, \"''\") + \"', 0) RETURNING *\"\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1696,
+        208
+      ],
+      "id": "99c6d58e-0153-4c43-a9c2-9d71adf41e3d",
+      "name": "Create Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9b50f8d1-baa1-4f80-9379-e98523778b51",
+              "leftValue": "={{ $('Generate Ticket').item.json.urgency }}",
+              "rightValue": "urgent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        208
+      ],
+      "id": "4f28ebbb-78d6-4ca4-b725-d08b8ec7db3a",
+      "name": "Is Urgent?"
+    },
+    {
+      "parameters": {
+        "chatId": "6216258938",
+        "text": "=URGENT TICKET {{ $('Generate Ticket').item.json.ticket_id }}\n\nCategory: {{ $('Generate Ticket').item.json.category }}\nTenant: {{ $('Generate Ticket').item.json.tenant_name }}\nUnit: {{ $('Generate Ticket').item.json.unit }}\nProperty: {{ $('Generate Ticket').item.json.property }}\n\nSummary: {{ $('Generate Ticket').item.json.summary }}\n\nHow would you like to handle this?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Auto Dispatch",
+                    "additionalFields": {
+                      "callback_data": "=dispatch||{{ $('Generate Ticket').item.json.ticket_id }}||{{ $('Generate Ticket').item.json.category }}"
+                    }
+                  },
+                  {
+                    "text": "Show Contractors",
+                    "additionalFields": {
+                      "callback_data": "=manual||{{ $('Generate Ticket').item.json.ticket_id }}||{{ $('Generate Ticket').item.json.category }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        208
+      ],
+      "id": "5d66a6c7-a298-4b92-8c73-bb199a4e9ed2",
+      "name": "Notify Landlord",
+      "webhookId": "c0c56476-e93a-4326-9e3e-1bb03cb57f85",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return the response data to the parent workflow\nconst formatOutput = $('Format Output').item.json;\nreturn { json: formatOutput };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        400
+      ],
+      "id": "b2a6edd0-b234-40ef-9f1a-c48aa6dcd225",
+      "name": "Return to Parent"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE messages SET ticket_id = '{{ $json.ticket_id }}' WHERE chat_id = '{{ $('Format Output').item.json.chat_id }}' AND ticket_id IS NULL RETURNING *",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1320,
+        300
+      ],
+      "id": "d5b3e865-f5f1-4ec2-a453-f43ab24409b6",
+      "name": "Link Messages to Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const messages = $('Link Messages to Ticket').all().map(m => m.json);\nconst convo = messages\n  .filter(m => m.sender !== 'Julia AI')\n  .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))\n  .map(m => m.message_text || '')\n  .join('\\n');\nconst ticketId = $('Generate Ticket').item.json.ticket_id;\nreturn { json: { ticket_id: ticketId, full_conversation: convo } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ],
+      "id": "981e3aa9-cfa3-4fae-b1d2-4d04b1158248",
+      "name": "Build Conversation Text"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET tenant_message = '{{ $json.full_conversation.replace(/'/g, \"''\") }}', updated_at = NOW() WHERE ticket_id = '{{ $json.ticket_id }}' RETURNING *",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1800,
+        300
+      ],
+      "id": "2fb317ce-011e-45fe-9182-56bcf4c79e6d",
+      "name": "Update Ticket with Conversation",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "6216258938"
+            },
+            {
+              "name": "text",
+              "value": "=NEW TICKET {{ $('Generate Ticket').item.json.ticket_id }}\n\nCategory: {{ $('Generate Ticket').item.json.category }}\nTenant: {{ $('Generate Ticket').item.json.tenant_name }}\nUnit: {{ $('Generate Ticket').item.json.unit }}\nProperty: {{ $('Generate Ticket').item.json.property }}\n\nSummary: {{ $('Generate Ticket').item.json.summary }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2040,
+        400
+      ],
+      "id": "30b2ba33-1a68-474a-bb57-bd9e274b8938",
+      "name": "Notify Non-Urgent"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE messages \nSET ticket_id = (\n  SELECT ticket_id FROM maintenance_requests \n  WHERE (phone = '{{ $('Format Output').item.json.phone }}' OR tenant_email = '{{ $('Format Output').item.json.email }}')\n  AND status NOT IN ('closed', 'declined') \n  ORDER BY created_at DESC LIMIT 1\n)\nWHERE chat_id = '{{ $('Format Output').item.json.chat_id }}'\nAND ticket_id IS NULL\nRETURNING *",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        380,
+        400
+      ],
+      "id": "274698db-cbde-464e-8fdc-d643af9be900",
+      "name": "Link Ongoing Messages",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "When Called": {
+      "main": [
+        [
+          {
+            "node": "Get Conversation History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Conversation History": {
+      "main": [
+        [
+          {
+            "node": "Get Open Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Open Tickets": {
+      "main": [
+        [
+          {
+            "node": "Format Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Context": {
+      "main": [
+        [
+          {
+            "node": "Julia AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Sonnet 4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Julia AI",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Output": {
+      "main": [
+        [
+          {
+            "node": "Log AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log AI Response": {
+      "main": [
+        [
+          {
+            "node": "Link Ongoing Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Julia AI": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku Classifier": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Action",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify Action",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Action": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket?": {
+      "main": [
+        [
+          {
+            "node": "Generate Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return to Parent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Ticket": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Link Messages to Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Urgent?": {
+      "main": [
+        [
+          {
+            "node": "Notify Landlord",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Non-Urgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Landlord": {
+      "main": [
+        [
+          {
+            "node": "Return to Parent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Messages to Ticket": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Conversation Text": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket with Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket with Conversation": {
+      "main": [
+        [
+          {
+            "node": "Is Urgent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Non-Urgent": {
+      "main": [
+        [
+          {
+            "node": "Return to Parent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link Ongoing Messages": {
+      "main": [
+        [
+          {
+            "node": "Classify Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}
