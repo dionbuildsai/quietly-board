@@ -504,7 +504,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT title, video_url, description,\n  CASE \n    WHEN LOWER(keywords::text) LIKE '%' || LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\").replace(/[^a-zA-Z0-9 ]/g, '') }}') || '%' THEN 3\n    WHEN LOWER(description) LIKE '%' || LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\").replace(/[^a-zA-Z0-9 ]/g, '') }}') || '%' THEN 2\n    ELSE 0\n  END as relevance\nFROM repair_videos\nWHERE EXISTS (\n  SELECT 1 FROM unnest(keywords) AS kw \n  WHERE LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\") }}') LIKE '%' || LOWER(kw) || '%'\n)\nOR LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\") }}') LIKE '%' || LOWER(title) || '%'\nORDER BY relevance DESC\nLIMIT 1",
+        "query": "SELECT DISTINCT ON (rv.title) rv.title, rv.video_url, rv.description\nFROM repair_videos rv, unnest(rv.keywords) AS kw\nWHERE (\n  LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\") }}') LIKE '%' || LOWER(split_part(kw, ' ', 1)) || '%'\n  AND (split_part(kw, ' ', 2) = '' OR LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\") }}') LIKE '%' || LOWER(split_part(kw, ' ', 2)) || '%')\n)\nLIMIT 1",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
