@@ -1411,7 +1411,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE maintenance_requests SET status = 'resolved', updated_at = NOW() WHERE ticket_id = '{{ $json.ticket_id }}' RETURNING ticket_id, status",
+        "query": "UPDATE maintenance_requests SET status = 'resolved', updated_at = NOW() \nWHERE ticket_id = CASE \n  WHEN '{{ $json.ticket_id }}' LIKE 'TK-%' THEN '{{ $json.ticket_id }}'\n  ELSE (SELECT ticket_id FROM maintenance_requests WHERE phone LIKE '%' || RIGHT('{{ $json.ticket_id }}', 10) || '%' OR telegram_id = '{{ $json.ticket_id }}' ORDER BY created_at DESC LIMIT 1)\nEND\nRETURNING ticket_id, status",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -1431,7 +1431,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $('Parse Callback').item.json;\nconst chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: {\n    chat_id: chatId,\n    text: 'Great! Ticket ' + data.ticket_id + ' has been marked as resolved. Thank you!\\n\\nSuper! Le billet ' + data.ticket_id + ' a \u00e9t\u00e9 marqu\u00e9 comme r\u00e9solu. Merci!'\n  },\n  json: true\n});\nreturn [{ json: result }];"
+        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\nconst resolved = $('Resolve Ticket').first()?.json;\nconst ticketId = resolved?.ticket_id || '';\n\n// Detect language from the button text that was clicked\nconst btnText = $('Telegram Trigger').item.json.callback_query?.data || '';\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('vid\u00e9o') || false;\n\nconst msg = isFrench\n  ? 'Super! Le billet ' + ticketId + ' a \u00e9t\u00e9 marqu\u00e9 comme r\u00e9solu. Merci!'\n  : 'Great! Ticket ' + ticketId + ' has been marked as resolved. Thank you!';\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg },\n  json: true\n});\nreturn [{ json: result }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1444,7 +1444,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: {\n    chat_id: chatId,\n    text: 'No worries! Someone from our team will follow up with you soon.\\n\\nPas de souci! Quelqu\\'un de notre \u00e9quipe vous contactera bient\u00f4t.'\n  },\n  json: true\n});\nreturn [{ json: result }];"
+        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('vid\u00e9o') || false;\n\nconst msg = isFrench\n  ? 'Pas de souci! Quelqu\\'un de notre \u00e9quipe vous contactera bient\u00f4t.'\n  : 'No worries! Someone from our team will follow up with you soon.';\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg },\n  json: true\n});\nreturn [{ json: result }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
