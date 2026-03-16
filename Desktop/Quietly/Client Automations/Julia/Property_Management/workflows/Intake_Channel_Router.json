@@ -56,7 +56,9 @@
     {
       "parameters": {
         "path": "sms-intake",
-        "options": {},
+        "options": {
+          "rawBody": true
+        },
         "httpMethod": "POST"
       },
       "type": "n8n-nodes-base.webhook",
@@ -423,13 +425,13 @@
             {
               "id": "61422741-e130-4aa4-bffb-5d352d516b4b",
               "name": "sender_identifier",
-              "value": "={{ $json.body?.From || $json.body?.phone || $json.query?.phone || '' }}",
+              "value": "={{ $json.phone }}",
               "type": "string"
             },
             {
               "id": "49b4c2e4-cfd6-4cb1-9bde-cb61da0b85b4",
               "name": "message",
-              "value": "={{ $json.body?.Body || $json.body?.message || $json.query?.message || '' }}",
+              "value": "={{ $json.message }}",
               "type": "string"
             },
             {
@@ -441,7 +443,7 @@
             {
               "id": "9ebe56c9-7ada-4ddc-9bd3-78eda7e70624",
               "name": "chat_id",
-              "value": "={{ $json.body?.From || $json.body?.phone || $json.query?.phone || '' }}",
+              "value": "={{ $json.phone }}",
               "type": "string"
             },
             {
@@ -459,7 +461,7 @@
             {
               "id": "ae0e9a28-30b8-4cec-afa7-b59e4e411c7b",
               "name": "external_message_id",
-              "value": "=sms_{{ $json.body?.MessageSid || $now.toMillis() }}_{{ $json.body?.From || $json.body?.phone || '' }}",
+              "value": "=sms_{{ $json.message_sid || $now.toMillis() }}_{{ $json.phone }}",
               "type": "string"
             }
           ]
@@ -1348,6 +1350,19 @@
       "id": "3e08f34b-d101-42de-902f-2a1cbc79674f",
       "name": "WhatsApp Incoming",
       "webhookId": "9babb4fd-4025-4f09-ade8-5562cf5c7909"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Twilio form-encoded body\nconst raw = $input.first().json;\n\n// Twilio sends x-www-form-urlencoded: From=+15148319058&Body=hello&To=+14389009998\n// n8n with rawBody puts it in body as a string, or it may be in body as parsed object\nlet from = '';\nlet body = '';\nlet messageSid = '';\n\n// Try parsed body first (if n8n auto-parses)\nif (raw.body && typeof raw.body === 'object' && raw.body.From) {\n  from = raw.body.From;\n  body = raw.body.Body || '';\n  messageSid = raw.body.MessageSid || '';\n} else if (raw.body && typeof raw.body === 'string') {\n  // Parse URL-encoded string manually\n  const params = new URLSearchParams(raw.body);\n  from = params.get('From') || '';\n  body = params.get('Body') || '';\n  messageSid = params.get('MessageSid') || '';\n} else {\n  // Try top-level (some webhook configs put form data at root)\n  from = raw.From || raw.from || '';\n  body = raw.Body || raw.body?.Body || '';\n  messageSid = raw.MessageSid || '';\n}\n\nif (!from && !body) {\n  // No valid SMS data\n  return [];\n}\n\nreturn [{\n  json: {\n    phone: from,\n    message: body,\n    message_sid: messageSid,\n    channel: 'sms'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        912
+      ],
+      "id": "parse-sms",
+      "name": "Parse SMS"
     }
   ],
   "connections": {
@@ -1377,7 +1392,7 @@
       "main": [
         [
           {
-            "node": "Normalize SMS",
+            "node": "Parse SMS",
             "type": "main",
             "index": 0
           }
@@ -1820,6 +1835,17 @@
         [
           {
             "node": "Parse WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse SMS": {
+      "main": [
+        [
+          {
+            "node": "Normalize SMS",
             "type": "main",
             "index": 0
           }
