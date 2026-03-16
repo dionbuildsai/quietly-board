@@ -95,8 +95,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        672,
-        208
+        1560,
+        500
       ],
       "id": "8c25e2df-70b8-4870-adea-3e22e3c8fe53",
       "name": "Log AI Response",
@@ -384,7 +384,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Return the response data to the parent workflow\nconst formatOutput = $('Format Output').item.json;\nreturn { json: formatOutput };"
+        "jsCode": "// Return the response data to the parent workflow\nconst formatOutput = $('Append Video').item.json;\nreturn { json: formatOutput };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -487,8 +487,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        380,
-        400
+        1560,
+        700
       ],
       "id": "274698db-cbde-464e-8fdc-d643af9be900",
       "name": "Link Ongoing Messages",
@@ -500,6 +500,41 @@
       },
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT title, video_url, description FROM repair_videos WHERE LOWER(keywords::text) LIKE '%' || LOWER('{{ ($json.keyword || $json.category || '').replace(/'/g, \"''\") }}') || '%' OR LOWER(category) = LOWER('{{ ($json.category || '').replace(/'/g, \"''\") }}') LIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1080,
+        500
+      ],
+      "id": "48528204-9677-4c4d-8f10-5ec4541ce110",
+      "name": "Search Video",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Append video link to AI response if a matching video was found\nconst output = $('Format Output').item.json;\nconst video = $('Search Video').first()?.json;\n\nlet responseText = output.response_text || '';\n\nif (video && video.video_url) {\n  responseText += '\\n\\n---\\n';\n  if (output.language_pref === 'en') {\n    responseText += 'This video might help: ' + video.title + '\\n' + video.video_url;\n  } else {\n    responseText += 'Cette vid\u00e9o pourrait vous aider : ' + video.title + '\\n' + video.video_url;\n  }\n}\n\nreturn [{\n  json: {\n    ...output,\n    response_text: responseText,\n    video_url: video?.video_url || '',\n    video_title: video?.title || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        500
+      ],
+      "id": "bfb9cb0f-8358-40c4-a8cd-b7913b38fb52",
+      "name": "Append Video"
     }
   ],
   "connections": {
@@ -562,7 +597,7 @@
       "main": [
         [
           {
-            "node": "Log AI Response",
+            "node": "Search Video",
             "type": "main",
             "index": 0
           }
@@ -742,6 +777,28 @@
         [
           {
             "node": "Classify Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Video": {
+      "main": [
+        [
+          {
+            "node": "Append Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Video": {
+      "main": [
+        [
+          {
+            "node": "Log AI Response",
             "type": "main",
             "index": 0
           }
