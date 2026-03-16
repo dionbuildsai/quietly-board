@@ -504,7 +504,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT DISTINCT ON (rv.title) rv.title, rv.video_url, rv.description\nFROM repair_videos rv, unnest(rv.keywords) AS kw\nWHERE (\n  LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\") }}') LIKE '%' || LOWER(split_part(kw, ' ', 1)) || '%'\n  AND (split_part(kw, ' ', 2) = '' OR LOWER('{{ ($('Format Output').item.json.message || '').replace(/'/g, \"''\") }}') LIKE '%' || LOWER(split_part(kw, ' ', 2)) || '%')\n)\nLIMIT 1",
+        "query": "SELECT title, video_url, keywords::text as keywords FROM repair_videos ORDER BY title",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -525,7 +525,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Append video link to AI response if a matching video was found\nconst output = $('Format Output').item.json;\nconst video = $('Search Video').first()?.json;\n\nlet responseText = output.response_text || '';\n\nif (video && video.video_url) {\n  responseText += '\\n\\n---\\n';\n  if (output.language_pref === 'en') {\n    responseText += 'This video might help: ' + video.title + '\\n' + video.video_url;\n  } else {\n    responseText += 'Cette vid\u00e9o pourrait vous aider : ' + video.title + '\\n' + video.video_url;\n  }\n}\n\nreturn [{\n  json: {\n    ...output,\n    response_text: responseText,\n    video_url: video?.video_url || '',\n    video_title: video?.title || ''\n  }\n}];"
+        "jsCode": "// Match video to tenant's issue using conversation context\nconst output = $('Format Output').item.json;\nconst videos = $('Search Video').all().map(v => v.json);\nconst message = (output.message || '').toLowerCase();\nconst history = ($('Format Context').item.json.history_text || '').toLowerCase();\nconst fullContext = message + ' ' + history;\n\n// Score each video by how many keyword words appear in the conversation\nlet bestVideo = null;\nlet bestScore = 0;\n\nfor (const video of videos) {\n  const keywords = (video.keywords || '').replace(/[{}\"]/g, '').split(',');\n  let score = 0;\n  \n  for (const kw of keywords) {\n    const words = kw.trim().toLowerCase().split(' ');\n    const allMatch = words.every(w => w.length > 2 && fullContext.includes(w));\n    if (allMatch) {\n      score += words.length; // More matching words = higher score\n    }\n  }\n  \n  if (score > bestScore) {\n    bestScore = score;\n    bestVideo = video;\n  }\n}\n\nlet responseText = output.response_text || '';\n\nif (bestVideo && bestScore >= 2) {\n  responseText += '\\n\\n---\\n';\n  // Detect language from response\n  const isFrench = responseText.includes('Bonjour') || responseText.includes('merci') || responseText.includes('votre');\n  if (isFrench) {\n    responseText += 'Cette vid\u00e9o pourrait vous aider : ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  } else {\n    responseText += 'This video might help: ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  }\n}\n\nreturn [{\n  json: {\n    ...output,\n    response_text: responseText,\n    video_url: bestVideo?.video_url || '',\n    video_title: bestVideo?.title || ''\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
