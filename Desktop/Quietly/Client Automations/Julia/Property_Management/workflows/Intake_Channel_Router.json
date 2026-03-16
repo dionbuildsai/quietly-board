@@ -423,13 +423,13 @@
             {
               "id": "61422741-e130-4aa4-bffb-5d352d516b4b",
               "name": "sender_identifier",
-              "value": "={{ $json.query?.phone || $json.body?.phone || '' }}",
+              "value": "={{ $json.body?.From || $json.body?.phone || $json.query?.phone || '' }}",
               "type": "string"
             },
             {
               "id": "49b4c2e4-cfd6-4cb1-9bde-cb61da0b85b4",
               "name": "message",
-              "value": "={{ $json.query?.message || $json.body?.message || '' }}",
+              "value": "={{ $json.body?.Body || $json.body?.message || $json.query?.message || '' }}",
               "type": "string"
             },
             {
@@ -441,7 +441,7 @@
             {
               "id": "9ebe56c9-7ada-4ddc-9bd3-78eda7e70624",
               "name": "chat_id",
-              "value": "={{ $json.query?.phone || $json.body?.phone || '' }}",
+              "value": "={{ $json.body?.From || $json.body?.phone || $json.query?.phone || '' }}",
               "type": "string"
             },
             {
@@ -459,7 +459,7 @@
             {
               "id": "ae0e9a28-30b8-4cec-afa7-b59e4e411c7b",
               "name": "external_message_id",
-              "value": "=sms_{{ $now.toMillis() }}_{{ $json.query?.phone || $json.body?.phone || '' }}",
+              "value": "=sms_{{ $json.body?.MessageSid || $now.toMillis() }}_{{ $json.body?.From || $json.body?.phone || '' }}",
               "type": "string"
             }
           ]
