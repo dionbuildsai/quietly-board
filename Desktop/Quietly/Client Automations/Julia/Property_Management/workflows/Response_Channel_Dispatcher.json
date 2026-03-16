@@ -256,6 +256,19 @@
       ],
       "id": "f1a2b3c4-d5e6-7890-abcd-fallback00001",
       "name": "Log Unknown Channel"
+    },
+    {
+      "parameters": {
+        "jsCode": "// If video was included and channel is telegram, send follow-up with buttons\nconst input = $('When Called').item.json;\nif (!input.has_video || input.channel !== 'telegram') {\n  return [];\n}\n\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('votre');\nconst questionText = isFrench \n  ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n  : 'Did this video help resolve your issue?';\n\nconst yesText = isFrench ? 'Oui, r\u00e9solu!' : 'Yes, resolved!';\nconst noText = isFrench ? 'Non, besoin d\\'aide' : 'No, need help';\n\nconst ticketId = input.ticket_id || '';\n\n// Send Telegram message with inline keyboard\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: {\n    chat_id: input.chat_id,\n    text: questionText,\n    reply_markup: JSON.stringify({\n      inline_keyboard: [[\n        { text: yesText, callback_data: 'video_yes||' + ticketId },\n        { text: noText, callback_data: 'video_no||' + ticketId }\n      ]]\n    })\n  },\n  json: true\n});\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "id": "f43062f0-e17b-458b-b960-1013dcfd8e55",
+      "name": "Video Follow-up"
     }
   ],
   "connections": {
@@ -304,6 +317,17 @@
         [
           {
             "node": "Log Unknown Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram": {
+      "main": [
+        [
+          {
+            "node": "Video Follow-up",
             "type": "main",
             "index": 0
           }

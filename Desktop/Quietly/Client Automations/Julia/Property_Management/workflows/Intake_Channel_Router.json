@@ -803,6 +803,50 @@
               },
               "renameOutput": true,
               "outputKey": "confirm"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "video-yes",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "video_yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "video-no",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "video_no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             }
           ]
         },
@@ -1363,6 +1407,53 @@
       ],
       "id": "parse-sms",
       "name": "Parse SMS"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET status = 'resolved', updated_at = NOW() WHERE ticket_id = '{{ $json.ticket_id }}' RETURNING ticket_id, status",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        1200
+      ],
+      "id": "5d1c50ed-190e-4761-97f6-42c25a31d642",
+      "name": "Resolve Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Parse Callback').item.json;\nconst chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: {\n    chat_id: chatId,\n    text: 'Great! Ticket ' + data.ticket_id + ' has been marked as resolved. Thank you!\\n\\nSuper! Le billet ' + data.ticket_id + ' a \u00e9t\u00e9 marqu\u00e9 comme r\u00e9solu. Merci!'\n  },\n  json: true\n});\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        1200
+      ],
+      "id": "5bf0c4b6-49e6-4f5d-b41e-23e8ec3c1797",
+      "name": "Resolved Ack"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: {\n    chat_id: chatId,\n    text: 'No worries! Someone from our team will follow up with you soon.\\n\\nPas de souci! Quelqu\\'un de notre \u00e9quipe vous contactera bient\u00f4t.'\n  },\n  json: true\n});\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        1350
+      ],
+      "id": "225112a8-6e16-4520-8a1f-70d208540145",
+      "name": "Not Resolved Ack"
     }
   ],
   "connections": {
@@ -1629,6 +1720,20 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Resolve Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not Resolved Ack",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1846,6 +1951,28 @@
         [
           {
             "node": "Normalize SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Clear Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Ticket": {
+      "main": [
+        [
+          {
+            "node": "Resolved Ack",
             "type": "main",
             "index": 0
           }
