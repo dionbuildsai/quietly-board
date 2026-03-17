@@ -600,6 +600,45 @@
       ],
       "id": "f52ed448-98aa-4647-8191-fcb98de822b2",
       "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "path": "run-sql",
+        "httpMethod": "POST",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        800
+      ],
+      "id": "ddc97482-77a9-4c4f-b1b6-a6d776919d6b",
+      "name": "SQL Runner",
+      "webhookId": "8523bd1d-cacf-4e69-a686-866d4302e6ca"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.body.query }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        800
+      ],
+      "id": "505c76f2-d1b5-4b7f-9cd0-b4045096f707",
+      "name": "Run SQL",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
     }
   ],
   "connections": {
@@ -729,6 +768,17 @@
         [
           {
             "node": "Respond Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL Runner": {
+      "main": [
+        [
+          {
+            "node": "Run SQL",
             "type": "main",
             "index": 0
           }

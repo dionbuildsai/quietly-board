@@ -1,7 +1,7 @@
 # Julia Inc — Property Management Automation
 
 ## Project Overview
-Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows handle tenant messages across Telegram, Email, SMS, and WhatsApp — auto-classifying issues, creating tickets, dispatching vendors, and replying via AI.
+Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows (107 nodes) handle tenant messages across Telegram, Email, SMS, and WhatsApp — auto-classifying issues, creating tickets, suggesting repair videos, dispatching vendors, and replying via AI.
 
 **n8n Instance:** `https://n8n.srv1285597.hstgr.cloud`
 **NocoDB:** `https://nocodb.srv1285597.hstgr.cloud`
@@ -15,30 +15,28 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 
 ```
                     ┌──────────────────────────────────────────────┐
-                    │         [Intake] Channel Router (50 nodes)    │
+                    │         [Intake] Channel Router (54 nodes)    │
   Telegram ────────►│  Normalize → Lookup Tenant → Log Message     │
   Email (Gmail) ───►│  → Build AI Payload → Call AI Agent          │
   SMS (Twilio) ────►│                                              │
-  WhatsApp ────────►│  Also: Callback dispatch flow (vendor        │
-                    │  lookup, preview, confirm, email vendor)     │
+  WhatsApp ────────►│  Also: Callback dispatch + video resolve     │
                     └──────────────┬───────────────────────────────┘
                                    │
                     ┌──────────────▼───────────────────────────────┐
-                    │       [AI] Conversation Agent (23 nodes)      │
+                    │       [AI] Conversation Agent (25 nodes)      │
                     │  Claude Sonnet 4 → Classify → Create Ticket  │
-                    │  → Log Response → Notify Landlord (urgent)   │
+                    │  → Search Video → Append Video → Response    │
                     └──────────────┬───────────────────────────────┘
                                    │
                     ┌──────────────▼───────────────────────────────┐
-                    │    [Response] Channel Dispatcher (8 nodes)    │
-                    │  Routes reply back to: Telegram / Email /    │
-                    │  SMS / WhatsApp based on original channel    │
+                    │    [Response] Channel Dispatcher (9 nodes)    │
+                    │  Routes reply → Telegram/Email/SMS/WhatsApp  │
+                    │  + Video follow-up buttons (Telegram)        │
                     └──────────────────────────────────────────────┘
 
                     ┌──────────────────────────────────────────────┐
-                    │      [Ticket] Management (17 nodes)           │
-                    │  Webhook API for ticket creation, escalation, │
-                    │  lookup, video search (used by AI Agent tools)│
+                    │      [Ticket] Management (19 nodes)           │
+                    │  Webhook API for ticket ops + SQL runner      │
                     └──────────────────────────────────────────────┘
 ```
 
@@ -48,94 +46,85 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 
 | Workflow | n8n ID | Nodes | Purpose |
 |----------|--------|-------|---------|
-| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 50 | Receives messages from all 4 channels, normalizes, looks up tenant, logs message, hands off to AI Agent. Also handles Telegram callback dispatch flow (vendor lookup, preview, confirm, email vendor). |
-| **[AI] Conversation Agent** | `5WW7m5IiqvJoHWZ1` | 23 | Claude Sonnet 4 main agent + Haiku classifier. Classifies urgency/category, creates tickets, notifies landlord for urgent issues. |
-| **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 8 | Routes AI response back to Telegram / Email / SMS / WhatsApp. Truncates Telegram to 4090 chars. |
-| **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 17 | Webhook API endpoints for ticket creation, urgent escalation, ticket lookup, video search. |
-
-> `Ticket & Vendor Dispatch` (`3EfPAdyF5VRCpjLc`) is archived — vendor dispatch is handled in the Intake callback flow.
+| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 54 | All 4 channel triggers, normalize, tenant lookup, log message, AI handoff, callback dispatch, video resolve callbacks |
+| **[AI] Conversation Agent** | `5WW7m5IiqvJoHWZ1` | 25 | Claude Sonnet 4 agent + Haiku classifier, ticket creation, video search + append |
+| **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
+| **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
 
 ---
 
-## Channel Status (all verified working)
+## Channel Status (all verified)
 
-| Channel | Trigger | Tenant Lookup | Reply Method | Tested |
-|---------|---------|--------------|--------------|--------|
-| Telegram | Telegram Trigger | `telegram_id` match | Telegram Bot API | Yes |
-| Email | Gmail poll (every 1 min) | Case-insensitive email match | Gmail reply | Yes |
-| SMS | Webhook POST `/sms-intake` | Phone LIKE match | Twilio SMS | Yes |
-| WhatsApp | Meta webhook POST `/whatsapp-intake` | Phone RIGHT(10) match | WhatsApp Business API | Yes |
+| Channel | Trigger | Tenant Lookup | Reply | Tested |
+|---------|---------|--------------|-------|--------|
+| Telegram | Telegram Trigger | telegram_id | Bot API (HTTP) | Yes |
+| Email | Gmail poll (1 min) | Case-insensitive email, extracts from "Name \<email\>" | Gmail | Yes |
+| SMS | Webhook POST `/sms-intake` | Phone (strips + prefix from Twilio) | Twilio | Yes |
+| WhatsApp | Meta webhook POST `/whatsapp-intake` | Phone RIGHT(10) | WhatsApp Business API | Yes |
 
 ### Channel-Specific Notes
-- **Email:** Normalize Email extracts email from Gmail "Name \<email\>" format. Unknown senders are silently dropped (no reply to spam/newsletters).
-- **SMS:** Webhook accepts POST only.
-- **WhatsApp:** Meta sends delivery status webhooks (sent/delivered/read) — Parse WhatsApp filters these out. 3 empty ~13ms executions per message is cosmetic/expected.
-- **WhatsApp verification:** GET webhook at `/whatsapp-intake` returns `hub.challenge` for Meta callback verification.
+- **SMS:** Parse SMS code node handles Twilio's `application/x-www-form-urlencoded` format (From/Body/MessageSid)
+- **WhatsApp:** GET webhook at `/whatsapp-intake` handles Meta callback verification. Status updates (sent/delivered/read) filtered in Parse WhatsApp.
+- **Email:** Unknown senders silently dropped (no reply to spam/newsletters)
 
 ---
 
-## AI Models
+## AI Behavior
 
+### Models
 | Node | Model | Purpose |
 |------|-------|---------|
-| Julia AI | Claude Sonnet 4 | Main conversation agent |
-| Haiku Classifier | Claude Haiku 4.5 | Action classification, urgency detection |
+| Julia AI | Claude Sonnet 4 | Main conversation (3 exchanges per issue) |
+| Haiku Classifier | Claude Haiku 4.5 | Action classification, urgency |
 | Haiku Dispatch | Claude Haiku 4.5 | Vendor message generation |
-| Haiku Confirm | Claude Haiku 4.5 | Confirmation message generation |
+| Haiku Confirm | Claude Haiku 4.5 | Confirmation message |
 
----
+### Key Prompt Rules
+- **Language:** Default English, match tenant's language (detects from message, not DB)
+- **No signature:** Don't sign messages with Julia or company name (tenant messages only)
+- **Always ask first:** Never assume severity. "Smoke" → ask if cooking/cigarette/fire. Only suggest leaving unit after tenant confirms real danger.
+- **Never mention 911** or emergency services
+- **3 exchanges max** per issue, then wrap up
 
-## Ticket Classification
+### Ticket Classification
+- **ALWAYS creates ticket** on any issue/request/question (even on first message while asking questions)
+- Only `false` for greetings, thank-yous, or existing ticket for same category
+- **Urgency:** `urgent` (only confirmed emergencies), `not_urgent` (default), `info_request` (non-maintenance)
+- **Categories:** plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance, lease_admin, parking, general_inquiry
 
-ALL tenant messages create tickets except greetings/thank yous.
-
-| Urgency | Examples | Landlord Notified? |
-|---------|----------|-------------------|
-| `urgent` | Water leak, fire, gas smell, no heat, security breach | Yes — Telegram with inline buttons |
-| `not_urgent` | Appliance, pest, slow drain, cosmetic repairs | No |
-| `info_request` | Lease questions, parking, payment inquiries | No |
-
-**Maintenance categories:** plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance
-**Non-maintenance categories:** lease_admin, parking, general_inquiry
-
-Landlord views all tickets in NocoDB `maintenance_requests` table, sortable by urgency.
-
----
-
-## Data Flow Details
-
-### Message Logging
-- **Merge Tenant + Message** Code node (try/catch across all 4 Normalize nodes) combines normalized message data + tenant data before INSERT
-- Required because `$json` after Lookup Tenant is the tenant record, not the message
-- The merged `$json` has `norm_message`, `norm_channel`, `norm_chat_id`, `norm_ext_id` fields
-
-### Dedup
-- `external_message_id` column on messages table with partial unique index (`WHERE != ''`)
-- Log Inbound Message uses `INSERT ... ON CONFLICT (external_message_id) DO NOTHING`
-- IDs per channel: email=Gmail ID, telegram=`tg_{msg_id}_{chat_id}`, sms=`sms_{timestamp}_{phone}`, whatsapp=`wa_{message_id}`
+### Video Suggestions
+- `repair_videos` table: 8 YouTube videos with keywords array
+- Append Video code node scores all videos against full conversation history (tenant messages + AI responses)
+- Matches individual words from each keyword against the conversation
+- On Telegram: sends follow-up "Did this video help?" with Yes ✅ / No ❌ buttons
+- **Yes** → updates ticket status to `resolved` (looks up latest ticket by phone/telegram_id)
+- **No** → sends "someone will follow up" message
 
 ### Dispatch Flow (Telegram callbacks)
-1. Landlord gets urgent ticket notification with inline buttons (Auto Dispatch / Show Contractors)
-2. Click → Intake callback branch → Parse Callback → Route Action
-3. `dispatch` → Lookup Vendor → AI Vendor Msg (Haiku) → Show Preview → Send Preview with buttons
-4. `confirm_dispatch` → Confirm Vendor → AI Confirm Msg → Email Vendor → Dispatch Ack
+1. Urgent ticket → landlord notification with Auto Dispatch / Show Contractors buttons
+2. Auto Dispatch → Lookup Vendor → AI Vendor Msg (Haiku) → Show Preview → Confirm buttons
+3. Confirm → Email vendor + Dispatch Ack
+4. Urgency escalation UPDATE also sets category + keywords
 
 ---
 
-## PostgreSQL Tables
+## Database Tables
 
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| **tenants** | Tenant contacts | name, phone, email, telegram_id, property_id (FK), unit_number, language_pref |
-| **maintenance_requests** | Tickets | ticket_id, tenant_name, phone, property, unit, channel, category, urgency, status, summary, tenant_message |
-| **messages** | All messages | chat_id, ticket_id, sender, message_text, channel, external_message_id |
-| **vendors** | Vendor contacts | vendor_name, email, phone, category |
-| **properties** | Buildings | name, address, manager_name, manager_id, twilio_number |
-| **pending_media** | Photo uploads | ticket_id, chat_id, file_id, file_url, status |
-| **call_logs** | Voice calls | tenant_id, request_id (FK), duration_sec, full_transcript |
+| Table | Key Columns |
+|-------|-------------|
+| **tenants** | name, phone, email, telegram_id, property_id (FK), unit_number, language_pref |
+| **maintenance_requests** | ticket_id, tenant_name, phone, property, unit, channel, category, urgency, status, summary |
+| **messages** | chat_id, ticket_id, sender, message_text, channel, external_message_id |
+| **vendors** | vendor_name, email, phone, category |
+| **repair_videos** | title, video_url, category, keywords (array), description |
+| **properties** | name, address, manager_name, manager_id, twilio_number |
+| **pending_media** | ticket_id, chat_id, file_id, file_url, status |
+| **call_logs** | tenant_id, request_id (FK), duration_sec, full_transcript |
 
-### Ticket Statuses
-`open` → `wait_for_approval` → `vendor_contacted` → `in_progress` → `closed`
+### Dedup
+- `external_message_id` with partial unique index
+- `INSERT ... ON CONFLICT DO NOTHING`
+- IDs: email=Gmail ID, telegram=`tg_{msg_id}_{chat_id}`, sms=`sms_{sid}_{phone}`, whatsapp=`wa_{message_id}`
 
 ---
 
@@ -150,79 +139,53 @@ Landlord views all tickets in NocoDB `maintenance_requests` table, sortable by u
 | Twilio | Twilio account | `ijmhKNa9AFRv7Rjr` |
 | Telegram (tenant bot) | property_management | `5uwoGp7iX1GQkMcu` |
 | WhatsApp API | WhatsApp account | `we3yhVhUwWRnkTGz` |
-| WhatsApp Trigger | WhatsApp OAuth account | `o4wvMotZj7fX2wct` |
 
 ---
 
 ## Key Business Details
-- **Company:** Julia Inc
-- **Location:** Quebec, Canada (Civil Code of Quebec applies)
+- **Company:** Julia Inc (Quebec, Canada)
 - **Emergency Line:** 438-900-9998
-- **Callback Number:** 514-831-9058
 - **Owner Telegram Chat ID:** 6216258938
 - **Twilio Number:** +14389009998
 - **WhatsApp Phone Number ID:** 1002910989571888
-- **WhatsApp Business Account ID:** 168784515265314
 - **Meta App ID:** 872554515351219
 
 ---
 
-## Production Hardening (completed 2026-03-15)
+## Production Hardening
 - All SQL text fields escaped with `.replace(/'/g, "''")`
 - All Telegram send nodes use `parse_mode: HTML`
 - Telegram response truncated to 4090 chars
 - Vendor queries capped with LIMIT 10
-- Email sender extracted from "Name \<email\>" format
-- Email tenant lookup is case-insensitive
 - Get Open Tickets uses DISTINCT
-- Unknown email senders silently dropped (no spam replies)
-- WhatsApp status webhooks filtered in Parse WhatsApp
-- Full audit: 0 critical, 0 high, 0 warnings
+- Merge Tenant + Message code node with try/catch for channel-agnostic data flow
 
 ---
 
-## Known Risks (accepted)
-- Telegram bot token hardcoded in 4 HTTP Request nodes (Send Telegram, Send List, Dispatch Ack, Notify Non-Urgent)
-- Ticket Management webhooks have no auth (called internally by AI Agent)
-- SMS Webhook has no auth (called by Twilio)
-- If Claude API goes down, tenant gets no reply (no fallback handler)
-- Race condition: two simultaneous messages could create duplicate tickets (low probability)
-- WhatsApp status updates create 3 empty ~13ms executions per message (filtered, cosmetic only)
-
----
+## Known Risks
+- Telegram bot token hardcoded in HTTP Request nodes
+- Ticket Management + SMS webhooks have no auth
+- If Claude API goes down, tenant gets no reply
+- WhatsApp status updates create ~3 empty 13ms executions per message
 
 ## Before Client Deployment
-
-| Priority | Item | Status |
-|----------|------|--------|
-| Required | Switch WhatsApp to **Live mode** in Meta | Pending |
-| Required | Create WhatsApp **permanent token** (System User) | Pending |
-| Required | Add **production WhatsApp number** (currently test +1 555 183 0681) | Pending |
-| Required | Verify Gmail credential is the **client's inbox** (currently `dionfwang`) | Pending |
-| Required | Add **real tenants** to database (currently test data) | Pending |
-| Optional | Add `.gitignore` (repo root is `/Users/dion`) | Pending |
-| Optional | Move Telegram bot token to credential node | Pending |
-| Optional | Add Claude API fallback message | Pending |
+- [ ] Switch WhatsApp to Live mode in Meta
+- [ ] Create WhatsApp permanent token (System User)
+- [ ] Add production WhatsApp number
+- [ ] Set Gmail credential to client's inbox
+- [ ] Add real tenants to database
+- [ ] Verify SMS delivery (check Twilio logs)
 
 ---
 
 ## Server Access
 - **Host:** srv1285597.hstgr.cloud (IP: 76.13.96.3)
-- **SSH:** root@76.13.96.3
 - **PostgreSQL:** `docker exec -i $(docker ps --filter 'name=postgres' -q) psql -U quietly -d quietly_db`
-- **DB Credentials:** host=quietly-postgres, port=5432, db=quietly_db, user=quietly
-
-## SQL Migration Scripts (in `sql/`)
-1. `001_create_vendors.sql` — Create vendors table
-2. `002_create_messages.sql` — Create messages table
-3. `003_create_pending_media.sql` — Create pending_media table
-4. `004_alter_tenants.sql` — Add telegram_id to tenants
-5. `005_alter_maintenance_requests.sql` — Add ticket columns
-6. `006_run_all.sql` — Run all scripts in order
-7. `007_alter_messages.sql` — Add message_id and telegram_id to messages
-8. `008_add_manager_id.sql` — Add manager_id to properties
 
 ## Technical Notes
-- Webhook nodes created via API need `webhookId` field (UUID) to register in production mode
-- Telegram webhook must be re-registered via n8n UI toggle when workflow is deactivated/reactivated via API
-- Log Inbound Message uses "Merge Tenant + Message" Code node with try/catch because `$('Normalize X')?.item?.json` throws when node hasn't executed
+- Webhook nodes created via API need `webhookId` field (UUID) for production registration
+- Telegram webhook must be re-registered via n8n UI toggle after deactivate/reactivate
+- Format Context passes `language_pref: detect from message` (not DB field)
+- Classify Action runs AFTER Search Video in the flow — ticket_id not available when video is appended
+- Video resolve callback uses chat_id to look up latest ticket (not ticket_id)
+- Manual trigger → Clear Messages → Clear Tickets (for dev/testing)
