@@ -172,7 +172,9 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 - **Font:** DM Sans
 - **Colors:** Primary `#573CFA`, Neutral `#1C1A27`, Danger `#E8083E`, Success `#02864A`, Secondary `#F88D1A`
 - **Deployed:** Docker container `quietly-dash` on `n8n_default` network, Traefik reverse proxy
-- **Pages:** Dashboard (stat cards, time saved banner, recent tickets with toggle filters), Tickets (filterable list + detail with chat-style message thread), Tenants (CRUD), Vendors (CRUD), Properties (CRUD)
+- **Pages:** Dashboard (stat cards, animated time-saved banner, category pills, recent tickets with sort headers), Inbox (unread ticket notifications with animated dismiss), Tickets (cascading property→tenant filters, sort headers, clickable rows), Ticket Detail (chat-style message thread filtered by channel), Tenants (CRUD), Vendors (CRUD, table layout), Properties (CRUD)
+- **Notifications:** `viewed_at` column on `maintenance_requests` tracks read state. Sidebar badge polls `/api/unread` every 15s. Resolved/closed tickets auto-excluded from inbox.
+- **Auto-refresh:** Dashboard refreshes every 30s via client-side router.refresh()
 - **AI Chat:** Bottom-left floating widget, Claude Haiku 4.5 answers natural language questions about the database (read-only SELECT queries)
 - **Mobile:** Hamburger sidebar, scrollable tables, full-width dialogs
 - **DB Auth:** `pg_hba.conf` has `trust` for Docker network `172.18.0.0/16` — no password needed for internal containers
