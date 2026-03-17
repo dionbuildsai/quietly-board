@@ -4,9 +4,12 @@
 Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows (107 nodes) handle tenant messages across Telegram, Email, SMS, and WhatsApp — auto-classifying issues, creating tickets, suggesting repair videos, dispatching vendors, and replying via AI.
 
 **n8n Instance:** `https://n8n.srv1285597.hstgr.cloud`
+**Dashboard:** `https://dash.srv1285597.hstgr.cloud` — Next.js dashboard (Docker)
 **NocoDB:** `https://nocodb.srv1285597.hstgr.cloud`
-**GitHub:** `dionbuildsai/quietly-board` (branch: main)
-**Project Dir:** `~/Desktop/Quietly/Client Automations/Julia/Property_Management/`
+**GitHub (workflows):** `dionbuildsai/quietly-board` (branch: main)
+**GitHub (dashboard):** `dionbuildsai/quietly-dash` (branch: main)
+**Project Dir (workflows):** `~/Desktop/Quietly/Client Automations/Julia/Property_Management/`
+**Project Dir (dashboard):** `~/Desktop/Quietly/quietly-dash/`
 **Database:** PostgreSQL ("Quietly DB" — credential ID: `JlETYTnhAwFrsmL9`)
 
 ---
@@ -159,6 +162,20 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 - Vendor queries capped with LIMIT 10
 - Get Open Tickets uses DISTINCT
 - Merge Tenant + Message code node with try/catch for channel-agnostic data flow
+- Message linking filtered by channel (Link Messages to Ticket + Link Ongoing Messages include `AND channel = ...`)
+- Append Video uses classified category to prevent irrelevant video suggestions (noVideoCategories: parking, lease_admin, general_inquiry, pest_control)
+
+---
+
+## Dashboard (`quietly-dash`)
+- **Tech:** Next.js 15 (App Router), Tailwind CSS, shadcn/ui, pg (node-postgres)
+- **Font:** DM Sans
+- **Colors:** Primary `#573CFA`, Neutral `#1C1A27`, Danger `#E8083E`, Success `#02864A`, Secondary `#F88D1A`
+- **Deployed:** Docker container `quietly-dash` on `n8n_default` network, Traefik reverse proxy
+- **Pages:** Dashboard (stat cards, time saved banner, recent tickets with toggle filters), Tickets (filterable list + detail with chat-style message thread), Tenants (CRUD), Vendors (CRUD), Properties (CRUD)
+- **AI Chat:** Bottom-left floating widget, Claude Haiku 4.5 answers natural language questions about the database (read-only SELECT queries)
+- **Mobile:** Hamburger sidebar, scrollable tables, full-width dialogs
+- **DB Auth:** `pg_hba.conf` has `trust` for Docker network `172.18.0.0/16` — no password needed for internal containers
 
 ---
 
@@ -167,6 +184,7 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 - Ticket Management + SMS webhooks have no auth
 - If Claude API goes down, tenant gets no reply
 - WhatsApp status updates create ~3 empty 13ms executions per message
+- Dashboard has no login auth (relies on URL obscurity; Traefik basicauth planned)
 
 ## Before Client Deployment
 - [ ] Switch WhatsApp to Live mode in Meta
@@ -188,4 +206,6 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 - Format Context passes `language_pref: detect from message` (not DB field)
 - Classify Action runs AFTER Search Video in the flow — ticket_id not available when video is appended
 - Video resolve callback uses chat_id to look up latest ticket (not ticket_id)
+- Message linking includes `AND channel = ...` to prevent cross-channel ticket pollution
+- Dashboard message query filters by channel; falls back to chat_id only if ticket_id returns 0 messages
 - Manual trigger → Clear Messages → Clear Tickets (for dev/testing)
