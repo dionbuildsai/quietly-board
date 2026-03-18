@@ -333,6 +333,18 @@
               "name": "external_message_id",
               "value": "={{ $json.id }}",
               "type": "string"
+            },
+            {
+              "id": "3588d2c8-ce4d-408b-8108-553f67f08a2d",
+              "name": "media_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "b79fa4fc-979a-464e-bc29-cfa8ce2c1a9d",
+              "name": "media_url",
+              "value": "",
+              "type": "string"
             }
           ]
         },
@@ -384,19 +396,31 @@
             {
               "id": "707e5a63-d651-48bc-929f-8176198c054b",
               "name": "has_media",
-              "value": "={{ !!($('Telegram Trigger').item.json.message.photo || $('Telegram Trigger').item.json.message.video) }}",
+              "value": "={{ !!($('Telegram Trigger').item.json.message.photo || $('Telegram Trigger').item.json.message.video || $('Telegram Trigger').item.json.message.voice || $('Telegram Trigger').item.json.message.document) }}",
               "type": "boolean"
             },
             {
               "id": "08cd3ee8-9f38-4674-a80b-fd4d37e26277",
               "name": "media_type",
-              "value": "={{ $('Telegram Trigger').item.json.message.photo ? 'image' : ($('Telegram Trigger').item.json.message.video ? 'video' : '') }}",
+              "value": "={{ $('Telegram Trigger').item.json.message.photo ? 'image' : ($('Telegram Trigger').item.json.message.video ? 'video' : ($('Telegram Trigger').item.json.message.voice ? 'voice' : ($('Telegram Trigger').item.json.message.document ? 'document' : ''))) }}",
               "type": "string"
             },
             {
               "id": "e3e62c5f-d21c-4c19-a712-e5ea8f067c95",
               "name": "external_message_id",
               "value": "=tg_{{ $('Telegram Trigger').item.json.message.message_id }}_{{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "11f345fd-a168-4005-ae82-18fc2a279c25",
+              "name": "media_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.photo ? $('Telegram Trigger').item.json.message.photo.slice(-1)[0].file_id : ($('Telegram Trigger').item.json.message.video ? $('Telegram Trigger').item.json.message.video.file_id : ($('Telegram Trigger').item.json.message.voice ? $('Telegram Trigger').item.json.message.voice.file_id : ($('Telegram Trigger').item.json.message.document ? $('Telegram Trigger').item.json.message.document.file_id : ''))) }}",
+              "type": "string"
+            },
+            {
+              "id": "c3a49da6-7aa9-4c0d-8ce4-351a2d68e303",
+              "name": "media_url",
+              "value": "",
               "type": "string"
             }
           ]
@@ -449,19 +473,31 @@
             {
               "id": "2fe10326-9dc6-44a7-aeb0-a06be5f5fc92",
               "name": "has_media",
-              "value": false,
+              "value": "={{ $json.num_media > 0 }}",
               "type": "boolean"
             },
             {
               "id": "d56d2f65-74bd-4943-a448-b9ae1029bbca",
               "name": "media_type",
-              "value": "",
+              "value": "={{ $json.num_media > 0 ? 'image' : '' }}",
               "type": "string"
             },
             {
               "id": "ae0e9a28-30b8-4cec-afa7-b59e4e411c7b",
               "name": "external_message_id",
               "value": "=sms_{{ $json.message_sid || $now.toMillis() }}_{{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "f6edfc1d-e109-4890-a9fd-4149e45e5dce",
+              "name": "media_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "3ffd4693-8d88-4a34-a13e-af3d5b98f191",
+              "name": "media_url",
+              "value": "={{ $json.media_url || '' }}",
               "type": "string"
             }
           ]
@@ -1256,7 +1292,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Merge normalized message data with tenant data\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\nconst tenant = $('Lookup Tenant').item.json;\n\nreturn [{\n  json: {\n    ...tenant,\n    norm_chat_id: normalized.chat_id || tenant.telegram_id || '',\n    norm_message: normalized.message || '',\n    norm_channel: normalized.channel || '',\n    norm_ext_id: normalized.external_message_id || '',\n    norm_subject: normalized.subject || '',\n    norm_sender_identifier: normalized.sender_identifier || '',\n    norm_has_media: normalized.has_media || false,\n    norm_media_type: normalized.media_type || '',\n  }\n}];"
+        "jsCode": "// Merge normalized message data with tenant data\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\nconst tenant = $('Lookup Tenant').item.json;\n\nreturn [{\n  json: {\n    ...tenant,\n    norm_chat_id: normalized.chat_id || tenant.telegram_id || '',\n    norm_message: normalized.message || '',\n    norm_channel: normalized.channel || '',\n    norm_ext_id: normalized.external_message_id || '',\n    norm_subject: normalized.subject || '',\n    norm_sender_identifier: normalized.sender_identifier || '',\n    norm_has_media: normalized.has_media || false,\n    norm_media_type: normalized.media_type || '',\n    norm_media_id: normalized.media_id || '',\n    norm_media_url: normalized.media_url || '',\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1304,19 +1340,31 @@
             {
               "id": "wa-media",
               "name": "has_media",
-              "value": "={{ $json.has_image || $json.has_video || false }}",
+              "value": "={{ $json.has_image || $json.has_video || $json.has_audio || $json.has_document || false }}",
               "type": "boolean"
             },
             {
               "id": "wa-mtype",
               "name": "media_type",
-              "value": "={{ $json.has_image ? 'image' : ($json.has_video ? 'video' : '') }}",
+              "value": "={{ $json.has_image ? 'image' : ($json.has_video ? 'video' : ($json.has_audio ? 'voice' : ($json.has_document ? 'document' : ''))) }}",
               "type": "string"
             },
             {
               "id": "wa-extid",
               "name": "external_message_id",
               "value": "=wa_{{ $json.message_id || $now.toMillis() }}",
+              "type": "string"
+            },
+            {
+              "id": "bc0c7884-6f37-4221-9ceb-d8daa9e4f08d",
+              "name": "media_id",
+              "value": "={{ $json.image_id || $json.video_id || $json.audio_id || $json.document_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ecf3221a-df62-46ad-86dc-443fe7a9c4db",
+              "name": "media_url",
+              "value": "",
               "type": "string"
             }
           ]
@@ -1334,7 +1382,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract message from Meta WhatsApp webhook payload\nconst body = $input.first().json.body || $input.first().json;\n\n// Skip status updates (delivery receipts) - they don't have messages\nif (body.entry?.[0]?.changes?.[0]?.value?.statuses) {\n  return [];\n}\n\nconst entry = body.entry?.[0];\nconst change = entry?.changes?.[0];\nconst value = change?.value;\nconst message = value?.messages?.[0];\n\nif (!message || !message.from) {\n  return [];\n}\n\nreturn [{\n  json: {\n    from: message.from,\n    message_id: message.id || '',\n    text: message.text?.body || message.caption || '',\n    type: message.type || 'text',\n    has_image: !!message.image,\n    has_video: !!message.video,\n    contact_name: value?.contacts?.[0]?.profile?.name || '',\n  }\n}];"
+        "jsCode": "// Extract message from Meta WhatsApp webhook payload\nconst body = $input.first().json.body || $input.first().json;\nif (body.entry?.[0]?.changes?.[0]?.value?.statuses) { return []; }\nconst value = body.entry?.[0]?.changes?.[0]?.value;\nconst message = value?.messages?.[0];\nif (!message || !message.from) { return []; }\nreturn [{\n  json: {\n    from: message.from,\n    message_id: message.id || '',\n    text: message.text?.body || message.image?.caption || message.video?.caption || '',\n    type: message.type || 'text',\n    has_image: !!message.image,\n    has_video: !!message.video,\n    has_audio: !!message.audio,\n    has_document: !!message.document,\n    image_id: message.image?.id || '',\n    video_id: message.video?.id || '',\n    audio_id: message.audio?.id || '',\n    document_id: message.document?.id || '',\n    contact_name: value?.contacts?.[0]?.profile?.name || '',\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1397,7 +1445,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parse Twilio form-encoded body\nconst raw = $input.first().json;\n\n// Twilio sends x-www-form-urlencoded: From=+15148319058&Body=hello&To=+14389009998\n// n8n with rawBody puts it in body as a string, or it may be in body as parsed object\nlet from = '';\nlet body = '';\nlet messageSid = '';\n\n// Try parsed body first (if n8n auto-parses)\nif (raw.body && typeof raw.body === 'object' && raw.body.From) {\n  from = raw.body.From;\n  body = raw.body.Body || '';\n  messageSid = raw.body.MessageSid || '';\n} else if (raw.body && typeof raw.body === 'string') {\n  // Parse URL-encoded string manually\n  const params = new URLSearchParams(raw.body);\n  from = params.get('From') || '';\n  body = params.get('Body') || '';\n  messageSid = params.get('MessageSid') || '';\n} else {\n  // Try top-level (some webhook configs put form data at root)\n  from = raw.From || raw.from || '';\n  body = raw.Body || raw.body?.Body || '';\n  messageSid = raw.MessageSid || '';\n}\n\nif (!from && !body) {\n  // No valid SMS data\n  return [];\n}\n\nreturn [{\n  json: {\n    phone: from.replace(/^\\+/, ''),  // Strip leading +\n    message: body,\n    message_sid: messageSid,\n    channel: 'sms'\n  }\n}];"
+        "jsCode": "const raw = $input.first().json;\nlet from = '', body = '', messageSid = '', mediaUrl = '', numMedia = 0;\nif (raw.body && typeof raw.body === 'object' && raw.body.From) {\n  from = raw.body.From; body = raw.body.Body || ''; messageSid = raw.body.MessageSid || '';\n  mediaUrl = raw.body.MediaUrl0 || ''; numMedia = parseInt(raw.body.NumMedia || '0');\n} else if (raw.body && typeof raw.body === 'string') {\n  const params = new URLSearchParams(raw.body);\n  from = params.get('From') || ''; body = params.get('Body') || ''; messageSid = params.get('MessageSid') || '';\n  mediaUrl = params.get('MediaUrl0') || ''; numMedia = parseInt(params.get('NumMedia') || '0');\n} else {\n  from = raw.From || raw.from || ''; body = raw.Body || '';\n  messageSid = raw.MessageSid || ''; mediaUrl = raw.MediaUrl0 || ''; numMedia = parseInt(raw.NumMedia || '0');\n}\nif (!from && !body && numMedia === 0) { return []; }\nreturn [{ json: { phone: from.replace(/^\\+/, ''), message: body, message_sid: messageSid, channel: 'sms', media_url: mediaUrl, num_media: numMedia } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1454,6 +1502,73 @@
       ],
       "id": "225112a8-6e16-4520-8a1f-70d208540145",
       "name": "Not Resolved Ack"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1a4e69d0-09b5-4399-8e0c-e8e56b213c75",
+              "leftValue": "={{ $json.norm_has_media }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        920,
+        700
+      ],
+      "id": "36b41b40-3576-4805-b82b-311f0400a621",
+      "name": "Has Media?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare payload for Media Upload Handler\nconst input = $input.first().json;\nreturn [{\n  json: {\n    message_db_id: $('Log Inbound Message').item.json.id || '',\n    media_type: input.norm_media_type || '',\n    media_id: input.norm_media_id || '',\n    media_url: input.norm_media_url || '',\n    channel: input.norm_channel || '',\n    tenant_name: input.name || input.tenant_name || '',\n    property: input.property || '',\n    chat_id: input.norm_chat_id || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        700
+      ],
+      "id": "716ca24b-5357-4aad-8045-d8d652e4350c",
+      "name": "Prepare Media Payload"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "media-upload-handler-001",
+          "mode": "id"
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1240,
+        700
+      ],
+      "id": "42958da4-254b-4987-a456-cee053a858d0",
+      "name": "Call Media Upload"
     }
   ],
   "connections": {
@@ -1626,6 +1741,11 @@
         [
           {
             "node": "Build AI Payload",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Media?",
             "type": "main",
             "index": 0
           }
@@ -1978,11 +2098,35 @@
           }
         ]
       ]
+    },
+    "Has Media?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Media Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Prepare Media Payload": {
+      "main": [
+        [
+          {
+            "node": "Call Media Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
-  }
+  },
+  "id": "6uqrzVIcH8GFznDf"
 }

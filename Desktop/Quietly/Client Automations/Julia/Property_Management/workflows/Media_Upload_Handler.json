@@ -1,0 +1,739 @@
+{
+  "name": "[Media] Upload Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        400
+      ],
+      "id": "a1b2c3d4-1111-4aaa-b111-111111111111",
+      "name": "When Called"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d1a1a1a1-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d2b2b2b2-bbbb-4bbb-bbbb-bbbbbbbbbbbb",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d3c3c3c3-cccc-4ccc-cccc-cccccccccccc",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d4d4d4d4-dddd-4ddd-dddd-dddddddddddd",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "sms",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sms"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -560,
+        400
+      ],
+      "id": "a1b2c3d4-2222-4bbb-b222-222222222222",
+      "name": "Route by Channel"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/getFile?file_id={{ $json.media_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        160
+      ],
+      "id": "a1b2c3d4-3333-4ccc-b333-333333333333",
+      "name": "TG Get File"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/file/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        160
+      ],
+      "id": "a1b2c3d4-4444-4ddd-b444-444444444444",
+      "name": "TG Download"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.media_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        400
+      ],
+      "id": "a1b2c3d4-5555-4eee-b555-555555555555",
+      "name": "WA Get Media URL",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "we3yhVhUwWRnkTGz",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        400
+      ],
+      "id": "a1b2c3d4-6666-4fff-b666-666666666666",
+      "name": "WA Download",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "we3yhVhUwWRnkTGz",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Email attachments are complex \u2014 v2\nreturn [{ json: { skip: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        640
+      ],
+      "id": "a1b2c3d4-7777-4aab-b777-777777777777",
+      "name": "Email Get Attachment"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.media_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        880
+      ],
+      "id": "a1b2c3d4-8888-4bbc-b888-888888888888",
+      "name": "SMS Download"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "fileFolder",
+        "queryString": "={{ $('When Called').item.json.property }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m",
+            "mode": "id"
+          },
+          "includeTrashed": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        320,
+        400
+      ],
+      "id": "a1b2c3d4-9999-4ccd-b999-999999999999",
+      "name": "Check Property Folder",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e1f1f1f1-1111-4111-1111-f1f1f1f1f1f1",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        560,
+        400
+      ],
+      "id": "b1b2c3d4-aaaa-4dde-baaa-aaaaaaaaaaaa",
+      "name": "Property Exists?"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "folder",
+        "name": "={{ $('When Called').item.json.property || 'Unknown Property' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        800,
+        560
+      ],
+      "id": "b1b2c3d4-bbbb-4eef-bbbb-bbbbbbbbbbbb",
+      "name": "Create Property Folder",
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "fileFolder",
+        "queryString": "={{ $('When Called').item.json.tenant_name }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        400
+      ],
+      "id": "b1b2c3d4-cccc-4ffa-cccc-cccccccccccc",
+      "name": "Check Tenant Folder",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e2f2f2f2-2222-4222-2222-f2f2f2f2f2f2",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1280,
+        400
+      ],
+      "id": "b1b2c3d4-dddd-4aab-dddd-dddddddddddd",
+      "name": "Tenant Exists?"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "folder",
+        "name": "={{ $('When Called').item.json.tenant_name || 'Unknown Tenant' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1520,
+        560
+      ],
+      "id": "b1b2c3d4-eeee-4bbc-eeee-eeeeeeeeeeee",
+      "name": "Create Tenant Folder",
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "inputDataFieldName": "data",
+        "name": "={{ $('When Called').item.json.tenant_name + ' - ' + $('When Called').item.json.channel.toUpperCase() + ' - ' + $now.format('MMM-dd-yyyy HH-mm') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1760,
+        400
+      ],
+      "id": "b1b2c3d4-ffff-4ccd-ffff-ffffffffffff",
+      "name": "Upload File",
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.id }}/permissions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"type\":\"anyone\",\"role\":\"reader\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        400
+      ],
+      "id": "c1b2c3d4-1111-4dde-c111-111111111111",
+      "name": "Share File",
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE messages SET media = '{\"type\":\"{{ $('When Called').item.json.media_type }}\",\"url\":\"https://drive.google.com/file/d/{{ $('Upload File').item.json.id }}/view\",\"filename\":\"{{ $('Upload File').item.json.name }}\"}' WHERE id = '{{ $('When Called').item.json.message_db_id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2240,
+        400
+      ],
+      "id": "c1b2c3d4-2222-4eef-c222-222222222222",
+      "name": "Update Message",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Called": {
+      "main": [
+        [
+          {
+            "node": "Route by Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Channel": {
+      "main": [
+        [
+          {
+            "node": "TG Get File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WA Get Media URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Get Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG Get File": {
+      "main": [
+        [
+          {
+            "node": "TG Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG Download": {
+      "main": [
+        [
+          {
+            "node": "Check Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WA Get Media URL": {
+      "main": [
+        [
+          {
+            "node": "WA Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WA Download": {
+      "main": [
+        [
+          {
+            "node": "Check Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS Download": {
+      "main": [
+        [
+          {
+            "node": "Check Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Property Folder": {
+      "main": [
+        [
+          {
+            "node": "Property Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Property Exists?": {
+      "main": [
+        [
+          {
+            "node": "Check Tenant Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Property Folder": {
+      "main": [
+        [
+          {
+            "node": "Check Tenant Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Tenant Folder": {
+      "main": [
+        [
+          {
+            "node": "Tenant Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tenant Exists?": {
+      "main": [
+        [
+          {
+            "node": "Upload File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Tenant Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tenant Folder": {
+      "main": [
+        [
+          {
+            "node": "Upload File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload File": {
+      "main": [
+        [
+          {
+            "node": "Share File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share File": {
+      "main": [
+        [
+          {
+            "node": "Update Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": {
+    "instanceId": "a1b2c3d4e5f6g7h8i9j0"
+  },
+  "id": "media-upload-handler-001"
+}
