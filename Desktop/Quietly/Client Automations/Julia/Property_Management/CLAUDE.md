@@ -55,7 +55,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
 | **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
-| **Voice Agent** | `JO26ruzPNp1MQThL` | 19 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
+| **Voice Agent** | `JO26ruzPNp1MQThL` | 21 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
 
 ---
 
@@ -102,14 +102,18 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - `$helpers.httpRequest` is NOT available in this n8n Code node context — always use Postgres nodes for DB access
 
 ### log-maintenance chain (n8n)
-`Log Maintenance` → `Edit Fields` → `Lookup Tenant Info` → `Merge for Insert` → `Insert rows in a table` → `Send a text message` → `Respond to Webhook`
+`Log Maintenance` → `Edit Fields` → `Lookup Tenant Info` → `Merge for Insert` → `Insert rows in a table` → `Urgent?` → (urgent) `Send Urgent Notification` → `Respond to Webhook`
+                                                                                                                                                                        → (not urgent) `Send a text message` → `Respond to Webhook`
 
-- `Lookup Tenant Info` (Postgres): fetches `tenant_email` + `property_name` (full address: `TRIM(COALESCE(p.name,'') || ' ' || COALESCE(p.address,''))`) by `$json.phone`. Uses `alwaysOutputData: true`.
+- `Lookup Tenant Info` (Postgres): fetches `tenant_email` + `property_name` by `$json.phone`. Uses **MAX() aggregate** (`COALESCE(MAX(...))`) so query always returns exactly 1 row even with no match — prevents chain stoppage. `alwaysOutputData: true`.
+  - SQL: `SELECT COALESCE(MAX(t.email), '') AS tenant_email, COALESCE(MAX(TRIM(COALESCE(p.name,'') || ' ' || COALESCE(p.address,''))), '') AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ $json.phone }}';`
 - `Merge for Insert` (Code): combines Edit Fields + Lookup, populates ALL columns: `tenant_phone`, `unit_number`, `description`, `property`, `tenant_email` (aliases so both column name variants are filled).
 - **Ticket ID**: `TK-` + last 8 chars of `$now.toMillis().toString(36).toUpperCase()` — alphanumeric, not timestamp.
-- **Telegram**: `NEW TICKET TK-XXXX` / `URGENT TICKET TK-XXXX`. Fields: Category, Tenant, Unit, Property (full address), Summary. No phone/email/urgency/keywords. `appendAttribution: false`.
+- **Urgent? (IF node)**: checks `$json.urgency === "urgent"` after Insert rows — routes to either urgent or non-urgent Telegram.
+- **Send Urgent Notification** (Telegram): `URGENT TICKET TK-XXXX` with inline keyboard — **Auto Dispatch** (`dispatch||TK-XXXX||category`) and **Show Contractors** (`manual||TK-XXXX||category`) buttons. Same callback_data format as text channel dispatch flow.
+- **Send a text message** (non-urgent Telegram): `NEW TICKET TK-XXXX`. Fields: Category, Tenant, Unit, Property (full address), Summary. No phone/email/urgency/keywords. `appendAttribution: false`.
 - **PM_log_maintenance `description`**: Narrative 2-sentence format — "Tenant [name] is [X]. AI is [clarifying Y]." (ElevenLabs tool field description updated)
-- **Note:** The old IF node (`urgency == "urgent"`) was removed — LLM always assigns `not_urgent` by default
+- **PM_log_maintenance `tenant_phone`**: `dynamic_variable: "system__caller_id"`, `description: ""` — auto-filled from Twilio caller ID, always present. Added to `required` array. (description must be empty when dynamic_variable is set — mutually exclusive)
 
 ### ElevenLabs Agent — Auto Hang-up
 - `end_call` built-in tool enabled
