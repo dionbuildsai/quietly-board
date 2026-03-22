@@ -562,49 +562,27 @@
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "typeVersion": 2.1,
       "position": [
         0,
         -400
       ],
-      "id": "convai-init-webhook",
-      "name": "Convai Init"
+      "id": "b3e4f5a6-c7d8-4e9f-a0b1-c2d3e4f5a6b7",
+      "name": "Convai Init",
+      "webhookId": "e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b"
     },
     {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT \n  t.phone as caller_phone,\n  t.name as tenant_name,\n  t.unit_number,\n  p.name as property_name\nFROM tenants t\nLEFT JOIN properties p ON t.property_id = p.id\nWHERE t.phone ILIKE '%' || RIGHT(REGEXP_REPLACE('{{ $json.body.caller_id }}', '[^0-9]', '', 'g'), 10) || '%'\nLIMIT 1;",
-        "options": {
-          "alwaysOutputData": true
-        }
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [
-        240,
-        -400
-      ],
-      "id": "convai-lookup",
-      "name": "Lookup Tenant by Caller",
-      "credentials": {
-        "postgres": {
-          "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const row = $input.first()?.json || {};\nreturn [{\n  json: {\n    type: \"conversation_initiation_client_data\",\n    dynamic_variables: {\n      caller_phone: row.caller_phone || $('Convai Init').first().json.body?.caller_id || \"\",\n      tenant_name: row.tenant_name || \"there\",\n      unit_number: row.unit_number || \"\",\n      property_name: row.property_name || \"\"\n    }\n  }\n}];"
+        "jsCode": "// Always returns 1 item — never lets ElevenLabs hang up\nconst callerId = $('Convai Init').first().json.body?.caller_id || '';\nconst cleanPhone = callerId.replace(/[^0-9]/g, '').slice(-10);\n\nlet tenantName = 'there';\nlet unitNumber = '';\nlet propertyName = '';\nlet callerPhone = cleanPhone;\n\ntry {\n  const resp = await $helpers.httpRequest({\n    method: 'POST',\n    url: 'https://n8n.srv1285597.hstgr.cloud/webhook/get-status',\n    body: { tenant_phone: cleanPhone },\n    json: true,\n    timeout: 4000\n  });\n  const row = Array.isArray(resp) ? resp[0] : resp;\n  if (row && row.tenant_name) {\n    tenantName = row.tenant_name;\n    unitNumber = row.unit_number || '';\n    propertyName = row.property_name || '';\n    callerPhone = row.phone || cleanPhone;\n  }\n} catch(e) {\n  // Tenant not found or lookup failed — use defaults\n}\n\nreturn [{\n  json: {\n    type: 'conversation_initiation_client_data',\n    dynamic_variables: {\n      caller_phone: callerPhone,\n      tenant_name: tenantName,\n      unit_number: unitNumber,\n      property_name: propertyName\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        480,
+        280,
         -400
       ],
-      "id": "convai-format",
-      "name": "Format Init Response"
+      "id": "d4e5f6a7-b8c9-4d0e-b1f2-a3b4c5d6e7f8",
+      "name": "Lookup + Format Init"
     },
     {
       "parameters": {
@@ -617,7 +595,7 @@
         720,
         -400
       ],
-      "id": "convai-respond",
+      "id": "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6",
       "name": "Respond Init"
     }
   ],
@@ -804,25 +782,14 @@
       "main": [
         [
           {
-            "node": "Lookup Tenant by Caller",
+            "node": "Lookup + Format Init",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Lookup Tenant by Caller": {
-      "main": [
-        [
-          {
-            "node": "Format Init Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Init Response": {
+    "Lookup + Format Init": {
       "main": [
         [
           {
