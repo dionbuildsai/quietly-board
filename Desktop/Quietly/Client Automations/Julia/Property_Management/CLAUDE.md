@@ -76,6 +76,9 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 
 - Agent must NEVER ask for name, unit number, or phone — always from PM_get_status
 - If PM_get_status finds no record → proceed without a name, do not ask
+- **Emergency protocol**: NEVER tell tenant to vacate/leave — that is the landlord's decision; tenant may need to stay to open door for contractors. Say "your safety is the priority, team is being notified right away."
+- **Natural speech**: Agent uses brief fillers ("Sure", "Of course", "Let me see") and says "One moment..." before calling PM_log_maintenance and PM_post_call_log to provide audio feedback during tool delay
+- **Silence filler** (`soft_timeout_config`): "Mm, let me see..." (fires when turn timeout is reached)
 
 ### Voice Agent n8n Tools
 | Tool (webhook path) | Method | Purpose |
