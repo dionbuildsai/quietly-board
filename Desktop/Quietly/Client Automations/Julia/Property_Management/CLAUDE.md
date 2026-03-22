@@ -55,7 +55,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
 | **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
-| **Voice Agent** | `JO26ruzPNp1MQThL` | 15 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
+| **Voice Agent** | `JO26ruzPNp1MQThL` | 17 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
 
 ---
 
@@ -86,15 +86,24 @@ n8n receives `{caller_id, agent_id}`, looks up tenant by phone, returns:
 | `/webhook/post-call-log` | POST | Log call transcript to call_logs table |
 
 ### PM_log_maintenance Tool Config (ElevenLabs)
-Auto-filled fields (from dynamic variables — agent never needs to ask for these):
-- `tenant_phone` → `dynamic_variable: "caller_phone"`
-- `tenant_name` → `dynamic_variable: "tenant_name"`
-- `unit_number` → `dynamic_variable: "unit_number"`
+- `tenant_phone`: LLM fills from `{{system__caller_id}}` in system prompt (digits only, strip +)
+- `tenant_name`: LLM fills from conversation
+- `unit_number`: LLM fills from conversation
 - `channel` → `constant_value: "phone"`
+- Required: `category`, `description`, `urgency`, `tenant_message`
 
-Required fields the agent must collect: `category`, `description`, `urgency`, `tenant_message`
+**PM_get_status / PM_post_call_log** — `tenant_phone` auto-filled via `dynamic_variable: "system__caller_id"` (always available on phone calls). `call_id` auto-filled via `dynamic_variable: "system__conversation_id"`.
 
-**System prompt key rule:** Agent must CALL the tool — not say "I'm logging". Tool call happens first, then confirm to tenant after it returns.
+**System prompt** uses `{{system__caller_id}}` for phone (injected by ElevenLabs, always available).
+
+**Key rule:** Agent must CALL PM_log_maintenance — not say "I'm logging". Tool call first, confirm after.
+
+### convai-init Flow (n8n, 4-node chain)
+`Convai Init` → `Extract Phone` (Code: strip non-digits from caller_id) → `SQL Tenant Lookup` (Postgres: COALESCE LEFT JOIN, always returns 1 row) → `Format Init` (Code: build response) → `Respond Init`
+
+- Phone normalized to digits-only (no + prefix) before DB lookup
+- Unknown callers: `tenant_name = "there"`, empty unit/property
+- `$helpers.httpRequest` is NOT available in this n8n Code node context — always use Postgres nodes for DB access
 
 ### Git Note
 `workflows/Intake_Channel_Router.json` in git has `ANTHROPIC_API_KEY_SET_IN_N8N_ENV` as a placeholder for the Haiku API call in `Match Video AI`. The live n8n workflow has the real key. Set `ANTHROPIC_API_KEY` in n8n environment if redeploying from git.
