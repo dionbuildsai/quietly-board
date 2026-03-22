@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-22T17:42:03.959Z",
+  "updatedAt": "2026-03-22T17:56:13.009Z",
   "createdAt": "2026-03-22T03:03:23.390Z",
   "id": "JO26ruzPNp1MQThL",
   "name": "Voice Agent \u2014 Log Maintenance Request",
@@ -823,6 +823,70 @@
           "name": "property_management"
         }
       }
+    },
+    {
+      "id": "filter-text",
+      "name": "Is Dion? (text)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        -220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "dion-check",
+              "leftValue": "={{$('Edit Fields').item.json.phone}}",
+              "rightValue": "5148319058",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "filter-urgent",
+      "name": "Is Dion? (urgent)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        -50
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "dion-check",
+              "leftValue": "={{$('Edit Fields').item.json.phone}}",
+              "rightValue": "5148319058",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -912,7 +976,7 @@
       "main": [
         [
           {
-            "node": "Send text message - Julia",
+            "node": "Is Dion? (text)",
             "type": "main",
             "index": 0
           }
@@ -1007,7 +1071,7 @@
       "main": [
         [
           {
-            "node": "Send Urgent Notification - Julia",
+            "node": "Is Dion? (urgent)",
             "type": "main",
             "index": 0
           }
@@ -1035,6 +1099,42 @@
           }
         ]
       ]
+    },
+    "Is Dion? (text)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send text message - Julia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Dion? (urgent)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Urgent Notification - Julia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1045,9 +1145,9 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
-  "activeVersionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
-  "versionCounter": 81,
+  "versionId": "4f5fb993-c3a4-445a-a028-fbdbb488b7e0",
+  "activeVersionId": "4f5fb993-c3a4-445a-a028-fbdbb488b7e0",
+  "versionCounter": 84,
   "triggerCount": 4,
   "shared": [
     {
@@ -1070,9 +1170,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-22T17:42:03.961Z",
-    "createdAt": "2026-03-22T17:42:03.961Z",
-    "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
+    "updatedAt": "2026-03-22T17:56:13.011Z",
+    "createdAt": "2026-03-22T17:56:13.011Z",
+    "versionId": "4f5fb993-c3a4-445a-a028-fbdbb488b7e0",
     "workflowId": "JO26ruzPNp1MQThL",
     "nodes": [
       {
@@ -1891,6 +1991,70 @@
             "name": "property_management"
           }
         }
+      },
+      {
+        "id": "filter-text",
+        "name": "Is Dion? (text)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1380,
+          -220
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "dion-check",
+                "leftValue": "={{$('Edit Fields').item.json.phone}}",
+                "rightValue": "5148319058",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "filter-urgent",
+        "name": "Is Dion? (urgent)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1380,
+          -50
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "dion-check",
+                "leftValue": "={{$('Edit Fields').item.json.phone}}",
+                "rightValue": "5148319058",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
       }
     ],
     "connections": {
@@ -1980,7 +2144,7 @@
         "main": [
           [
             {
-              "node": "Send text message - Julia",
+              "node": "Is Dion? (text)",
               "type": "main",
               "index": 0
             }
@@ -2075,7 +2239,7 @@
         "main": [
           [
             {
-              "node": "Send Urgent Notification - Julia",
+              "node": "Is Dion? (urgent)",
               "type": "main",
               "index": 0
             }
@@ -2103,6 +2267,42 @@
             }
           ]
         ]
+      },
+      "Is Dion? (text)": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send text message - Julia",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is Dion? (urgent)": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Urgent Notification - Julia",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dion Wang",
@@ -2111,18 +2311,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-22T17:42:04.063Z",
-        "id": 118,
+        "createdAt": "2026-03-22T17:56:13.081Z",
+        "id": 122,
         "workflowId": "JO26ruzPNp1MQThL",
-        "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
+        "versionId": "4f5fb993-c3a4-445a-a028-fbdbb488b7e0",
         "event": "deactivated",
         "userId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
       },
       {
-        "createdAt": "2026-03-22T17:42:04.095Z",
-        "id": 119,
+        "createdAt": "2026-03-22T17:56:13.110Z",
+        "id": 123,
         "workflowId": "JO26ruzPNp1MQThL",
-        "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
+        "versionId": "4f5fb993-c3a4-445a-a028-fbdbb488b7e0",
         "event": "activated",
         "userId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
       }

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-22T17:42:04.675Z",
+  "updatedAt": "2026-03-22T17:56:13.643Z",
   "createdAt": "2026-03-20T21:07:19.237Z",
   "id": "5WW7m5IiqvJoHWZ1",
   "name": "[AI] Conversation Agent",
@@ -589,6 +589,38 @@
           "name": "property_management"
         }
       }
+    },
+    {
+      "id": "filter-notify",
+      "name": "Is Dion? (notify)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2364,
+        208
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "dion-check",
+              "leftValue": "={{$('Generate Ticket').item.json.phone}}",
+              "rightValue": "5148319058",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -775,7 +807,7 @@
       "main": [
         [
           {
-            "node": "Notify Landlord - Julia",
+            "node": "Is Dion? (notify)",
             "type": "main",
             "index": 0
           }
@@ -869,6 +901,24 @@
           }
         ]
       ]
+    },
+    "Is Dion? (notify)": {
+      "main": [
+        [
+          {
+            "node": "Return to Parent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Landlord - Julia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -879,9 +929,9 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "ad68769c-7221-40ac-a804-ca33ef1bc02b",
-  "activeVersionId": "ad68769c-7221-40ac-a804-ca33ef1bc02b",
-  "versionCounter": 18,
+  "versionId": "f231375b-3f18-41e9-86b0-c74d9e363c70",
+  "activeVersionId": "f231375b-3f18-41e9-86b0-c74d9e363c70",
+  "versionCounter": 21,
   "triggerCount": 0,
   "shared": [
     {
@@ -904,9 +954,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-22T17:42:04.680Z",
-    "createdAt": "2026-03-22T17:42:04.680Z",
-    "versionId": "ad68769c-7221-40ac-a804-ca33ef1bc02b",
+    "updatedAt": "2026-03-22T17:56:13.645Z",
+    "createdAt": "2026-03-22T17:56:13.645Z",
+    "versionId": "f231375b-3f18-41e9-86b0-c74d9e363c70",
     "workflowId": "5WW7m5IiqvJoHWZ1",
     "nodes": [
       {
@@ -1491,6 +1541,38 @@
             "name": "property_management"
           }
         }
+      },
+      {
+        "id": "filter-notify",
+        "name": "Is Dion? (notify)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2364,
+          208
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "dion-check",
+                "leftValue": "={{$('Generate Ticket').item.json.phone}}",
+                "rightValue": "5148319058",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
       }
     ],
     "connections": {
@@ -1677,7 +1759,7 @@
         "main": [
           [
             {
-              "node": "Notify Landlord - Julia",
+              "node": "Is Dion? (notify)",
               "type": "main",
               "index": 0
             }
@@ -1771,6 +1853,24 @@
             }
           ]
         ]
+      },
+      "Is Dion? (notify)": {
+        "main": [
+          [
+            {
+              "node": "Return to Parent",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Notify Landlord - Julia",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dion Wang",
@@ -1779,18 +1879,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-22T17:42:04.758Z",
-        "id": 120,
+        "createdAt": "2026-03-22T17:56:13.684Z",
+        "id": 124,
         "workflowId": "5WW7m5IiqvJoHWZ1",
-        "versionId": "ad68769c-7221-40ac-a804-ca33ef1bc02b",
+        "versionId": "f231375b-3f18-41e9-86b0-c74d9e363c70",
         "event": "deactivated",
         "userId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
       },
       {
-        "createdAt": "2026-03-22T17:42:04.777Z",
-        "id": 121,
+        "createdAt": "2026-03-22T17:56:13.699Z",
+        "id": 125,
         "workflowId": "5WW7m5IiqvJoHWZ1",
-        "versionId": "ad68769c-7221-40ac-a804-ca33ef1bc02b",
+        "versionId": "f231375b-3f18-41e9-86b0-c74d9e363c70",
         "event": "activated",
         "userId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
       }
