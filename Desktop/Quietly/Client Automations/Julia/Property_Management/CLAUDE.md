@@ -55,6 +55,38 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
 | **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
+| **Voice Agent** | `JO26ruzPNp1MQThL` | 16 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
+
+---
+
+## Voice Agent (ElevenLabs)
+
+**Phone:** +14389009998 (Twilio → ElevenLabs)
+**ElevenLabs Agent ID:** `agent_6201km9s1231fdm8ajv5e55gyf8j`
+**ElevenLabs Agent Name:** Julia — Property Management
+**LLM:** Gemini 2.5 Flash
+**Voices:** Sarah (English, `EXAVITQu4vr4xnSDxMaL`), Charlotte (French, `XB0fDUnXU5powFXDhCwa`)
+**TTS Model:** `eleven_flash_v2`
+
+### Conversation Initiation Webhook
+ElevenLabs workspace setting: calls `https://n8n.srv1285597.hstgr.cloud/webhook/convai-init` before every call.
+n8n receives `{caller_id, agent_id}`, looks up tenant by phone, returns:
+```json
+{ "type": "conversation_initiation_client_data", "dynamic_variables": { "caller_phone", "tenant_name", "unit_number", "property_name" } }
+```
+- Unknown callers → `tenant_name = "there"` → greeting: "Hello there, you've reached property management."
+- Known callers → "Hello [name], you've reached property management."
+
+### Voice Agent n8n Tools
+| Tool (webhook path) | Method | Purpose |
+|---------------------|--------|---------|
+| `/webhook/convai-init` | POST | Pre-call: lookup tenant, return dynamic vars |
+| `/webhook/get-status` | POST | Check tenant info + open tickets by phone |
+| `/webhook/log-maintenance` | POST | Create new maintenance ticket |
+| `/webhook/post-call-log` | POST | Log call transcript to call_logs table |
+
+### Git Note
+`workflows/Intake_Channel_Router.json` in git has `ANTHROPIC_API_KEY_SET_IN_N8N_ENV` as a placeholder for the Haiku API call in `Match Video AI`. The live n8n workflow has the real key. Set `ANTHROPIC_API_KEY` in n8n environment if redeploying from git.
 
 ---
 
