@@ -165,7 +165,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        304,
+        700,
         -128
       ],
       "id": "fea6a152-1b7e-4339-976f-f2c2964b51e2",
@@ -535,7 +535,7 @@
     {
       "parameters": {
         "chatId": "6216258938",
-        "text": "={{ $('Insert rows in a table').item.json.urgency === 'urgent' ? 'URGENT TICKET' : 'NEW TICKET' }} {{ $('Edit Fields').item.json.ticket_id }}\n\nCategory: {{ $('Edit Fields').item.json.category }}\nTenant: {{ $('Edit Fields').item.json.tenant_name }}\nPhone: {{ $('Edit Fields').item.json.phone }}\nUnit: {{ $('Edit Fields').item.json.unit || 'N/A' }}\nProperty: {{ $('Lookup Tenant Info').item.json.property_name || 'N/A' }}\nEmail: {{ $('Lookup Tenant Info').item.json.tenant_email || 'N/A' }}\n\nSummary: {{ $('Edit Fields').item.json.summary }}\nUrgency: {{ $('Edit Fields').item.json.urgency }}\nKeywords: {{ $('Insert rows in a table').item.json.keywords || 'N/A' }}",
+        "text": "={{ $json.urgency === 'urgent' ? 'URGENT TICKET' : 'NEW TICKET' }} {{ $json.ticket_id }}\n\nCategory: {{ $json.category }}\nTenant: {{ $json.tenant_name }}\nPhone: {{ $json.phone }}\nUnit: {{ $json.unit || 'N/A' }}\nProperty: {{ $json.property || 'N/A' }}\nEmail: {{ $json.tenant_email || 'N/A' }}\n\nSummary: {{ $json.summary }}\nUrgency: {{ $json.urgency }}\nKeywords: {{ $json.keywords || 'N/A' }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -637,7 +637,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.email AS tenant_email, p.name AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ \\$('Edit Fields').item.json.phone }}' LIMIT 1;",
+        "query": "SELECT t.email AS tenant_email, p.name AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ $json.phone }}' LIMIT 1;",
         "options": {
           "alwaysOutputData": true
         }
@@ -645,7 +645,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        700,
+        280,
         -128
       ],
       "id": "b1c2d3e4-f5a6-7890-abcd-ef1234567890",
@@ -656,6 +656,19 @@
           "name": "Quietly DB"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const edit = $('Edit Fields').item.json;\nconst lookup = $input.first().json;\nreturn [{ json: {\n  tenant_name: edit.tenant_name,\n  phone: edit.phone,\n  tenant_phone: edit.phone,\n  unit: edit.unit,\n  unit_number: edit.unit,\n  category: edit.category,\n  summary: edit.summary,\n  description: edit.summary,\n  urgency: edit.urgency,\n  tenant_message: edit.tenant_message,\n  channel: edit.channel,\n  ticket_id: edit.ticket_id,\n  status: edit.status,\n  property: lookup.property_name || null,\n  tenant_email: lookup.tenant_email || null\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -128
+      ],
+      "id": "a2b3c4d5-e6f7-8901-bcde-f12345678901",
+      "name": "Merge for Insert"
     }
   ],
   "connections": {
@@ -663,7 +676,7 @@
       "main": [
         [
           {
-            "node": "Lookup Tenant Info",
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
@@ -674,7 +687,7 @@
       "main": [
         [
           {
-            "node": "Insert rows in a table",
+            "node": "Lookup Tenant Info",
             "type": "main",
             "index": 0
           }
@@ -800,7 +813,18 @@
       "main": [
         [
           {
-            "node": "Send a text message",
+            "node": "Merge for Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge for Insert": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
             "type": "main",
             "index": 0
           }
@@ -816,6 +840,6 @@
   "staticData": null,
   "tags": [],
   "pinData": null,
-  "versionId": "611f8a0a-020d-4779-811a-e9a91557d8f0",
+  "versionId": "b590663e-7228-4b6f-b57d-4700c012c627",
   "meta": null
 }

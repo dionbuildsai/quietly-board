@@ -55,7 +55,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
 | **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
-| **Voice Agent** | `JO26ruzPNp1MQThL` | 18 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
+| **Voice Agent** | `JO26ruzPNp1MQThL` | 19 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
 
 ---
 
@@ -101,15 +101,18 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 
 - `$helpers.httpRequest` is NOT available in this n8n Code node context — always use Postgres nodes for DB access
 
-### log-maintenance Telegram Notification
-`Insert rows in a table` → `Lookup Tenant Info` (Postgres: get email + property from tenants table) → `Send a text message`
+### log-maintenance chain (n8n)
+`Log Maintenance` → `Edit Fields` → `Lookup Tenant Info` → `Merge for Insert` → `Insert rows in a table` → `Send a text message` → `Respond to Webhook`
 
-- **Always fires** for every phone ticket (urgent and non-urgent)
-- Format matches text-channel notifications: `NEW TICKET TK-XXXX` / `URGENT TICKET TK-XXXX`
-- Includes: Category, Tenant, Phone, Unit, Property, Email, Summary, Urgency, Keywords
-- `appendAttribution: false` — no "Sent from n8n" footer
-- `Lookup Tenant Info` uses `alwaysOutputData: true`; shows `N/A` for fields not found
-- **Note:** The old IF node (`urgency == "urgent"`) was removed — LLM always assigns `not_urgent` by default, so the gate was silently dropping all notifications
+- `Lookup Tenant Info` (Postgres): fetches `tenant_email` + `property_name` from tenants/properties by `$json.phone`. Uses `alwaysOutputData: true`.
+- `Merge for Insert` (Code): combines Edit Fields + Lookup, populates ALL columns: `tenant_phone`, `unit_number`, `description`, `property`, `tenant_email` (aliases so both column name variants are filled).
+- **Telegram**: Format matches text-channel — `NEW TICKET TK-XXXX` / `URGENT TICKET TK-XXXX`. Includes Category, Tenant, Phone, Unit, Property, Email, Summary, Urgency, Keywords. `appendAttribution: false`.
+- **Note:** The old IF node (`urgency == "urgent"`) was removed — LLM always assigns `not_urgent` by default
+
+### ElevenLabs Agent — Auto Hang-up
+- `end_call` built-in tool enabled
+- Call flow step 7: After `PM_post_call_log` returns → immediately call `end_call`
+- Agent says nothing after PM_post_call_log — just hangs up
 
 ### Git Note
 `workflows/Intake_Channel_Router.json` in git has `ANTHROPIC_API_KEY_SET_IN_N8N_ENV` as a placeholder for the Haiku API call in `Match Video AI`. The live n8n workflow has the real key. Set `ANTHROPIC_API_KEY` in n8n environment if redeploying from git.
