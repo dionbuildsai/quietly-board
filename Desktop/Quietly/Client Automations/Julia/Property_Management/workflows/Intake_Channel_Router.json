@@ -430,7 +430,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -480,
+        -240,
         512
       ],
       "id": "280d00c5-e3d4-421b-985f-08f27a40dcbb",
@@ -883,11 +883,83 @@
                 ],
                 "combinator": "and"
               }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "53932e1e-0580-4122-bc15-402722c8ec80",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "resolve_yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "resolve_yes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b9416479-8743-4025-93f5-9daf8815aed0",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "resolve_no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "resolve_no"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "45f8b168-2957-4888-bab5-1d7a217b0e97",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "mc",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "media_cat"
             }
           ]
         },
         "options": {
-          "fallbackOutput": "none"
+          "fallbackOutput": "extra"
         }
       },
       "type": "n8n-nodes-base.switch",
@@ -1479,7 +1551,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\nconst resolved = $('Resolve Ticket').first()?.json;\nconst ticketId = resolved?.ticket_id || '';\n\n// Detect language from the button text that was clicked\nconst btnText = $('Telegram Trigger').item.json.callback_query?.data || '';\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('vid\u00e9o') || false;\n\nconst msg = isFrench\n  ? 'Super! Le billet ' + ticketId + ' a \u00e9t\u00e9 marqu\u00e9 comme r\u00e9solu. Merci!'\n  : 'Great! Ticket ' + ticketId + ' has been marked as resolved. Thank you!';\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg },\n  json: true\n});\nreturn [{ json: result }];"
+        "jsCode": "const chatId = String($('Telegram Trigger').item.json.callback_query.message.chat.id);\nconst resolved = $('Resolve Ticket').first()?.json;\nconst ticketId = resolved?.ticket_id || '';\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('vid\u00e9o') || false;\n\nconst msg = isFrench\n  ? 'Super! Le billet ' + ticketId + ' a \u00e9t\u00e9 marqu\u00e9 comme r\u00e9solu. Merci!'\n  : 'Great! Ticket ' + ticketId + ' has been marked as resolved. Thank you!';\n\n// Send ack message\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg },\n  json: true\n});\n\nreturn [{ json: { chat_id: chatId, ticket_id: ticketId, ack_msg: msg } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1515,7 +1587,7 @@
           "conditions": [
             {
               "id": "1a4e69d0-09b5-4399-8e0c-e8e56b213c75",
-              "leftValue": "={{ $json.norm_has_media }}",
+              "leftValue": "={{ $('Merge Tenant + Message').item.json.norm_has_media }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1539,36 +1611,411 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prepare payload for Media Upload Handler\nconst input = $input.first().json;\nreturn [{\n  json: {\n    message_db_id: $('Log Inbound Message').item.json.id || '',\n    media_type: input.norm_media_type || '',\n    media_id: input.norm_media_id || '',\n    media_url: input.norm_media_url || '',\n    channel: input.norm_channel || '',\n    tenant_name: input.name || input.tenant_name || '',\n    property: input.property || '',\n    chat_id: input.norm_chat_id || ''\n  }\n}];"
+        "operation": "executeQuery",
+        "query": "SELECT title, video_url, keywords::text as keywords, category FROM repair_videos ORDER BY title",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1500,
+        512
+      ],
+      "id": "a52d1cd2-2c86-4bfe-b3dc-a4a3fc9487b5",
+      "name": "Search Repair Videos",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI-powered video matching using Claude Haiku\nconst videos = $('Search Repair Videos').all().map(v => v.json);\n\n// Get tenant message from Build AI Payload (upstream node)\nlet message = '';\nlet channel = '';\nlet chat_id = '';\nlet phone = '';\nlet email = '';\nlet responseText = '';\n\ntry {\n  const payload = $('Build AI Payload').item.json;\n  message = (payload.message || '').trim();\n  channel = payload.channel || '';\n  chat_id = payload.chat_id || '';\n  phone = payload.phone || '';\n  email = payload.email || '';\n} catch(e) {\n  // Fallback: try to get from Merge Tenant + Message\n  try {\n    const merged = $('Merge Tenant + Message').item.json;\n    message = (merged.norm_message || '').trim();\n    channel = merged.norm_channel || '';\n    chat_id = merged.norm_chat_id || '';\n    phone = merged.phone || '';\n    email = merged.email || '';\n  } catch(e2) {}\n}\n\ntry {\n  responseText = $('Call AI Agent').item.json.response_text || '';\n} catch(e) {}\n\nif (!message || message.length < 5) return [{ json: { has_video: false } }];\n\nconst videoList = videos.map((v, i) => i + ': \"' + v.title + '\"').join('\\n');\n\nlet bestVideo = null;\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.anthropic.com/v1/messages',\n    headers: {\n      'x-api-key': $env.ANTHROPIC_API_KEY,\n      'anthropic-version': '2023-06-01',\n      'content-type': 'application/json'\n    },\n    body: {\n      model: 'claude-haiku-4-5-20251001',\n      max_tokens: 20,\n      messages: [{\n        role: 'user',\n        content: 'The tenant sent this message: \"' + message + '\"\\n\\nAvailable repair videos:\\n' + videoList + '\\n\\nRULES:\\n- Reply with ONLY a number OR \"none\"\\n- A video is relevant ONLY if the tenant\\'s message describes the EXACT same problem the video solves\\n- \"toilet\" issues only match toilet videos, \"faucet\" only faucet, etc.\\n- If tenant says \"thank you\", \"ok\", \"yes\", or confirms something \u2014 reply \"none\"\\n- When in doubt, reply \"none\"'\n      }]\n    },\n    json: true,\n    timeout: 10000\n  });\n\n  const aiAnswer = (response.content?.[0]?.text || '').trim().toLowerCase().split(/[\\s\\n]/)[0];\n  if (aiAnswer !== 'none' && !isNaN(parseInt(aiAnswer))) {\n    const idx = parseInt(aiAnswer);\n    if (idx >= 0 && idx < videos.length) bestVideo = videos[idx];\n  }\n} catch(e) {\n  // API timeout or error \u2014 skip video suggestion\n  return [{ json: { has_video: false } }];\n}\n\nreturn [{\n  json: {\n    has_video: bestVideo !== null,\n    video_url: bestVideo?.video_url || '',\n    video_title: bestVideo?.title || '',\n    channel: channel,\n    chat_id: chat_id,\n    phone: phone,\n    email: email,\n    response_text: responseText\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1060,
-        700
+        1700,
+        512
       ],
-      "id": "716ca24b-5357-4aad-8045-d8d652e4350c",
-      "name": "Prepare Media Payload"
+      "id": "3c8b7c76-d825-4a23-bffc-c99b42de55b3",
+      "name": "Match Video AI"
     },
     {
       "parameters": {
-        "source": "database",
-        "workflowId": {
-          "__rl": true,
-          "value": "media-upload-handler-001",
-          "mode": "id"
-        },
-        "mode": "each",
+        "jsCode": "// Send video as follow-up if matched\nconst input = $input.first().json;\nif (!input.has_video || !input.video_url) return [{ json: { sent: false } }];\n\nconst channel = input.channel;\nconst chat_id = input.chat_id;\nconst phone = (input.phone || '').replace(/[^0-9]/g, '');\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('merci');\n\nconst videoMsg = isFrench\n  ? 'Cette vid\u00e9o pourrait vous aider :\\n' + input.video_title + '\\n' + input.video_url\n  : 'This video might help:\\n' + input.video_title + '\\n' + input.video_url;\n\nconst ticketLookup = input.chat_id || '';\n\nif (channel === 'telegram') {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n    body: { chat_id: chat_id, text: videoMsg },\n    json: true\n  });\n\n  const questionText = isFrench \n    ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n    : 'Did this video help resolve your issue?';\n\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n    body: {\n      chat_id: chat_id,\n      text: questionText,\n      reply_markup: JSON.stringify({\n        inline_keyboard: [[\n          { text: isFrench ? 'Oui \u2705' : 'Yes \u2705', callback_data: 'video_yes||' + ticketLookup },\n          { text: isFrench ? 'Non \u274c' : 'No \u274c', callback_data: 'video_no||' + ticketLookup }\n        ]]\n      })\n    },\n    json: true\n  });\n} else if (channel === 'whatsapp') {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://graph.facebook.com/v21.0/1002910989571888/messages',\n    headers: { 'Content-Type': 'application/json' },\n    body: { messaging_product: 'whatsapp', to: phone, type: 'text', text: { body: videoMsg } },\n    json: true\n  });\n}\n\n// Log the video suggestion as a message\ntry {\n  const { Pool } = require('pg');\n  // Can't use require in n8n code nodes, use helpers instead\n} catch(e) {}\n\nreturn [{ json: { sent: true, channel: channel, video_title: input.video_title, chat_id: chat_id, video_url: input.video_url, videoMsg: videoMsg } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        512
+      ],
+      "id": "16b90a2b-53af-4f07-a7e7-5f6b532a910e",
+      "name": "Send Video Followup"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET status = 'open', updated_at = NOW() WHERE ticket_id = CASE WHEN '{{ $json.ticket_id }}' LIKE 'TK-%' THEN '{{ $json.ticket_id }}' ELSE (SELECT ticket_id FROM maintenance_requests WHERE phone LIKE '%' || RIGHT('{{ $json.ticket_id }}', 10) || '%' OR telegram_id = '{{ $json.ticket_id }}' ORDER BY created_at DESC LIMIT 1) END RETURNING ticket_id, status",
         "options": {}
       },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
       "position": [
-        1240,
+        1200,
+        1600
+      ],
+      "id": "5e8f37db-5c7f-4247-a2e4-75b4f5b450ec",
+      "name": "Reopen Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\nconst reopened = $('Reopen Ticket').first()?.json;\nconst ticketId = reopened?.ticket_id || '';\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('probl\u00e8me') || false;\n\nconst msg = isFrench\n  ? 'Merci de nous avoir inform\u00e9. Le billet ' + ticketId + ' a \u00e9t\u00e9 r\u00e9ouvert et quelqu\\'un vous contactera bient\u00f4t.'\n  : 'Thank you for letting us know. Ticket ' + ticketId + ' has been reopened and someone will follow up with you shortly.';\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: String(chatId), text: msg },\n  json: true\n});\n\nreturn [{ json: { chat_id: String(chatId), ticket_id: ticketId, ack_msg: msg } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        1600
+      ],
+      "id": "7014adca-433a-46cb-aa24-fef1f62a3986",
+      "name": "Reopen Ack"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Send typing indicator + check if AI already responded recently (dedup)\nconst msg = $('Telegram Trigger').item.json.message;\nif (!msg || !msg.chat) return [];\n\nconst chatId = String(msg.chat.id);\n\n// Send typing indicator immediately\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendChatAction',\n  body: { chat_id: chatId, action: 'typing' },\n  json: true\n});\n\nreturn [{ json: { ...$('Telegram Trigger').item.json, typing_sent: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -580,
+        512
+      ],
+      "id": "98344bbf-abdb-4dc7-ba85-7ff5d5383a1d",
+      "name": "Send Typing"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO messages (chat_id, sender, message_text, channel, created_at) SELECT '{{ $json.chat_id }}', 'Julia AI', '{{ ($json.videoMsg || '').replace(/'/g, \"''\") }}', '{{ $json.channel }}', NOW() WHERE '{{ $json.sent }}' = 'true'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2100,
+        512
+      ],
+      "id": "746f1e4d-7ce1-437a-b452-ecd85bac3ce1",
+      "name": "Log Video Message",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO messages (chat_id, ticket_id, sender, message_text, channel, created_at) VALUES ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Steven Bartlett', 'Video helped \u2014 marked as resolved \u2705', 'telegram', NOW()), ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Julia AI', '{{ ($json.ack_msg || '').replace(/'/g, \"''\") }}', 'telegram', NOW() + INTERVAL '1 second')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1400,
+        1200
+      ],
+      "id": "b1ebbdb5-7ef6-4361-9524-735261be4dbc",
+      "name": "Log Resolution",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO messages (chat_id, ticket_id, sender, message_text, channel, created_at) VALUES ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Steven Bartlett', 'Issue not resolved \u2014 ticket reopened', 'telegram', NOW()), ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Julia AI', '{{ ($json.ack_msg || '').replace(/'/g, \"''\") }}', 'telegram', NOW() + INTERVAL '1 second')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1600,
+        1600
+      ],
+      "id": "b161f688-eb78-47ba-9b60-250d7fd373e1",
+      "name": "Log Reopen",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO pending_media (chat_id, file_id, channel, media_type, status) VALUES ('{{ $('Merge Tenant + Message').item.json.norm_chat_id }}', '{{ $('Merge Tenant + Message').item.json.norm_media_id }}', '{{ $('Merge Tenant + Message').item.json.norm_channel }}', '{{ $('Merge Tenant + Message').item.json.norm_media_type }}', 'pending') RETURNING id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1060,
         700
       ],
-      "id": "42958da4-254b-4987-a456-cee053a858d0",
-      "name": "Call Media Upload"
+      "id": "e022a74d-01de-4192-924c-eddf3e94c288",
+      "name": "Save Pending Media",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check tenant's open tickets and prompt accordingly\nconst merged = $('Merge Tenant + Message').item.json;\nconst channel = merged.norm_channel;\nconst chatId = merged.norm_chat_id;\nconst phone = merged.phone || '';\nconst email = merged.email || '';\nconst pendingId = $('Save Pending Media').item.json.id;\n\n// Query open tickets for this tenant\nconst tickets = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://n8n.srv1285597.hstgr.cloud/webhook/ticket-ops',\n  body: { action: 'query', query: \"SELECT ticket_id, category, LEFT(summary, 40) as summary FROM maintenance_requests WHERE (phone = '\" + phone.replace(/'/g, \"''\") + \"' OR tenant_email = '\" + email.replace(/'/g, \"''\") + \"' OR telegram_id = '\" + chatId + \"') AND status NOT IN ('closed', 'resolved') ORDER BY created_at DESC LIMIT 5\" },\n  json: true\n}).catch(() => []);\n\n// Store pending_id for later lookup\nconst shortId = pendingId.slice(-12);\n\nif (channel === 'telegram') {\n  let messageText = '';\n  \n  if (tickets && tickets.length > 0) {\n    // Has open tickets \u2014 show numbered list\n    messageText = '\ud83d\udcf8 Photo received! Which ticket is this for?\\n\\n';\n    tickets.forEach((t, i) => {\n      const summary = t.summary || t.category || 'Unknown';\n      messageText += (i + 1) + '. ' + t.ticket_id + ' \u2014 ' + summary + '\\n';\n    });\n    messageText += (tickets.length + 1) + '. \ud83c\udd95 New issue\\n\\nReply with the number.';\n    \n    // Store the ticket mapping in pending_media for lookup when tenant replies\n    // We'll use the file_url field to store the JSON mapping\n    const mapping = tickets.map((t, i) => ({ num: i + 1, ticket_id: t.ticket_id }));\n    mapping.push({ num: tickets.length + 1, ticket_id: 'NEW' });\n    \n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://n8n.srv1285597.hstgr.cloud/webhook/ticket-ops',\n      body: { action: 'query', query: \"UPDATE pending_media SET file_url = '\" + JSON.stringify(mapping).replace(/'/g, \"''\") + \"' WHERE id = '\" + pendingId + \"'\" },\n      json: true\n    }).catch(() => {});\n    \n  } else {\n    // No open tickets \u2014 show category buttons for new ticket\n    messageText = '\ud83d\udcf8 Photo received! What is this about?';\n  }\n  \n  if (tickets && tickets.length > 0) {\n    // Send as text message (tenant replies with number)\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n      body: { chat_id: chatId, text: messageText },\n      json: true\n    });\n  } else {\n    // Send category buttons (no open tickets)\n    const categories = [\n      { text: '\ud83d\udd27 Plumbing', data: 'mc||plumb||' + shortId },\n      { text: '\u26a1 Electrical', data: 'mc||elec||' + shortId },\n      { text: '\ud83c\udf21\ufe0f Heating/AC', data: 'mc||hvac||' + shortId },\n      { text: '\ud83d\udeaa Maintenance', data: 'mc||maint||' + shortId },\n      { text: '\ud83d\udc1b Pest Control', data: 'mc||pest||' + shortId },\n      { text: '\ud83d\udccb Other', data: 'mc||other||' + shortId },\n    ];\n    \n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n      body: {\n        chat_id: chatId,\n        text: messageText,\n        reply_markup: JSON.stringify({\n          inline_keyboard: [\n            [{ text: categories[0].text, callback_data: categories[0].data }, { text: categories[1].text, callback_data: categories[1].data }],\n            [{ text: categories[2].text, callback_data: categories[2].data }, { text: categories[3].text, callback_data: categories[3].data }],\n            [{ text: categories[4].text, callback_data: categories[4].data }, { text: categories[5].text, callback_data: categories[5].data }]\n          ]\n        })\n      },\n      json: true\n    });\n  }\n}\n\nreturn [{ json: { sent: true, pending_id: pendingId, has_tickets: tickets && tickets.length > 0 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        700
+      ],
+      "id": "9d39708f-7625-4621-9af4-360e20885951",
+      "name": "Send Category Prompt"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Map short category codes back to full names\nconst callbackData = $('Parse Callback').item.json;\nconst shortCode = callbackData.ticket_id; // parts[1] = short category code\nconst shortId = callbackData.category;    // parts[2] = last 12 chars of pending_id\nconst chatId = callbackData.chat_id;\n\nconst codeMap = {\n  plumb: 'plumbing', elec: 'electrical', hvac: 'hvac',\n  maint: 'general_maintenance', pest: 'pest_control', other: 'general_inquiry'\n};\n\nconst category = codeMap[shortCode] || 'general_inquiry';\n\nreturn [{\n  json: {\n    short_id: shortId,\n    category: category,\n    chat_id: chatId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        1800
+      ],
+      "id": "4418f3af-49f4-4f15-bb64-1f27f024714f",
+      "name": "Parse Media Category"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE pending_media SET category = '{{ $json.category }}', status = 'categorized' WHERE id::text LIKE '%{{ $json.short_id }}' RETURNING *",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1400,
+        1800
+      ],
+      "id": "db25f402-6ef2-401b-9b2e-3002f2d91874",
+      "name": "Update Pending Category",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $('Parse Callback').item.json.chat_id;\nconst category = $json.category || 'unknown';\nconst isFrench = false; // TODO: detect language\n\nconst categoryLabels = {\n  plumbing: 'Plumbing', electrical: 'Electrical', hvac: 'Heating/AC',\n  general_maintenance: 'General Maintenance', pest_control: 'Pest Control',\n  general_inquiry: 'Other'\n};\n\nconst label = categoryLabels[category] || category;\nconst msg = 'Got it! Your photo has been logged under **' + label + '**. We\\'ll include it with your ticket.';\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg, parse_mode: 'Markdown' },\n  json: true\n});\n\nreturn [{ json: { sent: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        1800
+      ],
+      "id": "2f44e8b6-5d75-4fd4-9c86-5963cd90d00f",
+      "name": "Media Category Ack"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT pm.id, pm.file_id, pm.media_type, pm.channel, pm.category, t.name as tenant_name, COALESCE(p.address, 'Unknown Property') as property FROM pending_media pm LEFT JOIN tenants t ON t.telegram_id = pm.chat_id::text LEFT JOIN properties p ON t.property_id = p.id WHERE pm.chat_id = {{ $('Parse Callback').item.json.chat_id }}::bigint AND pm.status = 'categorized' AND (pm.file_url IS NULL OR pm.file_url = '') ORDER BY pm.created_at DESC LIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1800,
+        1800
+      ],
+      "id": "fc976ba6-eada-4d61-9a85-e27f0f861069",
+      "name": "Get Pending File",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c0aa20a3-cf38-4632-9f00-812ef0bf9001",
+              "leftValue": "={{ $json.file_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2000,
+        1800
+      ],
+      "id": "03d76908-add3-4daa-99fc-bd6380aa0a3d",
+      "name": "Has File?"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/getFile?file_id={{ $('Get Pending File').item.json.file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        1700
+      ],
+      "id": "fba90f50-64aa-42cf-aece-e29ef89280df",
+      "name": "TG Get File Path"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/file/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        1700
+      ],
+      "id": "71dfe8a0-faef-4686-b5b5-49782b89e786",
+      "name": "TG Download Photo"
+    },
+    {
+      "parameters": {
+        "authentication": "",
+        "inputDataFieldName": "data",
+        "name": "={{ $('Get Pending File').item.json.tenant_name || 'Unknown' }} - {{ $('Get Pending File').item.json.category || 'photo' }} - {{ $now.format('MMM-dd-yyyy HH-mm') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2600,
+        1700
+      ],
+      "id": "e04a7c4b-8ed0-4018-9f4e-e4bf358e3c2b",
+      "name": "Upload Photo to Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "p7I1i2fnrnCjI4kX",
+          "name": "dionbuildsai comparable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.id }}/permissions",
+        "authentication": "oAuth2",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"type\":\"anyone\",\"role\":\"reader\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2800,
+        1700
+      ],
+      "id": "670a6914-5342-4a01-9f1c-8d44f1b2e25f",
+      "name": "Share Photo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "p7I1i2fnrnCjI4kX",
+          "name": "dionbuildsai comparable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE pending_media SET file_url = 'https://drive.google.com/file/d/' || '{{ $('Upload Photo to Drive').item.json.id }}' || '/view', status = 'uploaded' WHERE id = '{{ $('Get Pending File').item.json.id }}' RETURNING id, file_url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3000,
+        1700
+      ],
+      "id": "07850d4f-007f-48c7-98de-0f7d4d63d877",
+      "name": "Update Pending URL",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
     }
   ],
   "connections": {
@@ -1634,7 +2081,7 @@
         ],
         [
           {
-            "node": "Normalize Telegram",
+            "node": "Send Typing",
             "type": "main",
             "index": 0
           }
@@ -1739,11 +2186,6 @@
     "Log Inbound Message": {
       "main": [
         [
-          {
-            "node": "Build AI Payload",
-            "type": "main",
-            "index": 0
-          },
           {
             "node": "Has Media?",
             "type": "main",
@@ -1854,7 +2296,29 @@
             "type": "main",
             "index": 0
           }
-        ]
+        ],
+        [
+          {
+            "node": "Resolve Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reopen Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Media Category",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     },
     "Lookup Vendor": {
@@ -2103,7 +2567,168 @@
       "main": [
         [
           {
-            "node": "Prepare Media Payload",
+            "node": "Save Pending Media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build AI Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send AI Response": {
+      "main": [
+        [
+          {
+            "node": "Search Repair Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Repair Videos": {
+      "main": [
+        [
+          {
+            "node": "Match Video AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Video AI": {
+      "main": [
+        [
+          {
+            "node": "Send Video Followup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reopen Ticket": {
+      "main": [
+        [
+          {
+            "node": "Reopen Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Typing": {
+      "main": [
+        [
+          {
+            "node": "Normalize Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Video Followup": {
+      "main": [
+        [
+          {
+            "node": "Log Video Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolved Ack": {
+      "main": [
+        [
+          {
+            "node": "Log Resolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reopen Ack": {
+      "main": [
+        [
+          {
+            "node": "Log Reopen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Pending Media": {
+      "main": [
+        [
+          {
+            "node": "Send Category Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Media Category": {
+      "main": [
+        [
+          {
+            "node": "Update Pending Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Pending Category": {
+      "main": [
+        [
+          {
+            "node": "Media Category Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Media Category Ack": {
+      "main": [
+        [
+          {
+            "node": "Get Pending File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pending File": {
+      "main": [
+        [
+          {
+            "node": "Has File?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has File?": {
+      "main": [
+        [
+          {
+            "node": "TG Get File Path",
             "type": "main",
             "index": 0
           }
@@ -2111,11 +2736,44 @@
         []
       ]
     },
-    "Prepare Media Payload": {
+    "TG Get File Path": {
       "main": [
         [
           {
-            "node": "Call Media Upload",
+            "node": "TG Download Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG Download Photo": {
+      "main": [
+        [
+          {
+            "node": "Upload Photo to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Photo to Drive": {
+      "main": [
+        [
+          {
+            "node": "Share Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share Photo": {
+      "main": [
+        [
+          {
+            "node": "Update Pending URL",
             "type": "main",
             "index": 0
           }
@@ -2126,7 +2784,8 @@
   "settings": {
     "executionOrder": "v1",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "maxConcurrency": 1
   },
   "id": "6uqrzVIcH8GFznDf"
 }

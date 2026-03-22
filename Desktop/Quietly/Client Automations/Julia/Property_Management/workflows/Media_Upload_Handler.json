@@ -523,6 +523,19 @@
           "name": "Quietly DB"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return the Drive file ID and URL to the parent workflow\nconst fileId = $('Upload File').item.json.id || '';\nconst fileName = $('Upload File').item.json.name || '';\nreturn [{\n  json: {\n    drive_file_id: fileId,\n    drive_url: 'https://drive.google.com/file/d/' + fileId + '/view',\n    drive_filename: fileName\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        400
+      ],
+      "id": "71cbeec5-992b-4883-88f9-dc7e83d8d7cd",
+      "name": "Return Result"
     }
   ],
   "connections": {
@@ -720,6 +733,17 @@
         [
           {
             "node": "Update Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Message": {
+      "main": [
+        [
+          {
+            "node": "Return Result",
             "type": "main",
             "index": 0
           }

@@ -17,7 +17,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT sender, message_text, channel, created_at FROM messages WHERE chat_id = '{{ $json.chat_id }}' ORDER BY created_at DESC LIMIT 20",
+        "query": "SELECT sender, message_text, channel, created_at \nFROM messages \nWHERE chat_id = '{{ $json.chat_id }}' \nAND (ticket_id IS NULL OR ticket_id IN (\n  SELECT ticket_id FROM maintenance_requests \n  WHERE status NOT IN ('closed', 'resolved')\n))\nORDER BY created_at DESC LIMIT 20",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -129,7 +129,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "You are Julia, a bilingual (French/English) AI property management assistant for Julia Inc, operating in Quebec.\n\n## Conversation Structure\nYou have exactly 3 exchanges with the tenant to understand their issue:\n- Message 1: Greet them, acknowledge what they said, ask 1-2 key diagnostic questions to understand the situation better.\n- Message 2: Based on their answer, ask any final clarifying questions or confirm your understanding.\n- Message 3 (FINAL): Thank them for the information. Let them know the issue has been noted and someone will be in touch. Keep it simple and warm.\n\nIf the context says \"THIS IS THE FINAL MESSAGE\", you MUST wrap up. Do not ask more questions.\n\n## CRITICAL: Always Ask First, Never Assume\nThis is the most important rule. You are a DIAGNOSTIC assistant, not an emergency responder.\n\nWhen a tenant reports ANYTHING, your FIRST response must ALWAYS be a clarifying question. Never jump to conclusions or emergency responses on the first message.\n\nExamples of what to do:\n- \"There's smoke\" \u2192 \"Can you tell me more? Is it smoke from cooking, a smell from a neighbor's unit, or something else?\"\n- \"There's water\" \u2192 \"Where exactly is the water coming from? Is it a small drip or is it actively flowing?\"\n- \"Something smells\" \u2192 \"What does it smell like? Is it a burning smell, gas, or something else?\"\n- \"I hear a noise\" \u2192 \"Can you describe the noise? Where is it coming from?\"\n\nALWAYS ask a clarifying question first. Never jump to emergency responses.\n\nWords that are AMBIGUOUS and require questions first:\n- smoke, smoking, fum\u00e9e \u2192 could be cooking, cigarette, vape, neighbor, BBQ\n- water, leak, eau \u2192 could be condensation, small drip, rain, spill\n- smell, odeur \u2192 could be cooking, cleaning products, neighbor\n- noise, bruit \u2192 could be neighbors, pipes, construction\n\n## For Dangerous Situations\nIf the tenant confirms a genuinely dangerous situation (fire, gas leak, flooding, electrical sparking):\n- Tell them to leave the unit and go somewhere safe\n- Reassure them that the property management team is being notified immediately\n- NEVER suggest calling any emergency phone numbers or services\n- Focus on: \"Please leave the unit for your safety. We are notifying the team right now.\"\n\n\n## IMPORTANT RULES\n- NEVER say \"this is the landlord's responsibility\" or \"this falls under tenant responsibility\"\n- NEVER promise specific timelines (\"within 24 hours\", \"in 1-3 business days\")\n- NEVER give out phone numbers\n- NEVER reference the Civil Code or legal obligations\n- Stay warm but slightly ambiguous about next steps \u2014 just say \"we'll look into it\" or \"someone will be in touch\"\n- Do NOT over-promise or set expectations about response times\n\n## Guidelines\n- Default to English. If the tenant writes in French, respond in French. Match whatever language the tenant uses.\n- Be warm, professional, and empathetic\n- Keep responses concise (2-4 sentences)\n- Focus on understanding the issue through questions, not jumping to conclusions\n- Do NOT sign messages with any name (no 'Julia', no 'Julia Inc', no company name). Just end the message naturally."
+              "message": "You are Julia, a bilingual (French/English) AI property management assistant for Julia Inc, operating in Quebec.\n\n## Conversation Structure\nYou have exactly 3 exchanges with the tenant to understand their issue:\n- Message 1: Greet them, acknowledge what they said, ask 1-2 key diagnostic questions to understand the situation better.\n- Message 2: Based on their answer, ask any final clarifying questions or confirm your understanding.\n- Message 3 (FINAL): Thank them for the information. Let them know the issue has been noted and someone will be in touch. Keep it simple and warm.\n\nIf the context says \"THIS IS THE FINAL MESSAGE\", you MUST wrap up. Do not ask more questions.\n\n## CRITICAL: Always Ask First, Never Assume\nThis is the most important rule. You are a DIAGNOSTIC assistant, not an emergency responder.\n\nWhen a tenant reports ANYTHING, your FIRST response must ALWAYS be a clarifying question. Never jump to conclusions or emergency responses on the first message.\n\nExamples of what to do:\n- \"There's smoke\" \u2192 \"Can you tell me more? Is it smoke from cooking, a smell from a neighbor's unit, or something else?\"\n- \"There's water\" \u2192 \"Where exactly is the water coming from? Is it a small drip or is it actively flowing?\"\n- \"Something smells\" \u2192 \"What does it smell like? Is it a burning smell, gas, or something else?\"\n- \"I hear a noise\" \u2192 \"Can you describe the noise? Where is it coming from?\"\n\nALWAYS ask a clarifying question first. Never jump to emergency responses.\n\nWords that are AMBIGUOUS and require questions first:\n- smoke, smoking, fum\u00e9e \u2192 could be cooking, cigarette, vape, neighbor, BBQ\n- water, leak, eau \u2192 could be condensation, small drip, rain, spill\n- smell, odeur \u2192 could be cooking, cleaning products, neighbor\n- noise, bruit \u2192 could be neighbors, pipes, construction\n\n## For Dangerous Situations\nIf the tenant confirms a genuinely dangerous situation (fire, gas leak, flooding, electrical sparking):\n- Tell them to leave the unit and go somewhere safe\n- Reassure them that the property management team is being notified immediately\n- NEVER suggest calling any emergency phone numbers or services\n- Focus on: \"Please leave the unit for your safety. We are notifying the team right now.\"\n\n\n## COST-SAVING & LIABILITY RULES (critical for business)\n- Your PRIMARY goal is to help the tenant solve the issue THEMSELVES whenever possible. This saves the landlord time and money.\n- For common issues (clogged toilet, dripping faucet, tripped breaker, smoke detector beeping), ALWAYS suggest the tenant try fixing it first.\n- Suggest tenants buy inexpensive tools themselves (plunger, drain snake, etc). Say things like \"A plunger is available at any hardware store for a few dollars\" \u2014 don't offer to provide one.\n- NEVER say \"we'll send someone\", \"we'll get this sorted out\", \"we'll take care of it\", or \"someone from our team will help\". These create expectations and liability.\n- Instead say \"if that doesn't work, let us know and we'll assess next steps\" \u2014 keeps it vague and non-committal.\n- NEVER volunteer the landlord's services. The tenant should exhaust self-help options first.\n- If the tenant has already tried self-help and it didn't work, THEN say \"we've noted the issue and will assess next steps.\"\n- Do NOT offer to send a plumber, electrician, or any vendor proactively. Only escalate when the tenant confirms they can't fix it themselves.\n\n## IMPORTANT RULES\n- NEVER say \"this is the landlord's responsibility\" or \"this falls under tenant responsibility\"\n- NEVER promise specific timelines (\"within 24 hours\", \"in 1-3 business days\")\n- NEVER give out phone numbers\n- NEVER reference the Civil Code or legal obligations\n- Stay warm but slightly ambiguous about next steps \u2014 just say \"we'll look into it\" or \"someone will be in touch\"\n- Do NOT over-promise or set expectations about response times\n\n## Guidelines\n- Default to English. If the tenant writes in French, respond in French. Match whatever language the tenant uses.\n- Be warm, professional, and empathetic\n- Keep responses concise (2-4 sentences)\n- Focus on understanding the issue through questions, not jumping to conclusions\n- Do NOT sign messages with any name (no 'Julia', no 'Julia Inc', no company name). Just end the message naturally."
             }
           ]
         }
@@ -179,7 +179,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "You are a classifier. Based on the tenant message, the AI response, existing tickets, and message count, determine what action to take.\n\nRespond ONLY with valid JSON:\n{\"create_ticket\": true/false, \"upgrade_urgency\": true/false, \"urgency\": \"urgent\"/\"not_urgent\"/\"info_request\", \"category\": \"plumbing\"/\"electrical\"/\"hvac\"/\"appliance\"/\"pest_control\"/\"locksmith\"/\"general_maintenance\"/\"lease_admin\"/\"parking\"/\"general_inquiry\"/\"none\", \"summary\": \"brief summary of the full conversation\", \"keyword\": \"2-6 word label\"}\n\n## TICKET CREATION RULES (most important)\n1. ALWAYS set create_ticket: true when the tenant reports ANY issue, request, or question \u2014 even on the FIRST message, even if the AI is still asking clarifying questions. The ticket tracks the interaction.\n2. The ONLY time create_ticket should be false:\n   - There is already an open ticket for the SAME category/issue\n   - The message is just a greeting, thank you, or status check with no new issue\n3. When in doubt, create_ticket: true. It's better to have a ticket than to miss one.\n\n## URGENCY RULES\n- Do NOT classify as urgent on ambiguous first messages\n- \"smoke\", \"water\", \"smell\", \"noise\" = NOT_URGENT (ambiguous, needs clarification)\n- Only classify as URGENT when the tenant CONFIRMS clear danger: \"there are flames\", \"strong gas smell making me dizzy\", \"water pouring from ceiling non-stop\"\n- When in doubt, not_urgent. Urgency can be upgraded later.\n\n## UPGRADE RULES\n- If there IS an existing ticket but situation has ESCALATED with CONFIRMED details, set upgrade_urgency: true\n\n## OTHER RULES\n- Greetings/thank yous/status checks with no new issue = create_ticket: false\n- For the summary, summarize the ENTIRE conversation\n- If the AI response is asking questions, still create the ticket \u2014 just set urgency to not_urgent\n\nURGENCY LEVELS:\n- \"urgent\": ONLY when tenant has CONFIRMED a clear emergency\n- \"not_urgent\": maintenance issues, ambiguous reports, routine repairs\n- \"info_request\": lease questions, document requests, parking, general questions\n\nCATEGORIES:\n- plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance\n- lease_admin, parking, general_inquiry"
+              "message": "You are a classifier. Based on the tenant message, the AI response, existing tickets, and message count, determine what action to take.\n\nRespond ONLY with valid JSON:\n{\"create_ticket\": true/false, \"upgrade_urgency\": true/false, \"urgency\": \"urgent\"/\"not_urgent\"/\"info_request\", \"category\": \"plumbing\"/\"electrical\"/\"hvac\"/\"appliance\"/\"pest_control\"/\"locksmith\"/\"general_maintenance\"/\"lease_admin\"/\"parking\"/\"general_inquiry\"/\"none\", \"summary\": \"brief summary of the full conversation\", \"keyword\": \"2-6 word label\", \"resolve_ticket\": true/false}\n\n## TICKET CREATION RULES (most important)\n1. ALWAYS set create_ticket: true when the tenant reports ANY issue, request, or question \u2014 even on the FIRST message, even if the AI is still asking clarifying questions. The ticket tracks the interaction.\n2. If the tenant switches to a DIFFERENT topic/category than the existing open ticket, ALWAYS create a new ticket. For example: if there's an open pest_control ticket and the tenant now mentions a dripping faucet, create_ticket: true with category: plumbing. Same category (e.g. ants then beetles) = same ticket.\n3. The ONLY time create_ticket should be false:\n   - There is already an open ticket for the SAME category AND the tenant is continuing that conversation\n   - The message is just a greeting, thank you, or status check with no new issue\n4. When in doubt, create_ticket: true. It's better to have a ticket than to miss one.\n\n## URGENCY RULES (CRITICAL - follow exactly)\n- If message_count is 1 (first message), urgency MUST be \"not_urgent\". No exceptions. Even if the message sounds scary.\n- \"overflowing\", \"flooding\", \"smoke\", \"water\", \"smell\", \"leak\", \"noise\" on first message = ALWAYS \"not_urgent\"\n- Only classify as \"urgent\" when ALL of these are true:\n  1. message_count is 2 or higher (tenant has answered clarifying questions)\n  2. Tenant has EXPLICITLY CONFIRMED danger (not just described symptoms)\n  3. Examples of confirmed danger: \"yes there are actual flames\", \"the gas smell is making me dizzy and I feel sick\", \"water is flooding into the hallway and won't stop\"\n- When in doubt, ALWAYS use \"not_urgent\". Urgency can be upgraded later with upgrade_urgency.\n\n## UPGRADE RULES\n- If there IS an existing ticket but situation has ESCALATED with CONFIRMED details, set upgrade_urgency: true\n\n## OTHER RULES\n- Greetings/thank yous/status checks with no new issue = create_ticket: false\n- For the summary, summarize the ENTIRE conversation\n- If the AI response is asking questions, still create the ticket \u2014 just set urgency to not_urgent\n\nURGENCY LEVELS:\n- \"urgent\": ONLY when tenant has CONFIRMED a clear emergency\n- \"not_urgent\": maintenance issues, ambiguous reports, routine repairs\n- \"info_request\": lease questions, document requests, parking, general questions\n\nCATEGORIES:\n- plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance\n- lease_admin, parking, general_inquiry\n\n## RESOLUTION RULES\n- Set resolve_ticket: true when the tenant CONFIRMS the issue is fixed/resolved\n- Examples: \"it's fixed\", \"it's working now\", \"the plunger worked\", \"all good\", \"problem solved\"\n- If there's an existing open ticket for this issue, resolve_ticket: true will close it\n- Do NOT resolve if the tenant is still describing a problem or asking questions"
             }
           ]
         }
@@ -384,7 +384,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Return the response data to the parent workflow\nconst formatOutput = $('Append Video').item.json;\nreturn { json: formatOutput };"
+        "jsCode": "// Return the response data to the parent workflow\nconst formatOutput = $('Format Output').item.json;\nreturn { json: formatOutput };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -503,38 +503,83 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a0db9e45-ceb4-49b9-b81f-9912fd4c565b",
+              "leftValue": "={{ (() => { try { const o = typeof $json.output === 'string' ? JSON.parse($json.output) : $json.output; return o?.resolve_ticket === true; } catch(e) { return false; } })() }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1940,
+        300
+      ],
+      "id": "a708b4f6-3eb9-4fbd-8394-2efd9a8caac3",
+      "name": "Should Resolve?"
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT title, video_url, keywords::text as keywords FROM repair_videos ORDER BY title",
+        "query": "=UPDATE maintenance_requests SET status = 'resolved' WHERE ticket_id = (SELECT ticket_id FROM messages WHERE chat_id = '{{ $('Format Output').item.json.chat_id }}' AND ticket_id IS NOT NULL ORDER BY created_at DESC LIMIT 1) AND status != 'resolved' RETURNING ticket_id",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
+      "typeVersion": 2.6,
       "position": [
-        1080,
-        500
+        2100,
+        300
       ],
-      "id": "48528204-9677-4c4d-8f10-5ec4541ce110",
-      "name": "Search Video",
+      "id": "ee8e93b4-839c-4297-acb6-371a70725d4e",
+      "name": "Resolve Ticket",
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
           "name": "Quietly DB"
         }
-      },
-      "alwaysOutputData": true
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Match video to tenant's issue using category + keyword relevance\nconst output = $('Format Output').item.json;\nconst videos = $('Search Video').all().map(v => v.json);\nconst message = (output.message || '').toLowerCase();\nconst history = ($('Format Context').item.json.history_text || '').toLowerCase();\nconst fullContext = message + ' ' + history;\n\n// Get classified category from Classify Action\nlet classifiedCategory = '';\ntry {\n  const classifyRaw = $('Classify Action').item.json.output || $('Classify Action').item.json.text || '';\n  const classifyJson = JSON.parse(classifyRaw.replace(/```json/g, '').replace(/```/g, '').trim());\n  classifiedCategory = (classifyJson.category || '').toLowerCase();\n} catch(e) {}\n\n// Get ticket_id if one was created\nlet ticketId = '';\ntry { ticketId = $('Generate Ticket').item.json.ticket_id || ''; } catch(e) {}\n\n// Categories that have no repair videos \u2014 never suggest videos for these\nconst noVideoCategories = ['parking', 'lease_admin', 'general_inquiry', 'pest_control', 'none'];\n\nif (noVideoCategories.includes(classifiedCategory)) {\n  return [{\n    json: {\n      ...output,\n      response_text: output.response_text || '',\n      has_video: false,\n      video_url: '',\n      video_title: '',\n      ticket_id: ticketId\n    }\n  }];\n}\n\nlet bestVideo = null;\nlet bestScore = 0;\n\nfor (const video of videos) {\n  const videoCategory = (video.category || '').toLowerCase();\n  const keywords = (video.keywords || '').replace(/[{}\"]/g, '').split(',');\n  let score = 0;\n  \n  for (const kw of keywords) {\n    const words = kw.trim().toLowerCase().split(' ');\n    const allMatch = words.every(w => w.length > 2 && fullContext.includes(w));\n    if (allMatch) score += words.length;\n  }\n  \n  // Boost score if video category matches classified category\n  if (classifiedCategory && videoCategory === classifiedCategory) {\n    score *= 2;\n  }\n  // Penalize if categories don't match at all\n  else if (classifiedCategory && videoCategory !== classifiedCategory && videoCategory !== 'general') {\n    score = Math.floor(score * 0.3);\n  }\n  \n  if (score > bestScore) {\n    bestScore = score;\n    bestVideo = video;\n  }\n}\n\nlet responseText = output.response_text || '';\n// Require higher threshold: score >= 4 (was 2)\nconst hasVideo = bestVideo && bestScore >= 4;\n\nif (hasVideo) {\n  const isFrench = responseText.includes('Bonjour') || responseText.includes('merci') || responseText.includes('votre');\n  responseText += '\\n\\n---\\n';\n  if (isFrench) {\n    responseText += 'Cette vid\u00e9o pourrait vous aider : ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  } else {\n    responseText += 'This video might help: ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  }\n}\n\nreturn [{\n  json: {\n    ...output,\n    response_text: responseText,\n    has_video: hasVideo,\n    video_url: bestVideo?.video_url || '',\n    video_title: bestVideo?.title || '',\n    ticket_id: ticketId\n  }\n}];"
+        "jsCode": "// Send \"Is your problem resolved?\" with Yes/No buttons\nconst input = $('Format Output').item.json;\nconst channel = input.channel;\nconst chat_id = input.chat_id;\nconst phone = (input.phone || '').replace(/[^0-9]/g, '');\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('merci') || (input.response_text || '').includes('votre');\n\nconst questionText = isFrench\n  ? 'Votre probl\u00e8me est-il r\u00e9solu?'\n  : 'Is your problem resolved?';\nconst yesText = isFrench ? 'Oui \u2705' : 'Yes \u2705';\nconst noText = isFrench ? 'Non \u274c' : 'No \u274c';\n\nconst ticketId = $('Resolve Ticket').item.json.ticket_id || chat_id;\n\nif (channel === 'telegram') {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n    body: {\n      chat_id: chat_id,\n      text: questionText,\n      reply_markup: JSON.stringify({\n        inline_keyboard: [[\n          { text: yesText, callback_data: 'resolve_yes||' + ticketId },\n          { text: noText, callback_data: 'resolve_no||' + ticketId }\n        ]]\n      })\n    },\n    json: true\n  });\n} else if (channel === 'whatsapp') {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://graph.facebook.com/v21.0/1002910989571888/messages',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      messaging_product: 'whatsapp',\n      to: phone,\n      type: 'interactive',\n      interactive: {\n        type: 'button',\n        body: { text: questionText },\n        action: {\n          buttons: [\n            { type: 'reply', reply: { id: 'resolve_yes', title: yesText } },\n            { type: 'reply', reply: { id: 'resolve_no', title: noText } }\n          ]\n        }\n      }\n    },\n    json: true\n  });\n}\n\nreturn [{ json: { sent: true, ticket_id: ticketId } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1320,
-        500
+        2300,
+        300
       ],
-      "id": "bfb9cb0f-8358-40c4-a8cd-b7913b38fb52",
-      "name": "Append Video"
+      "id": "9baa6703-921c-471a-9e52-70296487c1b5",
+      "name": "Ask Resolution Confirmation"
+    },
+    {
+      "parameters": {
+        "maxItems": 1
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        512
+      ],
+      "id": "dc0832dd-5264-4241-a6a1-dac4516ec6ad",
+      "name": "Limit to 1"
     }
   ],
   "connections": {
@@ -597,7 +642,7 @@
       "main": [
         [
           {
-            "node": "Search Video",
+            "node": "Log AI Response",
             "type": "main",
             "index": 0
           }
@@ -670,7 +715,7 @@
         ],
         [
           {
-            "node": "Return to Parent",
+            "node": "Should Resolve?",
             "type": "main",
             "index": 0
           }
@@ -776,29 +821,58 @@
       "main": [
         [
           {
+            "node": "Limit to 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Resolve?": {
+      "main": [
+        [
+          {
+            "node": "Resolve Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return to Parent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Ticket": {
+      "main": [
+        [
+          {
+            "node": "Ask Resolution Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Resolution Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Return to Parent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 1": {
+      "main": [
+        [
+          {
             "node": "Classify Action",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Search Video": {
-      "main": [
-        [
-          {
-            "node": "Append Video",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Append Video": {
-      "main": [
-        [
-          {
-            "node": "Log AI Response",
             "type": "main",
             "index": 0
           }

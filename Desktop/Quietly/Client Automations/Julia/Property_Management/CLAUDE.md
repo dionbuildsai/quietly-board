@@ -1,7 +1,7 @@
 # Julia Inc — Property Management Automation
 
 ## Project Overview
-Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows (107 nodes) handle tenant messages across Telegram, Email, SMS, and WhatsApp — auto-classifying issues, creating tickets, suggesting repair videos, dispatching vendors, and replying via AI.
+Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows (149 nodes) handle tenant messages across Telegram, Email, SMS, and WhatsApp — auto-classifying issues, creating tickets, suggesting repair videos, dispatching vendors, and replying via AI.
 
 **n8n Instance:** `https://n8n.srv1285597.hstgr.cloud`
 **Dashboard:** `https://dash.srv1285597.hstgr.cloud` — Next.js dashboard (Docker)
@@ -18,17 +18,18 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 
 ```
                     ┌──────────────────────────────────────────────┐
-                    │         [Intake] Channel Router (54 nodes)    │
+                    │         [Intake] Channel Router (76 nodes)    │
   Telegram ────────►│  Normalize → Lookup Tenant → Log Message     │
   Email (Gmail) ───►│  → Build AI Payload → Call AI Agent          │
-  SMS (Twilio) ────►│                                              │
-  WhatsApp ────────►│  Also: Callback dispatch + video resolve     │
+  SMS (Twilio) ────►│  → AI Video Match (Haiku)                    │
+  WhatsApp ────────►│  Callbacks: dispatch, video, resolve_yes/no  │
                     └──────────────┬───────────────────────────────┘
                                    │
                     ┌──────────────▼───────────────────────────────┐
-                    │       [AI] Conversation Agent (25 nodes)      │
+                    │       [AI] Conversation Agent (27 nodes)      │
                     │  Claude Sonnet 4 → Classify → Create Ticket  │
-                    │  → Search Video → Append Video → Response    │
+                    │  → Should Resolve? → Resolve Ticket          │
+                    │  → Ask Resolution Confirmation               │
                     └──────────────┬───────────────────────────────┘
                                    │
                     ┌──────────────▼───────────────────────────────┐
@@ -49,9 +50,10 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 
 | Workflow | n8n ID | Nodes | Purpose |
 |----------|--------|-------|---------|
-| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 54 | All 4 channel triggers, normalize, tenant lookup, log message, AI handoff, callback dispatch, video resolve callbacks |
-| **[AI] Conversation Agent** | `5WW7m5IiqvJoHWZ1` | 25 | Claude Sonnet 4 agent + Haiku classifier, ticket creation, video search + append |
+| **[Intake] Channel Router** | `6uqrzVIcH8GFznDf` | 76 | All 4 channel triggers, normalize, tenant lookup, log message, AI handoff, AI video match (Haiku), callback dispatch, resolve_yes/no callbacks |
+| **[AI] Conversation Agent** | `5WW7m5IiqvJoHWZ1` | 27 | Claude Sonnet 4 agent + Haiku classifier, ticket creation, resolve flow (Should Resolve? → Resolve Ticket → Ask Resolution Confirmation) |
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
+| **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
 
 ---
@@ -88,20 +90,34 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 - **Always ask first:** Never assume severity. "Smoke" → ask if cooking/cigarette/fire. Only suggest leaving unit after tenant confirms real danger.
 - **Never mention 911** or emergency services
 - **3 exchanges max** per issue, then wrap up
+- **Cost-saving & liability rules:** Primary goal is tenant self-help. Suggest tenant buys own tools (plunger, drain snake). Never say "we'll send someone" or "we'll take care of it" — creates liability. Only escalate after tenant confirms self-help failed. Use vague language: "we'll assess next steps".
 
 ### Ticket Classification
 - **ALWAYS creates ticket** on any issue/request/question (even on first message while asking questions)
-- Only `false` for greetings, thank-yous, or existing ticket for same category
+- Only `false` for greetings, thank-yous, or existing ticket for **same category** continuing same conversation
+- **Different category = new ticket**: if tenant switches topics (e.g. open pest_control ticket but now mentions a dripping faucet → create new plumbing ticket)
 - **Urgency:** `urgent` (only confirmed emergencies), `not_urgent` (default), `info_request` (non-maintenance)
+- **Urgency on message_count=1: ALWAYS `not_urgent`** — no exceptions, even for scary-sounding messages
+- `urgent` only when message_count ≥ 2 AND tenant has explicitly confirmed danger
 - **Categories:** plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance, lease_admin, parking, general_inquiry
+- **`resolve_ticket`:** classifier outputs `true` when tenant confirms issue is fixed ("it's working now", "the plunger worked") — triggers Resolve Ticket flow in AI Agent
 
 ### Video Suggestions
-- `repair_videos` table: 8 YouTube videos with keywords array
-- Append Video code node scores all videos against full conversation history (tenant messages + AI responses)
-- Matches individual words from each keyword against the conversation
-- On Telegram: sends follow-up "Did this video help?" with Yes ✅ / No ❌ buttons
-- **Yes** → updates ticket status to `resolved` (looks up latest ticket by phone/telegram_id)
+- `repair_videos` table: 8 YouTube videos with keywords array + category
+- Video search runs in **Intake Channel Router** (not AI Agent) — `Search Repair Videos` → `AI Video Match` code node
+- Matching uses **Claude Haiku API** (not keyword scoring): sends tenant message + video list, Haiku returns index or "none"
+- Only suggests video when Haiku is confident — strict matching (exact problem match required)
+- On Telegram: Response Dispatcher sends follow-up "Did this video help?" with Yes ✅ / No ❌ buttons (callbacks: `video_yes`, `video_no`)
+- **Yes** → updates ticket status to `resolved`
 - **No** → sends "someone will follow up" message
+
+### Resolve Flow (tenant-initiated)
+- If classifier sets `resolve_ticket: true` (tenant says issue is fixed):
+  1. `Should Resolve?` IF node checks the flag
+  2. `Resolve Ticket` — UPDATE maintenance_requests SET status='resolved' (latest open ticket by chat_id)
+  3. `Ask Resolution Confirmation` — sends "Is your problem resolved?" Yes ✅ / No ❌ (callbacks: `resolve_yes`, `resolve_no`)
+- `resolve_yes` callback in Intake: sends ack confirmation to tenant
+- Message history query filters to open tickets only (excludes messages from closed/resolved tickets)
 
 ### Dispatch Flow (Telegram callbacks)
 1. Urgent ticket → landlord notification with Auto Dispatch / Show Contractors buttons
@@ -163,7 +179,10 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 - Get Open Tickets uses DISTINCT
 - Merge Tenant + Message code node with try/catch for channel-agnostic data flow
 - Message linking filtered by channel (Link Messages to Ticket + Link Ongoing Messages include `AND channel = ...`)
-- Append Video uses classified category to prevent irrelevant video suggestions (noVideoCategories: parking, lease_admin, general_inquiry, pest_control)
+- Video Follow-up returns `{ video_skipped: true }` instead of `[]` when no video (fixes execution order bug)
+- Video matching via Haiku API has 10s timeout with graceful fallback (returns `has_video: false`)
+- Message history query filters to open tickets only — no bleedover from closed conversations
+- Media Upload Handler returns `{ drive_file_id, drive_url, drive_filename }` via `Return Result` node
 
 ---
 
@@ -206,8 +225,12 @@ Property management automation for **Julia Inc** (Quebec-based). 4 n8n workflows
 - Webhook nodes created via API need `webhookId` field (UUID) for production registration
 - Telegram webhook must be re-registered via n8n UI toggle after deactivate/reactivate
 - Format Context passes `language_pref: detect from message` (not DB field)
-- Classify Action runs AFTER Search Video in the flow — ticket_id not available when video is appended
+- Video search (Search Repair Videos + AI Video Match) runs in Intake, BEFORE calling AI Agent — result passed in AI payload
+- Classify Action runs in AI Agent after response generation — ticket_id available via Generate Ticket
 - Video resolve callback uses chat_id to look up latest ticket (not ticket_id)
+- Resolve Ticket uses chat_id to find latest open ticket (UPDATE WHERE ticket_id = subquery)
+- `resolve_yes`/`resolve_no`/`mc` (media_cat) are new callback routes in Intake Channel Router switch
 - Message linking includes `AND channel = ...` to prevent cross-channel ticket pollution
 - Dashboard message query filters by channel; falls back to chat_id only if ticket_id returns 0 messages
 - Manual trigger → Clear Messages → Clear Tickets (for dev/testing)
+- Intake Switch node has `fallbackOutput: "extra"` for unrecognized callback actions
