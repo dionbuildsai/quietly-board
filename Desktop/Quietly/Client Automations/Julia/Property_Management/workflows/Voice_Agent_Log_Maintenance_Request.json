@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-22T15:34:18.477Z",
+  "updatedAt": "2026-03-22T17:42:03.959Z",
   "createdAt": "2026-03-22T03:03:23.390Z",
   "id": "JO26ruzPNp1MQThL",
   "name": "Voice Agent \u2014 Log Maintenance Request",
@@ -753,6 +753,76 @@
           "name": "property_management"
         }
       }
+    },
+    {
+      "parameters": {
+        "chatId": "6274604148",
+        "text": "={{ $json.urgency === 'urgent' ? 'URGENT TICKET' : 'NEW TICKET' }} {{ $json.ticket_id }}\n\nCategory: {{ $json.category }}\nTenant: {{ $json.tenant_name }}\nUnit: {{ $json.unit || 'N/A' }}\nProperty: {{ $json.property || 'N/A' }}\n\nSummary: {{ $json.summary }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        -140
+      ],
+      "id": "tg-julia-text",
+      "name": "Send text message - Julia",
+      "webhookId": "e937900b-9494-4faa-87ed-ca5c969c26b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6274604148",
+        "text": "=URGENT TICKET {{ $('Insert rows in a table').item.json.ticket_id }}\n\nCategory: {{ $('Insert rows in a table').item.json.category }}\nTenant: {{ $('Insert rows in a table').item.json.tenant_name }}\nUnit: {{ $('Insert rows in a table').item.json.unit || 'N/A' }}\nProperty: {{ $('Insert rows in a table').item.json.property || 'N/A' }}\n\nSummary: {{ $('Insert rows in a table').item.json.summary }}\n\nHow would you like to handle this?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Auto Dispatch",
+                    "additionalFields": {
+                      "callback_data": "=dispatch||{{ $('Insert rows in a table').item.json.ticket_id }}||{{ $('Insert rows in a table').item.json.category }}"
+                    }
+                  },
+                  {
+                    "text": "Show Contractors",
+                    "additionalFields": {
+                      "callback_data": "=manual||{{ $('Insert rows in a table').item.json.ticket_id }}||{{ $('Insert rows in a table').item.json.category }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        30
+      ],
+      "id": "tg-julia-urgent",
+      "name": "Send Urgent Notification - Julia",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
     }
   ],
   "connections": {
@@ -842,7 +912,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Send text message - Julia",
             "type": "main",
             "index": 0
           }
@@ -937,6 +1007,28 @@
       "main": [
         [
           {
+            "node": "Send Urgent Notification - Julia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send text message - Julia": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Urgent Notification - Julia": {
+      "main": [
+        [
+          {
             "node": "Respond to Webhook",
             "type": "main",
             "index": 0
@@ -953,9 +1045,9 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "8d3671a9-9053-4cf1-8b20-3eb0ee2c8d5c",
-  "activeVersionId": "8d3671a9-9053-4cf1-8b20-3eb0ee2c8d5c",
-  "versionCounter": 78,
+  "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
+  "activeVersionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
+  "versionCounter": 81,
   "triggerCount": 4,
   "shared": [
     {
@@ -978,9 +1070,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-22T15:34:18.478Z",
-    "createdAt": "2026-03-22T15:34:18.478Z",
-    "versionId": "8d3671a9-9053-4cf1-8b20-3eb0ee2c8d5c",
+    "updatedAt": "2026-03-22T17:42:03.961Z",
+    "createdAt": "2026-03-22T17:42:03.961Z",
+    "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
     "workflowId": "JO26ruzPNp1MQThL",
     "nodes": [
       {
@@ -1729,6 +1821,76 @@
             "name": "property_management"
           }
         }
+      },
+      {
+        "parameters": {
+          "chatId": "6274604148",
+          "text": "={{ $json.urgency === 'urgent' ? 'URGENT TICKET' : 'NEW TICKET' }} {{ $json.ticket_id }}\n\nCategory: {{ $json.category }}\nTenant: {{ $json.tenant_name }}\nUnit: {{ $json.unit || 'N/A' }}\nProperty: {{ $json.property || 'N/A' }}\n\nSummary: {{ $json.summary }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1160,
+          -140
+        ],
+        "id": "tg-julia-text",
+        "name": "Send text message - Julia",
+        "webhookId": "e937900b-9494-4faa-87ed-ca5c969c26b6",
+        "credentials": {
+          "telegramApi": {
+            "id": "5uwoGp7iX1GQkMcu",
+            "name": "property_management"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "6274604148",
+          "text": "=URGENT TICKET {{ $('Insert rows in a table').item.json.ticket_id }}\n\nCategory: {{ $('Insert rows in a table').item.json.category }}\nTenant: {{ $('Insert rows in a table').item.json.tenant_name }}\nUnit: {{ $('Insert rows in a table').item.json.unit || 'N/A' }}\nProperty: {{ $('Insert rows in a table').item.json.property || 'N/A' }}\n\nSummary: {{ $('Insert rows in a table').item.json.summary }}\n\nHow would you like to handle this?",
+          "replyMarkup": "inlineKeyboard",
+          "inlineKeyboard": {
+            "rows": [
+              {
+                "row": {
+                  "buttons": [
+                    {
+                      "text": "Auto Dispatch",
+                      "additionalFields": {
+                        "callback_data": "=dispatch||{{ $('Insert rows in a table').item.json.ticket_id }}||{{ $('Insert rows in a table').item.json.category }}"
+                      }
+                    },
+                    {
+                      "text": "Show Contractors",
+                      "additionalFields": {
+                        "callback_data": "=manual||{{ $('Insert rows in a table').item.json.ticket_id }}||{{ $('Insert rows in a table').item.json.category }}"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1160,
+          30
+        ],
+        "id": "tg-julia-urgent",
+        "name": "Send Urgent Notification - Julia",
+        "credentials": {
+          "telegramApi": {
+            "id": "5uwoGp7iX1GQkMcu",
+            "name": "property_management"
+          }
+        }
       }
     ],
     "connections": {
@@ -1818,7 +1980,7 @@
         "main": [
           [
             {
-              "node": "Respond to Webhook",
+              "node": "Send text message - Julia",
               "type": "main",
               "index": 0
             }
@@ -1913,6 +2075,28 @@
         "main": [
           [
             {
+              "node": "Send Urgent Notification - Julia",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send text message - Julia": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Urgent Notification - Julia": {
+        "main": [
+          [
+            {
               "node": "Respond to Webhook",
               "type": "main",
               "index": 0
@@ -1927,18 +2111,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-22T15:34:18.570Z",
-        "id": 102,
+        "createdAt": "2026-03-22T17:42:04.063Z",
+        "id": 118,
         "workflowId": "JO26ruzPNp1MQThL",
-        "versionId": "8d3671a9-9053-4cf1-8b20-3eb0ee2c8d5c",
+        "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
         "event": "deactivated",
         "userId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
       },
       {
-        "createdAt": "2026-03-22T15:34:18.608Z",
-        "id": 103,
+        "createdAt": "2026-03-22T17:42:04.095Z",
+        "id": 119,
         "workflowId": "JO26ruzPNp1MQThL",
-        "versionId": "8d3671a9-9053-4cf1-8b20-3eb0ee2c8d5c",
+        "versionId": "38e6f08b-10c5-4e42-9176-10f7d9726b33",
         "event": "activated",
         "userId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
       }

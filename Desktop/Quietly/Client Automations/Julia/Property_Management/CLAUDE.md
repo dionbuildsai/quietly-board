@@ -79,6 +79,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - **Emergency protocol**: NEVER tell tenant to vacate/leave — that is the landlord's decision; tenant may need to stay to open door for contractors. Say "your safety is the priority, team is being notified right away."
 - **Natural speech**: Agent uses brief fillers ("Sure", "Of course", "Let me see") and says "One moment..." before calling PM_log_maintenance and PM_post_call_log to provide audio feedback during tool delay
 - **Silence filler** (`soft_timeout_config`): "Mm, let me see..." (fires when turn timeout is reached)
+- **Telegram recipients**: Dion (6216258938) AND Julia (6274604148) — both receive all landlord notifications from Voice Agent and AI Conversation Agent
 
 ### Voice Agent n8n Tools
 | Tool (webhook path) | Method | Purpose |
