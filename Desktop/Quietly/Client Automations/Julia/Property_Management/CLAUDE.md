@@ -64,45 +64,41 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 **Phone:** +14389009998 (Twilio → ElevenLabs)
 **ElevenLabs Agent ID:** `agent_6201km9s1231fdm8ajv5e55gyf8j`
 **ElevenLabs Agent Name:** Julia — Property Management
+**ElevenLabs API Key:** `sk_57816803559387cff8890341b07837e9966fe34ee982ad23`
 **LLM:** Gemini 2.5 Flash
 **Voices:** Sarah (English, `EXAVITQu4vr4xnSDxMaL`), Charlotte (French, `XB0fDUnXU5powFXDhCwa`)
 **TTS Model:** `eleven_flash_v2`
 
-### Conversation Initiation Webhook
-ElevenLabs workspace setting: calls `https://n8n.srv1285597.hstgr.cloud/webhook/convai-init` before every call.
-n8n receives `{caller_id, agent_id}`, looks up tenant by phone, returns:
-```json
-{ "type": "conversation_initiation_client_data", "dynamic_variables": { "caller_phone", "tenant_name", "unit_number", "property_name" } }
-```
-- Unknown callers → `tenant_name = "there"` → greeting: "Hello there, you've reached property management."
-- Known callers → "Hello [name], you've reached property management."
+### How Tenant Lookup Works
+**IMPORTANT:** ElevenLabs `conversation_initiation_client_data_webhook` (workspace level) is **NOT called for inbound Twilio phone calls** — client-side only (web SDK/widget). The `/webhook/convai-init` n8n flow exists but is never triggered for real calls.
+
+**Correct approach:** Agent calls `PM_get_status` as its **very first action** when the tenant speaks. This auto-fills `tenant_phone` via `dynamic_variable: "system__caller_id"` (always available on phone calls) and returns name, unit, open tickets. The agent addresses the caller by name from this result.
+
+- Agent must NEVER ask for name, unit number, or phone — always from PM_get_status
+- If PM_get_status finds no record → proceed without a name, do not ask
 
 ### Voice Agent n8n Tools
 | Tool (webhook path) | Method | Purpose |
 |---------------------|--------|---------|
-| `/webhook/convai-init` | POST | Pre-call: lookup tenant, return dynamic vars |
-| `/webhook/get-status` | POST | Check tenant info + open tickets by phone |
+| `/webhook/convai-init` | POST | Exists but NOT called for Twilio inbound — kept for future web use |
+| `/webhook/get-status` | POST | Tenant info + open tickets by phone — called first on every call |
 | `/webhook/log-maintenance` | POST | Create new maintenance ticket |
 | `/webhook/post-call-log` | POST | Log call transcript to call_logs table |
 
 ### PM_log_maintenance Tool Config (ElevenLabs)
 - `tenant_phone`: LLM fills from `{{system__caller_id}}` in system prompt (digits only, strip +)
-- `tenant_name`: LLM fills from conversation
-- `unit_number`: LLM fills from conversation
+- `tenant_name`: LLM fills from PM_get_status result
+- `unit_number`: LLM fills from PM_get_status result
 - `channel` → `constant_value: "phone"`
 - Required: `category`, `description`, `urgency`, `tenant_message`
 
 **PM_get_status / PM_post_call_log** — `tenant_phone` auto-filled via `dynamic_variable: "system__caller_id"` (always available on phone calls). `call_id` auto-filled via `dynamic_variable: "system__conversation_id"`.
 
-**System prompt** uses `{{system__caller_id}}` for phone (injected by ElevenLabs, always available).
-
 **Key rule:** Agent must CALL PM_log_maintenance — not say "I'm logging". Tool call first, confirm after.
 
-### convai-init Flow (n8n, 4-node chain)
-`Convai Init` → `Extract Phone` (Code: strip non-digits from caller_id) → `SQL Tenant Lookup` (Postgres: COALESCE LEFT JOIN, always returns 1 row) → `Format Init` (Code: build response) → `Respond Init`
+### convai-init Flow (n8n, kept but not used for phone calls)
+`Convai Init` → `Extract Phone` (Code: strip non-digits from caller_id) → `SQL Tenant Lookup` (Postgres: COALESCE LEFT JOIN) → `Format Init` (Code: build response) → `Respond Init`
 
-- Phone normalized to digits-only (no + prefix) before DB lookup
-- Unknown callers: `tenant_name = "there"`, empty unit/property
 - `$helpers.httpRequest` is NOT available in this n8n Code node context — always use Postgres nodes for DB access
 
 ### log-maintenance Telegram Notification
