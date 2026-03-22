@@ -105,6 +105,14 @@ n8n receives `{caller_id, agent_id}`, looks up tenant by phone, returns:
 - Unknown callers: `tenant_name = "there"`, empty unit/property
 - `$helpers.httpRequest` is NOT available in this n8n Code node context — always use Postgres nodes for DB access
 
+### log-maintenance Telegram Notification
+`Insert rows in a table` → `Send a text message` (direct, no IF gate)
+
+- **Always fires** for every phone ticket (urgent and non-urgent)
+- Message uses urgency-conditional emoji: `🚨 URGENT PHONE TICKET` vs `📞 New Phone Ticket`
+- Includes: tenant name, phone, unit, issue summary, urgency, timestamp
+- **Note:** The old IF node (`urgency == "urgent"`) was removed — LLM always assigns `not_urgent` by default, so the gate was silently dropping all notifications
+
 ### Git Note
 `workflows/Intake_Channel_Router.json` in git has `ANTHROPIC_API_KEY_SET_IN_N8N_ENV` as a placeholder for the Haiku API call in `Match Video AI`. The live n8n workflow has the real key. Set `ANTHROPIC_API_KEY` in n8n environment if redeploying from git.
 

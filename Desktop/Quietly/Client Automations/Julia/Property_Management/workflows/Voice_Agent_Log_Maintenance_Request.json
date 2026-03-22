@@ -535,7 +535,7 @@
     {
       "parameters": {
         "chatId": "6216258938",
-        "text": "=\ud83d\udea8 EMERGENCY MAINTENANCE REQUEST\n\nTenant: {{ $('Edit Fields').item.json.tenant_name }}\nPhone: {{ $('Edit Fields').item.json.phone }}\nUnit: {{ $('Edit Fields').item.json.unit }}\nIssue: {{ $('Edit Fields').item.json.summary }}\n\nLogged at: {{ $now.format('yyyy-MM-dd HH:mm') }}",
+        "text": "={{ $('Insert rows in a table').item.json.urgency === 'urgent' ? '\ud83d\udea8 URGENT PHONE TICKET' : '\ud83d\udcde New Phone Ticket' }}\n\nTenant: {{ $('Edit Fields').item.json.tenant_name }}\nPhone: {{ $('Edit Fields').item.json.phone }}\nUnit: {{ $('Edit Fields').item.json.unit }}\nIssue: {{ $('Edit Fields').item.json.summary }}\nUrgency: {{ $('Insert rows in a table').item.json.urgency }}\n\nLogged at: {{ $now.format('yyyy-MM-dd HH:mm') }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
@@ -638,7 +638,7 @@
       "main": [
         [
           {
-            "node": "If",
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
@@ -711,24 +711,6 @@
         ]
       ]
     },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "Send a text message",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Respond to Webhook": {
       "main": [
         []
@@ -795,5 +777,9 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "staticData": null
+  "staticData": null,
+  "tags": [],
+  "pinData": null,
+  "versionId": "46de49e6-4db9-41aa-bcb2-9a9c5ce92c89",
+  "meta": null
 }
