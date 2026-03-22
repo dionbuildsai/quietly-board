@@ -55,7 +55,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
 | **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
-| **Voice Agent** | `JO26ruzPNp1MQThL` | 17 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
+| **Voice Agent** | `JO26ruzPNp1MQThL` | 18 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
 
 ---
 
@@ -102,11 +102,13 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - `$helpers.httpRequest` is NOT available in this n8n Code node context — always use Postgres nodes for DB access
 
 ### log-maintenance Telegram Notification
-`Insert rows in a table` → `Send a text message` (direct, no IF gate)
+`Insert rows in a table` → `Lookup Tenant Info` (Postgres: get email + property from tenants table) → `Send a text message`
 
 - **Always fires** for every phone ticket (urgent and non-urgent)
-- Message uses urgency-conditional emoji: `🚨 URGENT PHONE TICKET` vs `📞 New Phone Ticket`
-- Includes: tenant name, phone, unit, issue summary, urgency, timestamp
+- Format matches text-channel notifications: `NEW TICKET TK-XXXX` / `URGENT TICKET TK-XXXX`
+- Includes: Category, Tenant, Phone, Unit, Property, Email, Summary, Urgency, Keywords
+- `appendAttribution: false` — no "Sent from n8n" footer
+- `Lookup Tenant Info` uses `alwaysOutputData: true`; shows `N/A` for fields not found
 - **Note:** The old IF node (`urgency == "urgent"`) was removed — LLM always assigns `not_urgent` by default, so the gate was silently dropping all notifications
 
 ### Git Note

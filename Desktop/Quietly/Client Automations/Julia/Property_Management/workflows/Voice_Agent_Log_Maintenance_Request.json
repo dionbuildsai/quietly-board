@@ -535,8 +535,10 @@
     {
       "parameters": {
         "chatId": "6216258938",
-        "text": "={{ $('Insert rows in a table').item.json.urgency === 'urgent' ? '\ud83d\udea8 URGENT PHONE TICKET' : '\ud83d\udcde New Phone Ticket' }}\n\nTenant: {{ $('Edit Fields').item.json.tenant_name }}\nPhone: {{ $('Edit Fields').item.json.phone }}\nUnit: {{ $('Edit Fields').item.json.unit }}\nIssue: {{ $('Edit Fields').item.json.summary }}\nUrgency: {{ $('Insert rows in a table').item.json.urgency }}\n\nLogged at: {{ $now.format('yyyy-MM-dd HH:mm') }}",
-        "additionalFields": {}
+        "text": "={{ $('Insert rows in a table').item.json.urgency === 'urgent' ? 'URGENT TICKET' : 'NEW TICKET' }} {{ $('Edit Fields').item.json.ticket_id }}\n\nCategory: {{ $('Edit Fields').item.json.category }}\nTenant: {{ $('Edit Fields').item.json.tenant_name }}\nPhone: {{ $('Edit Fields').item.json.phone }}\nUnit: {{ $('Edit Fields').item.json.unit || 'N/A' }}\nProperty: {{ $('Lookup Tenant Info').item.json.property_name || 'N/A' }}\nEmail: {{ $('Lookup Tenant Info').item.json.tenant_email || 'N/A' }}\n\nSummary: {{ $('Edit Fields').item.json.summary }}\nUrgency: {{ $('Edit Fields').item.json.urgency }}\nKeywords: {{ $('Insert rows in a table').item.json.keywords || 'N/A' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -631,6 +633,29 @@
       ],
       "id": "83ae6982-25b9-49fd-b823-5cd530eb15cb",
       "name": "Format Init"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.email AS tenant_email, p.name AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ \\$('Edit Fields').item.json.phone }}' LIMIT 1;",
+        "options": {
+          "alwaysOutputData": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        700,
+        -128
+      ],
+      "id": "b1c2d3e4-f5a6-7890-abcd-ef1234567890",
+      "name": "Lookup Tenant Info",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
     }
   ],
   "connections": {
@@ -638,7 +663,7 @@
       "main": [
         [
           {
-            "node": "Send a text message",
+            "node": "Lookup Tenant Info",
             "type": "main",
             "index": 0
           }
@@ -770,6 +795,17 @@
           }
         ]
       ]
+    },
+    "Lookup Tenant Info": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -780,6 +816,6 @@
   "staticData": null,
   "tags": [],
   "pinData": null,
-  "versionId": "46de49e6-4db9-41aa-bcb2-9a9c5ce92c89",
+  "versionId": "611f8a0a-020d-4779-811a-e9a91557d8f0",
   "meta": null
 }
