@@ -232,7 +232,7 @@
             {
               "id": "a9",
               "name": "ticket_id",
-              "value": "={{ 'TK-' + $now.format('MMddHHmmss') }}",
+              "value": "={{ 'TK-' + $now.toMillis().toString(36).toUpperCase().slice(-8) }}",
               "type": "string"
             },
             {
@@ -535,7 +535,7 @@
     {
       "parameters": {
         "chatId": "6216258938",
-        "text": "={{ $json.urgency === 'urgent' ? 'URGENT TICKET' : 'NEW TICKET' }} {{ $json.ticket_id }}\n\nCategory: {{ $json.category }}\nTenant: {{ $json.tenant_name }}\nPhone: {{ $json.phone }}\nUnit: {{ $json.unit || 'N/A' }}\nProperty: {{ $json.property || 'N/A' }}\nEmail: {{ $json.tenant_email || 'N/A' }}\n\nSummary: {{ $json.summary }}\nUrgency: {{ $json.urgency }}\nKeywords: {{ $json.keywords || 'N/A' }}",
+        "text": "={{ $json.urgency === 'urgent' ? 'URGENT TICKET' : 'NEW TICKET' }} {{ $json.ticket_id }}\n\nCategory: {{ $json.category }}\nTenant: {{ $json.tenant_name }}\nUnit: {{ $json.unit || 'N/A' }}\nProperty: {{ $json.property || 'N/A' }}\n\nSummary: {{ $json.summary }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -637,7 +637,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT t.email AS tenant_email, p.name AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ $json.phone }}' LIMIT 1;",
+        "query": "SELECT t.email AS tenant_email, TRIM(COALESCE(p.name,'') || ' ' || COALESCE(p.address,'')) AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ $json.phone }}' LIMIT 1;",
         "options": {
           "alwaysOutputData": true
         }
@@ -840,6 +840,6 @@
   "staticData": null,
   "tags": [],
   "pinData": null,
-  "versionId": "b590663e-7228-4b6f-b57d-4700c012c627",
+  "versionId": "98a8d8c6-c044-442f-acab-98f0126470b8",
   "meta": null
 }

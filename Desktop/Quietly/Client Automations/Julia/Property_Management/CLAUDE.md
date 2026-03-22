@@ -104,9 +104,11 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 ### log-maintenance chain (n8n)
 `Log Maintenance` → `Edit Fields` → `Lookup Tenant Info` → `Merge for Insert` → `Insert rows in a table` → `Send a text message` → `Respond to Webhook`
 
-- `Lookup Tenant Info` (Postgres): fetches `tenant_email` + `property_name` from tenants/properties by `$json.phone`. Uses `alwaysOutputData: true`.
+- `Lookup Tenant Info` (Postgres): fetches `tenant_email` + `property_name` (full address: `TRIM(COALESCE(p.name,'') || ' ' || COALESCE(p.address,''))`) by `$json.phone`. Uses `alwaysOutputData: true`.
 - `Merge for Insert` (Code): combines Edit Fields + Lookup, populates ALL columns: `tenant_phone`, `unit_number`, `description`, `property`, `tenant_email` (aliases so both column name variants are filled).
-- **Telegram**: Format matches text-channel — `NEW TICKET TK-XXXX` / `URGENT TICKET TK-XXXX`. Includes Category, Tenant, Phone, Unit, Property, Email, Summary, Urgency, Keywords. `appendAttribution: false`.
+- **Ticket ID**: `TK-` + last 8 chars of `$now.toMillis().toString(36).toUpperCase()` — alphanumeric, not timestamp.
+- **Telegram**: `NEW TICKET TK-XXXX` / `URGENT TICKET TK-XXXX`. Fields: Category, Tenant, Unit, Property (full address), Summary. No phone/email/urgency/keywords. `appendAttribution: false`.
+- **PM_log_maintenance `description`**: Narrative 2-sentence format — "Tenant [name] is [X]. AI is [clarifying Y]." (ElevenLabs tool field description updated)
 - **Note:** The old IF node (`urgency == "urgent"`) was removed — LLM always assigns `not_urgent` by default
 
 ### ElevenLabs Agent — Auto Hang-up
