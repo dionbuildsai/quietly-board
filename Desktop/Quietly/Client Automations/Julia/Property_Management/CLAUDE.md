@@ -55,7 +55,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
 | **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
-| **Voice Agent** | `JO26ruzPNp1MQThL` | 21 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
+| **Voice Agent** | `JO26ruzPNp1MQThL` | 25 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
 
 ---
 
@@ -79,7 +79,13 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - **Emergency protocol**: NEVER tell tenant to vacate/leave — that is the landlord's decision; tenant may need to stay to open door for contractors. Say "your safety is the priority, team is being notified right away."
 - **Natural speech**: Agent uses brief fillers ("Sure", "Of course", "Let me see") and says "One moment..." before calling PM_log_maintenance and PM_post_call_log to provide audio feedback during tool delay
 - **Silence filler** (`soft_timeout_config`): "Mm, let me see..." (fires when turn timeout is reached)
-- **Telegram recipients**: Dion (6216258938) AND Julia (6274604148) — both receive all landlord notifications from Voice Agent and AI Conversation Agent
+- **Telegram recipients**:
+  - **Dion:** 6216258938 — always receives all notifications
+  - **Julia:** 6274604148 — receives notifications ONLY when it is NOT Dion testing
+  - **Filter logic (Is Dion? IF node):** checks if tenant phone contains `5148319058` (Dion's number). If TRUE → Dion only. If FALSE → also send to Julia.
+  - Voice Agent uses `={{ $('Edit Fields').item.json.phone }}` as the check value
+  - AI Conversation Agent uses `={{ $('Generate Ticket').item.json.phone }}` as the check value
+  - This filter covers ALL channels: phone (caller ID), Telegram (looked up from tenants table), SMS, WhatsApp, Email — all resolve to Dion's phone 15148319058 for his test account (Aisha Brown)
 
 ### Voice Agent n8n Tools
 | Tool (webhook path) | Method | Purpose |
@@ -106,8 +112,15 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - `$helpers.httpRequest` is NOT available in this n8n Code node context — always use Postgres nodes for DB access
 
 ### log-maintenance chain (n8n)
-`Log Maintenance` → `Edit Fields` → `Lookup Tenant Info` → `Merge for Insert` → `Insert rows in a table` → `Urgent?` → (urgent) `Send Urgent Notification` → `Respond to Webhook`
-                                                                                                                                                                        → (not urgent) `Send a text message` → `Respond to Webhook`
+```
+Log Maintenance → Edit Fields → Lookup Tenant Info → Merge for Insert → Insert rows in a table → Urgent?
+  ├─(urgent)─► Send Urgent Notification → Is Dion? (urgent)
+  │               ├─(TRUE / Dion)──────► Respond to Webhook
+  │               └─(FALSE / Julia)────► Send Urgent Notification - Julia → Respond to Webhook
+  └─(not urgent)► Send a text message → Is Dion? (text)
+                    ├─(TRUE / Dion)──────► Respond to Webhook
+                    └─(FALSE / Julia)────► Send text message - Julia → Respond to Webhook
+```
 
 - `Lookup Tenant Info` (Postgres): fetches `tenant_email` + `property_name` by `$json.phone`. Uses **MAX() aggregate** (`COALESCE(MAX(...))`) so query always returns exactly 1 row even with no match — prevents chain stoppage. `alwaysOutputData: true`.
   - SQL: `SELECT COALESCE(MAX(t.email), '') AS tenant_email, COALESCE(MAX(TRIM(COALESCE(p.name,'') || ' ' || COALESCE(p.address,''))), '') AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ $json.phone }}';`
@@ -209,7 +222,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **repair_videos** | title, video_url, category, keywords (array), description |
 | **properties** | name, address, manager_name, manager_id, twilio_number |
 | **pending_media** | ticket_id, chat_id, file_id, file_url, status |
-| **call_logs** | tenant_id, request_id (FK), duration_sec, full_transcript |
+| **call_logs** | tenant_id, request_id (FK), elevenlabs_call_id, tenant_phone, duration_sec, full_transcript |
 
 ### Dedup
 - `external_message_id` with partial unique index
@@ -235,7 +248,8 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 ## Key Business Details
 - **Company:** Julia Inc (Quebec, Canada)
 - **Emergency Line:** 438-900-9998
-- **Owner Telegram Chat ID:** 6216258938
+- **Owner (Dion) Telegram Chat ID:** 6216258938
+- **Julia Telegram Chat ID:** 6274604148
 - **Twilio Number:** +14389009998
 - **WhatsApp Phone Number ID:** 1002910989571888
 - **Meta App ID:** 872554515351219
@@ -262,7 +276,9 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - **Font:** DM Sans
 - **Colors:** Primary `#573CFA`, Neutral `#1C1A27`, Danger `#E8083E`, Success `#02864A`, Secondary `#F88D1A`
 - **Deployed:** Docker container `quietly-dash` on `n8n_default` network, Traefik reverse proxy
-- **Pages:** Dashboard (stat cards, animated time-saved banner, category pills, recent tickets with sort headers), Inbox (unread ticket notifications with animated dismiss), Tickets (cascading property→tenant filters, sort headers, clickable rows), Ticket Detail (chat-style message thread filtered by channel), Tenants (CRUD), Vendors (CRUD, table layout), Properties (CRUD)
+- **Pages:** Dashboard (stat cards, animated time-saved banner, category pills, recent tickets with sort headers), Inbox (unread ticket notifications with animated dismiss), Tickets (cascading property→tenant filters, sort headers, clickable rows), Ticket Detail (chat-style message thread filtered by channel; phone channel shows call recording player instead of message thread), Tenants (CRUD), Vendors (CRUD, table layout), Properties (CRUD)
+- **Phone channel — call recording player:** Ticket Detail detects `ticket.channel === "phone"` → queries `call_logs` by phone + timestamp proximity (±15min, closest match) → renders `<CallRecordingPlayer>` with duration and `<audio>` element. Audio streamed via `/api/call-audio/[convId]` proxy (server-side, hides ElevenLabs API key). `call_logs.elevenlabs_call_id` is the ElevenLabs conversation ID.
+- **Phone channel icon:** `channel-icon.tsx` has explicit `phone` entry (`text-purple-500`, label "Phone") — no longer falls through to Telegram icon.
 - **Notifications:** `viewed_at` column on `maintenance_requests` tracks read state. Sidebar badge polls `/api/unread` every 15s. Resolved/closed tickets auto-excluded from inbox.
 - **Auto-refresh:** Dashboard refreshes every 30s via client-side router.refresh()
 - **AI Chat:** Bottom-left floating widget, Claude Haiku 4.5 answers natural language questions about the database (read-only SELECT queries)
@@ -290,7 +306,15 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 
 ## Server Access
 - **Host:** srv1285597.hstgr.cloud (IP: 76.13.96.3)
+- **SSH:** `ssh root@srv1285597.hstgr.cloud` — claude-code ed25519 key in `/root/.ssh/authorized_keys`
 - **PostgreSQL:** `docker exec -i $(docker ps --filter 'name=postgres' -q) psql -U quietly -d quietly_db`
+- **Dashboard deployment (SCP method):** Server `/docker/quietly-dash` is NOT a git repo. Deploy via:
+  ```bash
+  scp -r ~/Desktop/Quietly/quietly-dash/* root@srv1285597.hstgr.cloud:/docker/quietly-dash/
+  ssh root@srv1285597.hstgr.cloud "cd /docker/n8n && docker compose build dashboard && docker compose up -d dashboard"
+  ```
+- **Docker Compose:** `/docker/n8n/docker-compose.yml` — dashboard service is `quietly-dash`, image built from `/docker/quietly-dash`
+- **ELEVENLABS_API_KEY** is set in docker-compose.yml env for the dashboard container
 
 ## Technical Notes
 - Webhook nodes created via API need `webhookId` field (UUID) for production registration
@@ -303,5 +327,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - `resolve_yes`/`resolve_no`/`mc` (media_cat) are new callback routes in Intake Channel Router switch
 - Message linking includes `AND channel = ...` to prevent cross-channel ticket pollution
 - Dashboard message query filters by channel; falls back to chat_id only if ticket_id returns 0 messages
+- AI Conversation Agent notification routing: `Is Urgent?` TRUE → `Notify Landlord` (Dion 6216258938) → `Is Dion? (notify)` → TRUE: done / FALSE: `Notify Landlord - Julia` (6274604148) → done. `Is Urgent?` FALSE → `Notify Non-Urgent` (HTTP node, Dion only, no Julia copy)
+- **Dion's test account in DB:** Aisha Brown — phone `15148319058`, telegram_id `6216258938`, email `dionbuildsai@gmail.com`
 - Manual trigger → Clear Messages → Clear Tickets (for dev/testing)
 - Intake Switch node has `fallbackOutput: "extra"` for unrecognized callback actions
