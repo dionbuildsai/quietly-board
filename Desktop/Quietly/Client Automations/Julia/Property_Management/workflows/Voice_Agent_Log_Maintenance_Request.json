@@ -1,0 +1,743 @@
+{
+  "name": "Voice Agent \u2014 Log Maintenance Request",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1408,
+        -128
+      ],
+      "id": "c09c1de3-2309-46d0-925f-547f82b05363",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "maintenance_requests",
+          "mode": "list",
+          "cachedResultName": "maintenance_requests"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "ticket_number": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ticket_number",
+              "displayName": "ticket_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_name",
+              "displayName": "tenant_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_phone",
+              "displayName": "tenant_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "unit_number",
+              "displayName": "unit_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transcript",
+              "displayName": "transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        304,
+        -128
+      ],
+      "id": "fea6a152-1b7e-4339-976f-f2c2964b51e2",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "tenant_name",
+              "value": "={{ $json.body.tenant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "phone",
+              "value": "={{ $json.body.tenant_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "unit",
+              "value": "={{ $json.body.unit_number }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "category",
+              "value": "={{ $json.body.category }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "summary",
+              "value": "={{ $json.body.description }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "urgency",
+              "value": "={{ $json.body.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "tenant_message",
+              "value": "={{ $json.body.tenant_message }}",
+              "type": "string"
+            },
+            {
+              "id": "a8",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "a9",
+              "name": "ticket_id",
+              "value": "={{ 'TK-' + $now.format('MMddHHmmss') }}",
+              "type": "string"
+            },
+            {
+              "id": "a10",
+              "name": "status",
+              "value": "open",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        -128
+      ],
+      "id": "cbcbc2cd-24e9-47ac-83d4-ed1a730df2d2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  t.name as tenant_name,\n  t.unit_number,\n  t.phone,\n  p.name as property_name,\n  mr.ticket_id,\n  mr.category,\n  mr.summary,\n  mr.urgency,\n  mr.status,\n  mr.created_at\nFROM tenants t\nLEFT JOIN properties p ON t.property_id = p.id\nLEFT JOIN maintenance_requests mr \n  ON mr.phone = t.phone \n  AND mr.status NOT IN ('closed', 'resolved')\nWHERE t.phone = '{{ $json.body.tenant_phone }}'\nORDER BY mr.created_at DESC\nLIMIT 5;",
+        "options": {
+          "alwaysOutputData": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        80,
+        112
+      ],
+      "id": "fa1165ee-c421-4fbd-8d84-5e2fb796e929",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        304,
+        112
+      ],
+      "id": "a96d698d-93f3-478a-b043-7ae0020bfa92",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dabbf199-a42e-40b7-a1af-302bc108c9a8",
+              "name": "duration_sec",
+              "value": "={{ $json.body.duration_sec }}",
+              "type": "string"
+            },
+            {
+              "id": "1494dc82-5ce7-48f3-bb69-cd12afdafe0a",
+              "name": "full_transcript",
+              "value": "={{ $json.body.full_transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "74f9da3e-faa6-4dba-9fc2-4d676ebe2743",
+              "name": "=elevenlabs_call_id",
+              "value": "={{ $json.body.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6a559e41-e2c4-41fe-b1db-4bcec03f4130",
+              "name": "tenant_phone",
+              "value": "={{ $json.body.tenant_phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        336
+      ],
+      "id": "053cb2f2-4e86-4063-9f8e-14fc7a0113b5",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "call_logs",
+          "mode": "list",
+          "cachedResultName": "call_logs"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "duration_sec": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_sec",
+              "displayName": "duration_sec",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "full_transcript",
+              "displayName": "full_transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "elevenlabs_call_id",
+              "displayName": "elevenlabs_call_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        304,
+        336
+      ],
+      "id": "71970662-f817-4f93-86d6-eb5a8fb5247b",
+      "name": "Insert rows in a table1",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "post-call-log",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        336
+      ],
+      "id": "e022b39d-4ab5-40ab-b924-69590bf2c165",
+      "name": "Post-Call",
+      "webhookId": "a84041d7-1afc-47c0-add6-e41a11e2bf15"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get-status",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        112
+      ],
+      "id": "5e9c4932-db95-465d-98a0-d04064bd3f67",
+      "name": "Get Status",
+      "webhookId": "f1b6a1f6-aab4-41e9-bb5e-8e615a048c07"
+    },
+    {
+      "parameters": {
+        "path": "log-maintenance",
+        "responseMode": "responseNode",
+        "options": {},
+        "httpMethod": "POST"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -128
+      ],
+      "id": "5e221960-9e6c-48b0-bba8-301274d45226",
+      "name": "Log Maintenance",
+      "webhookId": "d8902402-5f29-41bb-9f82-61ac565aaf4a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0a04ab7a-0cab-4c80-a00b-f05d190fd254",
+              "leftValue": "={{ $('Insert rows in a table').item.json.urgency }}",
+              "rightValue": "urgent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        -128
+      ],
+      "id": "ed9bcf9c-8e1b-4071-af1a-473452733b48",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "6216258938",
+        "text": "=\ud83d\udea8 EMERGENCY MAINTENANCE REQUEST\n\nTenant: {{ $('Edit Fields').item.json.tenant_name }}\nPhone: {{ $('Edit Fields').item.json.phone }}\nUnit: {{ $('Edit Fields').item.json.unit }}\nIssue: {{ $('Edit Fields').item.json.summary }}\n\nLogged at: {{ $now.format('yyyy-MM-dd HH:mm') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        -192
+      ],
+      "id": "51ea0103-039f-4710-97df-f0f5a202bc56",
+      "name": "Send a text message",
+      "webhookId": "e937900b-9494-4faa-87ed-ca5c969c26b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "convai-init",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -400
+      ],
+      "id": "b3e4f5a6-c7d8-4e9f-a0b1-c2d3e4f5a6b7",
+      "name": "Convai Init",
+      "webhookId": "e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Always returns 1 item \u2014 never lets ElevenLabs hang up\nconst callerId = $('Convai Init').first().json.body?.caller_id || '';\nconst cleanPhone = callerId.replace(/[^0-9]/g, '').slice(-10);\n\nlet tenantName = 'there';\nlet unitNumber = '';\nlet propertyName = '';\nlet callerPhone = cleanPhone;\n\ntry {\n  const resp = await $helpers.httpRequest({\n    method: 'POST',\n    url: 'https://n8n.srv1285597.hstgr.cloud/webhook/get-status',\n    body: { tenant_phone: cleanPhone },\n    json: true,\n    timeout: 4000\n  });\n  const row = Array.isArray(resp) ? resp[0] : resp;\n  if (row && row.tenant_name) {\n    tenantName = row.tenant_name;\n    unitNumber = row.unit_number || '';\n    propertyName = row.property_name || '';\n    callerPhone = row.phone || cleanPhone;\n  }\n} catch(e) {\n  // Tenant not found or lookup failed \u2014 use defaults\n}\n\nreturn [{\n  json: {\n    type: 'conversation_initiation_client_data',\n    dynamic_variables: {\n      caller_phone: callerPhone,\n      tenant_name: tenantName,\n      unit_number: unitNumber,\n      property_name: propertyName\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        -400
+      ],
+      "id": "d4e5f6a7-b8c9-4d0e-b1f2-a3b4c5d6e7f8",
+      "name": "Lookup + Format Init"
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        -400
+      ],
+      "id": "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6",
+      "name": "Respond Init"
+    }
+  ],
+  "connections": {
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post-Call": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Status": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convai Init": {
+      "main": [
+        [
+          {
+            "node": "Lookup + Format Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup + Format Init": {
+      "main": [
+        [
+          {
+            "node": "Respond Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null
+}
