@@ -2008,7 +2008,7 @@
         480
       ],
       "parameters": {
-        "query": "SELECT COALESCE((SELECT bot_paused FROM maintenance_requests WHERE (phone = '{{ ($json.norm_phone || $json.phone || \"\").replace(/'/g, \"''\") }}' OR telegram_id::text = '{{ ($json.telegram_id || \"\").replace(/'/g, \"''\") }}' OR tenant_email = '{{ ($json.email || \"\").replace(/'/g, \"''\") }}') AND status NOT IN ('resolved', 'closed') ORDER BY created_at DESC LIMIT 1), false) AS bot_paused",
+        "query": "SELECT COALESCE((SELECT bot_paused FROM tenants WHERE phone = '{{ ($json.norm_phone || $json.phone || \"\").replace(/'/g, \"''\") }}' OR telegram_id::text = '{{ ($json.telegram_id || \"\").replace(/'/g, \"''\") }}' OR LOWER(email) = LOWER('{{ ($json.email || \"\").replace(/'/g, \"''\") }}') LIMIT 1), false) AS bot_paused",
         "options": {},
         "operation": "executeQuery"
       },
