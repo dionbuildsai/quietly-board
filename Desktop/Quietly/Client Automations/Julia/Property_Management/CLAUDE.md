@@ -285,6 +285,13 @@ Log Maintenance → Edit Fields → Lookup Tenant Info → Merge for Insert → 
 - **AI Chat:** Bottom-left floating widget, Claude Haiku 4.5 answers natural language questions about the database (read-only SELECT queries)
 - **Mobile:** Hamburger sidebar, scrollable tables, full-width dialogs
 - **DB Auth:** `pg_hba.conf` has `trust` for Docker network `172.18.0.0/16` — no password needed for internal containers
+- **Bot toggle (Phase 1):** `bot_paused BOOLEAN DEFAULT FALSE` on `maintenance_requests`. Ticket Detail page has `BotToggleButton` (amber = paused, muted = active). Toggle calls `toggleBotPaused` server action → flips DB flag. Intake Router checks flag before calling AI Agent (see n8n section below).
+
+### Bot Pause — n8n Intake Router
+- **Check Bot Paused** node (id: `check-bot-paused-001`, Postgres): queries `SELECT bot_paused FROM maintenance_requests WHERE ticket_id = $ticket_id` using phone/telegram_id/email match
+- **Bot Active?** node (id: `bot-active-check-001`, IF): `$json.bot_paused === false` → TRUE branch goes to `Call AI Agent`, FALSE branch stops (messages still logged, AI skipped)
+- Inserted between `Build AI Payload` → `Check Bot Paused` → `Bot Active?` → `Call AI Agent`
+- Media upload path is unaffected (separate branch before AI payload)
 
 ---
 
