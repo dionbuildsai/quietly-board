@@ -286,6 +286,8 @@ Log Maintenance → Edit Fields → Lookup Tenant Info → Merge for Insert → 
 - **Mobile:** Hamburger sidebar, scrollable tables, full-width dialogs
 - **DB Auth:** `pg_hba.conf` has `trust` for Docker network `172.18.0.0/16` — no password needed for internal containers
 - **Bot toggle (Phase 1):** `bot_paused BOOLEAN DEFAULT FALSE` on `maintenance_requests`. Ticket Detail page has `BotToggleButton` (amber = paused, muted = active). Toggle calls `toggleBotPaused` server action → flips DB flag. Intake Router checks flag before calling AI Agent (see n8n section below).
+  - **Auto-resume:** Bot automatically resumes when owner leaves the ticket page (component unmount → `fetch keepalive`) or closes the tab (`beforeunload` → `navigator.sendBeacon`). Both call `POST /api/resume-bot`. This ensures only one ticket can be paused at a time per owner session.
+  - **Per-tenant isolation:** n8n query filters by the incoming message's phone/telegram_id/email, so pausing one tenant's bot never affects other tenants.
 
 ### Bot Pause — n8n Intake Router
 - **Check Bot Paused** node (id: `check-bot-paused-001`, Postgres): queries `SELECT bot_paused FROM maintenance_requests WHERE ticket_id = $ticket_id` using phone/telegram_id/email match
