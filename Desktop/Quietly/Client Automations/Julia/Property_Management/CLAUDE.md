@@ -77,7 +77,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 - Agent must NEVER ask for name, unit number, or phone — always from PM_get_status
 - If PM_get_status finds no record → proceed without a name, do not ask
 - **Emergency protocol**: NEVER tell tenant to vacate/leave — that is the landlord's decision; tenant may need to stay to open door for contractors. Say "your safety is the priority, team is being notified right away."
-- **Natural speech**: Agent uses brief fillers ("Sure", "Of course", "Let me see") and says "One moment..." before calling PM_log_maintenance and PM_post_call_log to provide audio feedback during tool delay
+- **Natural speech**: Agent uses brief fillers ("Sure", "Of course", "Let me see") and says "One moment..." before calling PM_log_maintenance only. PM_post_call_log is called silently at end of call — agent says nothing before or after it (step 6 in system prompt)
 - **Silence filler** (`soft_timeout_config`): "Mm, let me see..." (fires when turn timeout is reached)
 - **Telegram recipients**:
   - **Dion:** 6216258938 — always receives all notifications
@@ -277,7 +277,8 @@ Log Maintenance → Edit Fields → Lookup Tenant Info → Merge for Insert → 
 - **Colors:** Primary `#573CFA`, Neutral `#1C1A27`, Danger `#E8083E`, Success `#02864A`, Secondary `#F88D1A`
 - **Deployed:** Docker container `quietly-dash` on `n8n_default` network, Traefik reverse proxy
 - **Pages:** Dashboard (stat cards, animated time-saved banner, category pills, recent tickets with sort headers), Inbox (unread ticket notifications with animated dismiss), Tickets (cascading property→tenant filters, sort headers, clickable rows), Ticket Detail (chat-style message thread filtered by channel; phone channel shows call recording player instead of message thread), Tenants (CRUD), Vendors (CRUD, table layout), Properties (CRUD)
-- **Phone channel — call recording player:** Ticket Detail detects `ticket.channel === "phone"` → queries `call_logs` by phone + timestamp proximity (±15min, closest match) → renders `<CallRecordingPlayer>` with duration and `<audio>` element. Audio streamed via `/api/call-audio/[convId]` proxy (server-side, hides ElevenLabs API key). `call_logs.elevenlabs_call_id` is the ElevenLabs conversation ID.
+- **Phone channel — call recording player:** Ticket Detail detects `ticket.channel === "phone"` → queries `call_logs` by phone + timestamp proximity (±15min, closest match) → renders `<CallRecordingPlayer>` with duration and `<audio>` element. Audio streamed via `/api/call-audio/[convId]` proxy (server-side, hides ElevenLabs API key). `call_logs.elevenlabs_call_id` is the ElevenLabs conversation ID. Proxy buffers full MP3 and returns `Content-Length` + `Accept-Ranges: bytes` so the browser progress bar is linear and starts at position 0.
+- **Sidebar title:** "Property Management" (no icon) — replaced the "Q Quietly" icon+text in `sidebar.tsx` for both desktop and mobile header.
 - **Phone channel icon:** `channel-icon.tsx` has explicit `phone` entry (`text-purple-500`, label "Phone") — no longer falls through to Telegram icon.
 - **Notifications:** `viewed_at` column on `maintenance_requests` tracks read state. Sidebar badge polls `/api/unread` every 15s. Resolved/closed tickets auto-excluded from inbox.
 - **Auto-refresh:** Dashboard refreshes every 30s via client-side router.refresh()
