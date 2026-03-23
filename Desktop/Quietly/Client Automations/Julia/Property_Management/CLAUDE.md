@@ -320,6 +320,7 @@ Log Maintenance → Edit Fields → Lookup Tenant Info → Merge for Insert → 
 - **Host:** srv1285597.hstgr.cloud (IP: 76.13.96.3)
 - **SSH:** `ssh root@srv1285597.hstgr.cloud` — claude-code ed25519 key in `/root/.ssh/authorized_keys`
 - **PostgreSQL:** `docker exec -i $(docker ps --filter 'name=postgres' -q) psql -U quietly -d quietly_db`
+- **CRITICAL — n8n workflow Postgres patches require restart:** Direct `UPDATE workflow_entity SET nodes=...` in Postgres does NOT invalidate n8n's in-memory workflow cache. The updated nodes will exist in DB but n8n keeps running the old version. Always restart n8n after patching: `cd /docker/n8n && docker compose restart n8n`. New workflows also need a `shared_workflow` row (`projectId: OG7kkLwgqLqxkXvS`, `role: workflow:owner`) or n8n will fail to activate them.
 - **Dashboard deployment (SCP method):** Server `/docker/quietly-dash` is NOT a git repo. Deploy via:
   ```bash
   scp -r ~/Desktop/Quietly/quietly-dash/* root@srv1285597.hstgr.cloud:/docker/quietly-dash/
