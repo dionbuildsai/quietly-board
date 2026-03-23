@@ -55,6 +55,7 @@ Property management automation for **Julia Inc** (Quebec-based). 5 n8n workflows
 | **[Response] Channel Dispatcher** | `ErGEhkdaWj0zTmQI` | 9 | Route reply to channel + video follow-up buttons on Telegram |
 | **[Media] Upload Handler** | `Iyv7PotiAq2beRae` | 18 | Download media from Telegram/WhatsApp, upload to Google Drive, update pending_media, return drive URL |
 | **[Ticket] Management** | `CnUFSXbeIk9GNI5t` | 19 | Webhook API endpoints + SQL runner |
+| **[Owner] Message Sender** | `owner-msg-sender-001` | 8 | Webhook `POST /owner-message` → log to messages + dispatch via channel |
 | **Voice Agent** | `JO26ruzPNp1MQThL` | 25 | ElevenLabs phone agent: convai-init webhook, PM_get_status, PM_log_maintenance, PM_post_call_log |
 
 ---
@@ -285,6 +286,7 @@ Log Maintenance → Edit Fields → Lookup Tenant Info → Merge for Insert → 
 - **AI Chat:** Bottom-left floating widget, Claude Haiku 4.5 answers natural language questions about the database (read-only SELECT queries)
 - **Mobile:** Hamburger sidebar, scrollable tables, full-width dialogs
 - **DB Auth:** `pg_hba.conf` has `trust` for Docker network `172.18.0.0/16` — no password needed for internal containers
+- **Owner messaging (Phase 2):** When bot is paused, a text input appears at the bottom of the conversation card. Owner types a message, hits Enter or Send — it POSTs to n8n webhook `POST /webhook/owner-message`, which logs to `messages` table as `sender='owner'` and dispatches via the ticket's channel (Telegram/SMS/WhatsApp/Email). Input hidden for phone channel (call recording view).
 - **Bot toggle (Phase 1):** `bot_paused BOOLEAN DEFAULT FALSE` on `maintenance_requests`. Ticket Detail page has `BotToggleButton` (amber = paused, muted = active). Toggle calls `toggleBotPaused` server action → flips DB flag. Intake Router checks flag before calling AI Agent (see n8n section below).
   - **Auto-resume:** Bot automatically resumes when owner leaves the ticket page (component unmount → `fetch keepalive`) or closes the tab (`beforeunload` → `navigator.sendBeacon`). Both call `POST /api/resume-bot`. This ensures only one ticket can be paused at a time per owner session.
   - **Per-tenant isolation:** n8n query filters by the incoming message's phone/telegram_id/email, so pausing one tenant's bot never affects other tenants.
