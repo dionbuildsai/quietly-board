@@ -23,7 +23,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT sender, message_text, channel, created_at FROM messages WHERE chat_id = '{{ $json.chat_id }}' ORDER BY created_at DESC LIMIT 20",
+        "query": "SELECT sender, message_text, channel, created_at FROM messages\nWHERE chat_id = '{{ $json.chat_id }}'\nAND (\n  ticket_id IN (\n    SELECT ticket_id FROM maintenance_requests\n    WHERE status NOT IN ('closed', 'resolved')\n    AND ticket_id IS NOT NULL\n  )\n  OR (ticket_id IS NULL AND created_at > NOW() - INTERVAL '4 hours')\n)\nORDER BY created_at DESC LIMIT 20",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
