@@ -2052,6 +2052,19 @@
         }
       },
       "typeVersion": 2.2
+    },
+    {
+      "id": "restore-payload-001",
+      "name": "Restore Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        480
+      ],
+      "parameters": {
+        "jsCode": "return { json: $(\"Build AI Payload\").item.json };"
+      }
     }
   ],
   "connections": {
@@ -2133,7 +2146,7 @@
       "main": [
         [
           {
-            "node": "Call AI Agent",
+            "node": "Restore Payload",
             "type": "main",
             "index": 0
           }
@@ -2833,6 +2846,17 @@
         [
           {
             "node": "Clear Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Payload": {
+      "main": [
+        [
+          {
+            "node": "Call AI Agent",
             "type": "main",
             "index": 0
           }
