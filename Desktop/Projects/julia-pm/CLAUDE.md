@@ -374,8 +374,17 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - Dashboard serves media via `/api/media/[filename]` API route
 - **Telegram flow:** `Has Media?` → `Save Pending Media` → `Get Tickets for Media` (Postgres) → `Send Category Prompt` (inline keyboard with ticket buttons by keywords) → tenant clicks → `Parse Media Category` → `TG Get File Path` → `TG Download Photo` → `Save Photo Locally` (uses `getBinaryDataBuffer`) → `Update Pending URL` → `Link Media to Message`
 - **WhatsApp flow (in WhatsApp Meta workflow):** `Is Media?` → `Save WA Pending Media` → `Log WA Media Message` → `Get WA Tickets` → `Send WA Ticket Prompt` (interactive list) → tenant selects → `Handle WA Callback` (mc|| prefix) → `Is Media Callback?` → `Get WA Pending File` → `Download WA Media` (Meta Graph API) → `Update WA Pending` → `Link WA Media` → `WA Media Ack`
-- Ticket delete also cleans up orphaned messages (`ticket_id IS NULL`) for that tenant+channel
-- **TODO:** Delete actual media files from disk when ticket is deleted. Build media management page.
+- Ticket delete cleans up: orphaned messages, pending_media rows, AND actual files from disk (`/app/media/`)
+- `Link Media to Message` sets `ticket_id` on the photo message so it shows in the correct ticket conversation
+- **Cross-channel:** Photos sent on Telegram can be linked to a WhatsApp ticket and vice versa
+- **TODO:** Build media management page (gallery view of all uploads, filterable by tenant/ticket)
+
+## Cross-Channel Behavior
+- `Link Ongoing Messages` has NO channel filter — if a tenant messages on WhatsApp about an existing Telegram ticket, the messages link to that ticket
+- AI Classifier creates separate tickets for DIFFERENT issues in the same category (e.g., sink leak ≠ clogged drain, even though both plumbing)
+- Conversation query shows ALL messages with matching `ticket_id` regardless of channel
+- Dashboard: tickets list and detail page show multi-channel icons when messages come from multiple channels
+- Dashboard: conversation bubbles show colored channel icon next to sender name
 
 ---
 
@@ -403,3 +412,12 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - Dashboard: ticket delete cleans orphaned messages + pending_media
 - Dashboard: owner WhatsApp messages fixed — was sending from test phone number ID
 - Fixed owner message API version from v19.0 to v21.0
+- Ticket delete now also deletes media files from disk
+- Photos link to correct ticket via `ticket_id` on message (not just chat_id match)
+- Cross-channel support: removed channel filter from `Link Ongoing Messages`
+- Classifier prompt: requires EXACT SAME specific issue to skip ticket creation (not just same category)
+- Conversation query: only shows messages with explicit `ticket_id` match (no orphan bleed)
+- Multi-channel icons: tickets list + detail show all channels involved (MultiChannelIcon component)
+- Conversation bubbles: colored channel icon replaces "via telegram" text
+- Error workflow assigned to all 7 critical workflows
+- Cleaned broken media files, stale DB references, orphaned pending_media
