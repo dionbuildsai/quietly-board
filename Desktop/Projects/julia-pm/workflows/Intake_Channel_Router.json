@@ -621,7 +621,12 @@
           "value": "5WW7m5IiqvJoHWZ1"
         },
         "workflowInputs": {
-          "mappingMode": "passthrough"
+          "value": {},
+          "schema": [],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "typeVersion": 1.2
