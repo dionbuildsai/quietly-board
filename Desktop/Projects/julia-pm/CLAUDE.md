@@ -361,14 +361,27 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Dion's test account in DB:** Aisha Brown — phone `15148319058`, telegram_id `6216258938`, email `dionbuildsai@gmail.com`
 - Manual trigger → Clear Messages → Clear Tickets (for dev/testing)
 - Intake Switch node has `fallbackOutput: "extra"` for unrecognized callback actions
-- **ANTHROPIC_API_KEY** must be set in BOTH n8n AND dashboard containers in docker-compose.yml (Match Video AI code node uses `process.env.ANTHROPIC_API_KEY` for direct Haiku API calls)
+- **ANTHROPIC_API_KEY** must be set in BOTH n8n AND dashboard containers in docker-compose.yml (Match Video AI code node uses `$env.ANTHROPIC_API_KEY` for direct Haiku API calls)
+- **WHATSAPP_TOKEN** must be set in BOTH n8n AND dashboard containers (WA media download + ticket prompt code nodes use `$env.WHATSAPP_TOKEN`)
 - **Sender naming:** All AI messages use `sender='bot'` in the messages table. Dashboard displays it as "Bot". Old messages that said "Julia AI" were migrated to "bot" on 2026-03-27. Dashboard code matches both `"bot"` and `"Julia AI"` for backwards compatibility.
+- **n8n Code nodes:** Use `$env.VAR_NAME` to access env vars (NOT `process.env`). Use `this.helpers.getBinaryDataBuffer(0, binaryKey)` for binary data (NOT `Buffer.from(binary.data, 'base64')`). `this.getCredentials()` is NOT available in Code node v2.
 - **n8n import:workflow overwrites live workflows** — the git JSON may differ from the live n8n version (e.g., live has hardcoded API keys, dedicated WhatsApp video nodes). Always export from n8n history before importing from git. Use `workflow_history` table to find the correct `versionId`.
+- **n8n Postgres node only runs first SQL statement** — multi-statement queries silently ignore everything after the first `;`. Split into separate Postgres nodes if needed.
+- **n8n published versions:** After import+publish, delete stale entries in `workflow_published_version` if n8n keeps running old code. When no published version exists, n8n falls back to `workflow_entity`.
+
+## Media Upload (Telegram + WhatsApp)
+- Photos saved to `/local-files/media/` on host (mounted as `/files/media/` in n8n, `/app/media/` in dashboard)
+- Dashboard serves media via `/api/media/[filename]` API route
+- **Telegram flow:** `Has Media?` → `Save Pending Media` → `Get Tickets for Media` (Postgres) → `Send Category Prompt` (inline keyboard with ticket buttons by keywords) → tenant clicks → `Parse Media Category` → `TG Get File Path` → `TG Download Photo` → `Save Photo Locally` (uses `getBinaryDataBuffer`) → `Update Pending URL` → `Link Media to Message`
+- **WhatsApp flow (in WhatsApp Meta workflow):** `Is Media?` → `Save WA Pending Media` → `Log WA Media Message` → `Get WA Tickets` → `Send WA Ticket Prompt` (interactive list) → tenant selects → `Handle WA Callback` (mc|| prefix) → `Is Media Callback?` → `Get WA Pending File` → `Download WA Media` (Meta Graph API) → `Update WA Pending` → `Link WA Media` → `WA Media Ack`
+- Ticket delete also cleans up orphaned messages (`ticket_id IS NULL`) for that tenant+channel
+- **TODO:** Delete actual media files from disk when ticket is deleted. Build media management page.
 
 ---
 
 ## Changelog (2026-03-27 evening session)
 - Added `ANTHROPIC_API_KEY` to n8n container env in docker-compose.yml (was only on dashboard)
+- Added `WHATSAPP_TOKEN` to n8n container env in docker-compose.yml
 - Added error workflow to Intake Channel Router (was missing)
 - Deployed `error.tsx` to dashboard server (was missing)
 - WhatsApp Meta: separated WA reply into dedicated `Build Confirmation` + `Send WA Confirmation` nodes after `Resolve Ticket`
@@ -377,3 +390,16 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - Renamed sender from `'Julia AI'` to `'bot'` across all workflows + existing DB messages
 - Dashboard: conversation bubbles show "Bot" instead of "Julia AI"
 - Dashboard: WhatsApp channel icon changed from Phone to MessageCircle
+
+## Changelog (2026-03-28 session)
+- Replaced Google Drive upload with local file storage (`Save Photo Locally` node)
+- Added `Link Media to Message` Postgres node — writes media URL to `messages.media` column
+- Dashboard: `MediaAttachment` component supports both local and Drive URLs
+- Dashboard: Attachments section on ticket detail renders local thumbnails
+- Telegram photo flow: shows open ticket buttons with keywords (not categories)
+- WhatsApp photo flow: full media handling added to WhatsApp Meta workflow (22 nodes)
+- Fixed `Normalize WA Native` reference in `Merge Tenant + Message` (was `Normalize WhatsApp`)
+- Dashboard: delete message button with confirmation dialog
+- Dashboard: ticket delete cleans orphaned messages + pending_media
+- Dashboard: owner WhatsApp messages fixed — was sending from test phone number ID
+- Fixed owner message API version from v19.0 to v21.0
