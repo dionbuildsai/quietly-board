@@ -1,0 +1,2869 @@
+{
+  "name": "[Intake] Channel Router",
+  "nodes": [
+    {
+      "id": "e6cb4f74-851c-4649-bc17-8270e9606b0b",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        -1200,
+        0
+      ],
+      "parameters": {
+        "filters": {
+          "readStatus": "unread"
+        },
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ws18m1zty0x1WwiD",
+          "name": "dionfwang"
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "b040d8c4-d965-43c0-8a0d-c34388f7bd67",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        -1200,
+        304
+      ],
+      "webhookId": "9d252842-949a-4ad8-9f22-5cb2ec06740a",
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      },
+      "typeVersion": 1.1
+    },
+    {
+      "id": "aa91a0d8-bbc3-496e-89f8-040b191a8b10",
+      "name": "SMS Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1200,
+        912
+      ],
+      "webhookId": "09621225-d8ad-41ca-a356-63017aa4b15e",
+      "parameters": {
+        "path": "sms-intake",
+        "options": {
+          "rawBody": true
+        },
+        "httpMethod": "POST"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "58412f0c-88a5-4789-8f3d-c34ccc27509d",
+      "name": "Is Callback?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -960,
+        304
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "f4a105f1-062c-41ed-b482-5a61509fe3ed",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.callback_query }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "0032d546-2029-4bef-a19e-f4f843668f12",
+      "name": "Is Start Cmd?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -720,
+        400
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "2c3b6977-6e25-466b-8936-ce4dc1bdeb50",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "leftValue": "={{ $json.message?.text }}",
+              "rightValue": "/start"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "1f6df37a-6360-43e5-8a36-f335e8818d74",
+      "name": "Extract Registration Data",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -480,
+        208
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e61aa56a-d6b2-416d-99c1-67c51b631802",
+              "name": "phone",
+              "type": "string",
+              "value": "={{ $('Telegram Trigger').item.json.message.text.replace('/start TEN_', '').replace('/start ', '').slice(-11) }}"
+            },
+            {
+              "id": "3270c10f-fed9-474a-be5a-b8a547e9960d",
+              "name": "telegram_user_id",
+              "type": "number",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+            },
+            {
+              "id": "53f321c7-adef-423c-8183-e109de2ddd67",
+              "name": "chat_id",
+              "type": "number",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "5d802864-80fb-4e0a-a2ae-e182ccab6bc5",
+      "name": "Lookup by Phone",
+      "type": "n8n-nodes-base.postgres",
+      "onError": "continueRegularOutput",
+      "position": [
+        -240,
+        208
+      ],
+      "parameters": {
+        "query": "SELECT t.*, t.name AS tenant_name FROM tenants t WHERE t.phone LIKE '%' || '{{ $json.phone }}' || '%' LIMIT 1",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5,
+      "alwaysOutputData": true
+    },
+    {
+      "id": "45c11f35-2af0-4312-984f-4f8de450355d",
+      "name": "Save Telegram ID",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        -80,
+        176
+      ],
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "tenants",
+          "cachedResultName": "tenants"
+        },
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "columns": {
+          "value": {
+            "phone": "={{ $('Extract Registration Data').item.json.phone }}",
+            "telegram_id": "={{ String($('Extract Registration Data').item.json.telegram_user_id) }}"
+          },
+          "schema": [
+            {
+              "id": "phone",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "phone",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telegram_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "telegram_id",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "phone"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {},
+        "operation": "update"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "756d58ae-8b31-4460-a28f-5bf84d28980c",
+      "name": "Welcome Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        160,
+        176
+      ],
+      "webhookId": "678635af-1a74-40fd-adc2-20512a1741fa",
+      "parameters": {
+        "text": "Registration successful! You are now linked to your tenant account.\n\nYou can send us messages, photos, or videos about any maintenance issues.",
+        "chatId": "={{ $('Extract Registration Data').item.json.chat_id }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "22db916f-6dd8-4360-ba9b-df715d7db36f",
+      "name": "Normalize Email",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9455db51-f197-4666-9a54-deac4d2370c1",
+              "name": "channel",
+              "type": "string",
+              "value": "email"
+            },
+            {
+              "id": "da85de0e-ca38-4d52-a55b-978c26551fb4",
+              "name": "sender_identifier",
+              "type": "string",
+              "value": "={{ ($json.From || '').includes('<') ? ($json.From || '').match(/<([^>]+)>/)?.[1] || $json.From : $json.From }}"
+            },
+            {
+              "id": "6164e830-24bb-40dd-8670-9d533a7073de",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.snippet || $json.textPlain || $json.text || '' }}"
+            },
+            {
+              "id": "1a3ca5d5-0f73-4446-92cf-13d5347ea843",
+              "name": "subject",
+              "type": "string",
+              "value": "={{ $json.subject || '' }}"
+            },
+            {
+              "id": "21cb1347-9e4d-482e-b753-279f7437c076",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ ($json.From || '').includes('<') ? ($json.From || '').match(/<([^>]+)>/)?.[1] || $json.From : $json.From }}"
+            },
+            {
+              "id": "6dfbbb16-f5ce-4301-bb1a-7b1a117982ca",
+              "name": "has_media",
+              "type": "boolean",
+              "value": false
+            },
+            {
+              "id": "a1625432-03cb-4022-937f-1a210e50480b",
+              "name": "media_type",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "eaaab461-187d-4fc7-b2fe-68362d96f8b0",
+              "name": "external_message_id",
+              "type": "string",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "id": "3588d2c8-ce4d-408b-8108-553f67f08a2d",
+              "name": "media_id",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "b79fa4fc-979a-464e-bc29-cfa8ce2c1a9d",
+              "name": "media_url",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "280d00c5-e3d4-421b-985f-08f27a40dcbb",
+      "name": "Normalize Telegram",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -240,
+        512
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "41e0db6c-b639-450d-988c-7f5d298760c4",
+              "name": "channel",
+              "type": "string",
+              "value": "telegram"
+            },
+            {
+              "id": "f4ac914e-bd48-408b-8fe4-e9845ebf4398",
+              "name": "sender_identifier",
+              "type": "string",
+              "value": "={{ String($('Telegram Trigger').item.json.message.chat.id) }}"
+            },
+            {
+              "id": "9b15ee2d-9d83-4e0f-b82b-c2a66bfe034a",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $('Telegram Trigger').item.json.message.text || $('Telegram Trigger').item.json.message.caption || '' }}"
+            },
+            {
+              "id": "48ff30c9-4ccb-48d0-87f2-670681a36d6c",
+              "name": "subject",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "21ed02eb-dbdf-4ec9-a2b8-5f0a20350c48",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ String($('Telegram Trigger').item.json.message.chat.id) }}"
+            },
+            {
+              "id": "707e5a63-d651-48bc-929f-8176198c054b",
+              "name": "has_media",
+              "type": "boolean",
+              "value": "={{ !!($('Telegram Trigger').item.json.message.photo || $('Telegram Trigger').item.json.message.video || $('Telegram Trigger').item.json.message.voice || $('Telegram Trigger').item.json.message.document) }}"
+            },
+            {
+              "id": "08cd3ee8-9f38-4674-a80b-fd4d37e26277",
+              "name": "media_type",
+              "type": "string",
+              "value": "={{ $('Telegram Trigger').item.json.message.photo ? 'image' : ($('Telegram Trigger').item.json.message.video ? 'video' : ($('Telegram Trigger').item.json.message.voice ? 'voice' : ($('Telegram Trigger').item.json.message.document ? 'document' : ''))) }}"
+            },
+            {
+              "id": "e3e62c5f-d21c-4c19-a712-e5ea8f067c95",
+              "name": "external_message_id",
+              "type": "string",
+              "value": "=tg_{{ $('Telegram Trigger').item.json.message.message_id }}_{{ $('Telegram Trigger').item.json.message.chat.id }}"
+            },
+            {
+              "id": "11f345fd-a168-4005-ae82-18fc2a279c25",
+              "name": "media_id",
+              "type": "string",
+              "value": "={{ $('Telegram Trigger').item.json.message.photo ? $('Telegram Trigger').item.json.message.photo.slice(-1)[0].file_id : ($('Telegram Trigger').item.json.message.video ? $('Telegram Trigger').item.json.message.video.file_id : ($('Telegram Trigger').item.json.message.voice ? $('Telegram Trigger').item.json.message.voice.file_id : ($('Telegram Trigger').item.json.message.document ? $('Telegram Trigger').item.json.message.document.file_id : ''))) }}"
+            },
+            {
+              "id": "c3a49da6-7aa9-4c0d-8ce4-351a2d68e303",
+              "name": "media_url",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "eb0161c7-33bb-4406-9eff-8b4df8152a81",
+      "name": "Normalize SMS",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -480,
+        1056
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "229d5fba-92a8-4f42-93a5-9a45bfb301da",
+              "name": "channel",
+              "type": "string",
+              "value": "sms"
+            },
+            {
+              "id": "61422741-e130-4aa4-bffb-5d352d516b4b",
+              "name": "sender_identifier",
+              "type": "string",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "id": "49b4c2e4-cfd6-4cb1-9bde-cb61da0b85b4",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "id": "b20f1632-1dc8-4241-9bda-26e3287599f3",
+              "name": "subject",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "9ebe56c9-7ada-4ddc-9bd3-78eda7e70624",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "id": "2fe10326-9dc6-44a7-aeb0-a06be5f5fc92",
+              "name": "has_media",
+              "type": "boolean",
+              "value": "={{ $json.num_media > 0 }}"
+            },
+            {
+              "id": "d56d2f65-74bd-4943-a448-b9ae1029bbca",
+              "name": "media_type",
+              "type": "string",
+              "value": "={{ $json.num_media > 0 ? 'image' : '' }}"
+            },
+            {
+              "id": "ae0e9a28-30b8-4cec-afa7-b59e4e411c7b",
+              "name": "external_message_id",
+              "type": "string",
+              "value": "=sms_{{ $json.message_sid || $now.toMillis() }}_{{ $json.phone }}"
+            },
+            {
+              "id": "f6edfc1d-e109-4890-a9fd-4149e45e5dce",
+              "name": "media_id",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "3ffd4693-8d88-4a34-a13e-af3d5b98f191",
+              "name": "media_url",
+              "type": "string",
+              "value": "={{ $json.media_url || '' }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "05eccb28-cb35-43ee-9e74-aa5bde73d9bc",
+      "name": "Lookup Tenant",
+      "type": "n8n-nodes-base.postgres",
+      "onError": "continueRegularOutput",
+      "position": [
+        160,
+        480
+      ],
+      "parameters": {
+        "query": "SELECT t.*, t.name AS tenant_name, t.phone, t.unit_number, t.email, p.address AS property, t.emergency_contact, t.telegram_id, t.language_pref FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE CASE WHEN '{{ $json.channel }}' = 'email' THEN LOWER(t.email) = LOWER('{{ $json.sender_identifier.replace(/'/g, \"''\") }}') WHEN '{{ $json.channel }}' = 'sms' THEN t.phone LIKE '%' || '{{ $json.sender_identifier.replace(/'/g, \"''\") }}' || '%' WHEN '{{ $json.channel }}' = 'telegram' THEN t.telegram_id = '{{ $json.sender_identifier.replace(/'/g, \"''\") }}' WHEN '{{ $json.channel }}' = 'whatsapp' THEN t.phone LIKE '%' || RIGHT('{{ $json.sender_identifier.replace(/'/g, \"''\") }}', 10) || '%' END LIMIT 1",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5,
+      "alwaysOutputData": true
+    },
+    {
+      "id": "c975cf3b-5f18-4660-a006-5da5d0b2be1e",
+      "name": "Tenant Found?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        400,
+        480
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d91fe847-e80c-42a1-9d16-fb25904189e1",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.isEmpty() }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "bf704c66-ce66-4c81-b038-f648eee202ce",
+      "name": "Log Inbound Message",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        784,
+        480
+      ],
+      "parameters": {
+        "query": "INSERT INTO messages (chat_id, message_id, telegram_id, sender, message_text, channel, created_at, external_message_id) VALUES ('{{ ($json.norm_chat_id || '').replace(/'/g, \"''\") }}', '', '{{ ($json.telegram_id || '').replace(/'/g, \"''\") }}', '{{ ($json.name || $json.tenant_name || '').replace(/'/g, \"''\") }}', '{{ ($json.norm_message || '').replace(/'/g, \"''\") }}', '{{ $json.norm_channel || '' }}', NOW(), '{{ ($json.norm_ext_id || '').replace(/'/g, \"''\") }}') ON CONFLICT (external_message_id) WHERE external_message_id != '' DO NOTHING RETURNING *",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "03cd4777-d3c9-449e-b99d-9f9b9e0ed418",
+      "name": "Build AI Payload",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        880,
+        480
+      ],
+      "parameters": {
+        "jsCode": "// Get tenant from Lookup Tenant\nconst tenant = $('Lookup Tenant').item.json;\n\n// Get normalized message data - try each channel's normalize node\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\nreturn {\n  json: {\n    tenant_id: tenant.id || '',\n    tenant_name: tenant.name || tenant.tenant_name || '',\n    phone: tenant.phone || '',\n    unit: tenant.unit_number || '',\n    property: tenant.property || '',\n    email: tenant.email || '',\n    telegram_id: tenant.telegram_id || '',\n    language_pref: tenant.language_pref || 'fr',\n    channel: normalized.channel || '',\n    message: normalized.message || '',\n    subject: normalized.subject || '',\n    chat_id: normalized.chat_id || tenant.telegram_id || '',\n    sender_identifier: normalized.sender_identifier || '',\n    has_media: normalized.has_media || false,\n    media_type: normalized.media_type || '',\n    media_id: normalized.media_id || '',\n    external_message_id: normalized.external_message_id || '',\n    message_db_id: $('Log Inbound Message').item.json.id || ''\n  }\n};"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "ce530685-2cad-450e-b522-27728ee38b40",
+      "name": "Call AI Agent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1120,
+        480
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "5WW7m5IiqvJoHWZ1"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "73b02fe1-697e-46b9-9482-edd20e6c2485",
+      "name": "Unknown Tenant Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        640,
+        672
+      ],
+      "parameters": {
+        "jsCode": "// Get normalized data from whichever normalize node ran\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\n// Don't reply to unknown email senders (could be spam/newsletters)\nif (normalized.channel === 'email') {\n  return [];\n}\n\nreturn {\n  json: {\n    channel: normalized.channel || '',\n    chat_id: normalized.chat_id || '',\n    sender_identifier: normalized.sender_identifier || '',\n    phone: normalized.sender_identifier || '',\n    email: normalized.sender_identifier || '',\n    response_text: \"Bonjour, nous n'avons pas pu identifier votre compte. Veuillez contacter votre gestionnaire immobilier.\\n\\nHello, we couldn't identify your account. Please contact your property manager.\"\n  }\n};"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "2268709a-a819-4827-91c8-6d5b4741f21b",
+      "name": "Send Unknown Reply",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        880,
+        672
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ErGEhkdaWj0zTmQI"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "624a5f50-94f4-4081-acaa-cbe219aba572",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1408,
+        -208
+      ],
+      "parameters": {
+        "width": 400,
+        "height": 180,
+        "content": "## [Intake] Channel Router\n\nReceives messages from all channels, normalizes into standard format, deduplicates, looks up tenant, hands off to AI Agent.\n\nChannels: Email, Telegram, WhatsApp, SMS\nFuture: ElevenLabs Voice"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "8c6bc7cb-93cd-471f-bd6f-8ba3f09a9878",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        112
+      ],
+      "parameters": {
+        "width": 280,
+        "height": 80,
+        "content": "## Registration Flow\n/start command -> extract phone -> save telegram_id -> welcome"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "1862b393-0085-4aa6-b34a-d4a34a937876",
+      "name": "Send AI Response",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1360,
+        480
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ErGEhkdaWj0zTmQI"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "b63df483-c85b-4251-96fd-f1be009e41e3",
+      "name": "When clicking \u2018Execute workflow\u2019",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -1136,
+        -400
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "e5e48fd6-570e-412a-9d11-861f84a13e54",
+      "name": "Remove Buttons",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -480,
+        208
+      ],
+      "webhookId": "927bd351-b943-4f94-9bc1-c5b201eb273e",
+      "parameters": {
+        "text": "={{ $('Telegram Trigger').item.json.callback_query.message.text }}\n\nProcessing...",
+        "chatId": "={{ $('Telegram Trigger').item.json.callback_query.message.chat.id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "operation": "editMessageText",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "ac37601f-8d81-498a-9c85-ec03da016b7b",
+      "name": "Parse Callback",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -240,
+        208
+      ],
+      "parameters": {
+        "jsCode": "const data = $('Telegram Trigger').item.json.callback_query.data;\nconst parts = data.split('||');\nreturn {\n  json: {\n    action: parts[0],\n    ticket_id: parts[1] || '',\n    category: parts[2] || '',\n    vendor_index: parts[3] || '0',\n    chat_id: String($('Telegram Trigger').item.json.callback_query.message.chat.id)\n  }\n};"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "d100f679-5c65-4065-97fb-dd681eb6a6b8",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -80,
+        176
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "dispatch",
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "c2dc3ac6-2fe1-4ea7-9d16-4a1ce5bde823",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "dispatch"
+                  }
+                ]
+              },
+              "renameOutput": true
+            },
+            {
+              "outputKey": "manual",
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "5ceb045e-9dde-47f0-a31a-21035f151532",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "manual"
+                  }
+                ]
+              },
+              "renameOutput": true
+            },
+            {
+              "outputKey": "confirm",
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "320f799c-4571-40d8-86a1-1e97a7afd472",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "confirm_dispatch"
+                  }
+                ]
+              },
+              "renameOutput": true
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "video-yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "video_yes"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "video-no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "video_no"
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "resolve_yes",
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "53932e1e-0580-4122-bc15-402722c8ec80",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "resolve_yes"
+                  }
+                ]
+              },
+              "renameOutput": true
+            },
+            {
+              "outputKey": "resolve_no",
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "b9416479-8743-4025-93f5-9daf8815aed0",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "resolve_no"
+                  }
+                ]
+              },
+              "renameOutput": true
+            },
+            {
+              "outputKey": "media_cat",
+              "conditions": {
+                "options": {
+                  "version": 3,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "45f8b168-2957-4888-bab5-1d7a217b0e97",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "mc"
+                  }
+                ]
+              },
+              "renameOutput": true
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "typeVersion": 3.2
+    },
+    {
+      "id": "1acec58c-5613-4676-89ce-d7d559e4a00a",
+      "name": "Lookup Vendor",
+      "type": "n8n-nodes-base.postgres",
+      "onError": "continueRegularOutput",
+      "position": [
+        160,
+        80
+      ],
+      "parameters": {
+        "query": "SELECT vendor_name, email, phone FROM vendors WHERE LOWER(category) LIKE LOWER('%{{ $json.category }}%') LIMIT 10",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5,
+      "alwaysOutputData": true
+    },
+    {
+      "id": "7cd27959-4dc6-43a9-b3f9-eb4360d07fe1",
+      "name": "Get Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "onError": "continueRegularOutput",
+      "position": [
+        400,
+        80
+      ],
+      "parameters": {
+        "query": "SELECT ticket_id, category, summary, description, property, unit, unit_number FROM maintenance_requests WHERE ticket_id = '{{ $('Parse Callback').item.json.ticket_id }}' LIMIT 1",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5,
+      "alwaysOutputData": true
+    },
+    {
+      "id": "e2a254bb-1ae8-419b-8828-1aa1f27f1f88",
+      "name": "AI Vendor Msg",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        640,
+        80
+      ],
+      "parameters": {
+        "text": "=Maintenance issue: {{ $('Get Ticket').item.json.category }} - {{ $('Get Ticket').item.json.summary || $('Get Ticket').item.json.description }}\nProperty: {{ $('Get Ticket').item.json.property }}\nUnit: {{ $('Get Ticket').item.json.unit || $('Get Ticket').item.json.unit_number }}\nVendor: {{ $('Lookup Vendor').all()[$('Parse Callback').item.json.vendor_index || 0]?.json?.vendor_name || 'Service Provider' }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a brief service request email. ONLY use the information provided below - do NOT add any details, speculations, or assumptions. Write exactly: 1) Greeting to the vendor by name 2) State you are Julia from Julia Inc property management 3) State ONLY the issue as described 4) State the address and unit 5) Ask for earliest availability. Maximum 4 sentences. Do NOT mention neighboring units, potential causes, or any information not explicitly provided. Sign as Julia."
+            }
+          ]
+        },
+        "promptType": "define"
+      },
+      "typeVersion": 1.4
+    },
+    {
+      "id": "bf8ac99d-05ab-448e-adf3-29d9f222c481",
+      "name": "Haiku Dispatch",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [
+        640,
+        320
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-haiku-4-5-20251001",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      },
+      "typeVersion": 1.3
+    },
+    {
+      "id": "b89efd0a-2814-4638-bc81-ea7a70967d18",
+      "name": "Show Preview",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1024,
+        80
+      ],
+      "parameters": {
+        "jsCode": "const vendors = $('Lookup Vendor').all().map(v => v.json);\nconst aiMsg = $('AI Vendor Msg').item.json.text || $('AI Vendor Msg').item.json.response || '';\nconst ticketId = $('Parse Callback').item.json.ticket_id;\nconst category = $('Parse Callback').item.json.category;\nconst cbData = $('Parse Callback').item.json;\n\n// Get vendor index from callback data (default 0)\nconst vendorIndex = parseInt(cbData.vendor_index || '0');\nconst vendor = vendors[vendorIndex] || vendors[0] || {};\nconst totalVendors = vendors.filter(v => v.vendor_name).length;\n\nconst preview = aiMsg.replace(/\\n/g, ' ').substring(0, 400);\n\nlet text = 'DISPATCH PREVIEW (' + (vendorIndex + 1) + '/' + totalVendors + ')\\n\\n' +\n  'Vendor: ' + (vendor.vendor_name || 'No vendor found') + '\\n' +\n  'Email: ' + (vendor.email || 'N/A') + '\\n' +\n  'Phone: ' + (vendor.phone || 'N/A') + '\\n\\n' +\n  'Message preview:\\n' + preview + '\\n\\n' +\n  'Confirm dispatch to this vendor?';\n\nreturn {\n  json: {\n    chat_id: '6216258938',\n    text: text,\n    ticket_id: ticketId,\n    category: category,\n    vendor_index: vendorIndex,\n    total_vendors: totalVendors,\n    vendor_email: vendor.email || '',\n    vendor_name: vendor.vendor_name || ''\n  }\n};"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "dbc818ab-6d4b-44b1-a556-ae6b5c71ac1c",
+      "name": "Get Contractors",
+      "type": "n8n-nodes-base.postgres",
+      "onError": "continueRegularOutput",
+      "position": [
+        160,
+        368
+      ],
+      "parameters": {
+        "query": "SELECT vendor_name, email, phone FROM vendors WHERE LOWER(category) LIKE LOWER('%{{ $json.category }}%') LIMIT 10",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5,
+      "alwaysOutputData": true
+    },
+    {
+      "id": "e9a21d1c-026d-43d5-9081-e0f3f8bf4d44",
+      "name": "Format List",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        400,
+        368
+      ],
+      "parameters": {
+        "jsCode": "const contractors = $('Get Contractors').all().map(c => c.json);\nconst category = $('Parse Callback').item.json.category;\nconst ticketId = $('Parse Callback').item.json.ticket_id;\nlet text = 'CONTRACTORS FOR ' + category.toUpperCase() + '\\nTicket: ' + ticketId + '\\n\\n';\nif (!contractors.length || !contractors[0].vendor_name) {\n  text += 'No contractors found for this category.';\n} else {\n  contractors.forEach((c, i) => {\n    text += (i+1) + '. ' + (c.vendor_name||'Unknown') + '\\n   Phone: ' + (c.phone||'N/A') + '\\n   Email: ' + (c.email||'N/A') + '\\n\\n';\n  });\n}\nreturn { json: { text } };"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "64344afe-d067-4d2e-a3fd-be590900b790",
+      "name": "Send List",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        640,
+        368
+      ],
+      "parameters": {
+        "url": "https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage",
+        "method": "POST",
+        "options": {},
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "6216258938"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "ba4f0e71-f374-4eb4-9be3-20936bccdcf9",
+      "name": "Confirm Vendor",
+      "type": "n8n-nodes-base.postgres",
+      "onError": "continueRegularOutput",
+      "position": [
+        160,
+        576
+      ],
+      "parameters": {
+        "query": "SELECT vendor_name, email, phone FROM vendors WHERE LOWER(category) LIKE LOWER('%{{ $json.category }}%') OFFSET {{ $json.vendor_index || 0 }} LIMIT 1",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5,
+      "alwaysOutputData": true
+    },
+    {
+      "id": "7b7d1b8e-281c-4f39-8f94-e1f73bbee161",
+      "name": "Confirm Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "onError": "continueRegularOutput",
+      "position": [
+        400,
+        576
+      ],
+      "parameters": {
+        "query": "SELECT * FROM maintenance_requests WHERE ticket_id = '{{ $('Parse Callback').item.json.ticket_id }}' LIMIT 1",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5,
+      "alwaysOutputData": true
+    },
+    {
+      "id": "0bb928ca-a38e-432a-89c2-17a08cfcc835",
+      "name": "Confirm Vendor Msg",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        640,
+        576
+      ],
+      "parameters": {
+        "text": "=Maintenance issue: {{ $json.category }} - {{ $json.summary || $json.description }}\nProperty: {{ $json.property }}\nUnit: {{ $json.unit || $json.unit_number }}\nVendor: {{ $('Confirm Vendor').item.json.vendor_name || 'Service Provider' }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a brief service request email. ONLY use the information provided below - do NOT add any details, speculations, or assumptions. Write exactly: 1) Greeting to the vendor by name 2) State you are Julia from Julia Inc property management 3) State ONLY the issue as described 4) State the address and unit 5) Ask for earliest availability. Maximum 4 sentences. Do NOT mention neighboring units, potential causes, or any information not explicitly provided. Sign as Julia."
+            }
+          ]
+        },
+        "promptType": "define"
+      },
+      "typeVersion": 1.4
+    },
+    {
+      "id": "70d76394-0f69-4be8-bece-930a4f05b5d5",
+      "name": "Haiku Confirm",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [
+        720,
+        848
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-haiku-4-5-20251001",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      },
+      "typeVersion": 1.3
+    },
+    {
+      "id": "604d8fa4-1126-40d2-95a3-41255f2e6d64",
+      "name": "Email Vendor",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        880,
+        576
+      ],
+      "webhookId": "9dec9f4b-fbec-43a3-848b-f5964ba61fdd",
+      "parameters": {
+        "sendTo": "={{ $('Confirm Vendor').item.json.email }}",
+        "message": "={{ $json.text || $json.response }}",
+        "options": {
+          "appendAttribution": false
+        },
+        "subject": "=Service Request: {{ $('Confirm Ticket').item.json.category }} - {{ $('Confirm Ticket').item.json.property }}"
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ws18m1zty0x1WwiD",
+          "name": "dionfwang"
+        }
+      },
+      "typeVersion": 2.1
+    },
+    {
+      "id": "55edae12-eba9-41cc-bdaf-006c929f7ccf",
+      "name": "Dispatch Ack",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1360,
+        576
+      ],
+      "parameters": {
+        "url": "https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage",
+        "method": "POST",
+        "options": {},
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "6216258938"
+            },
+            {
+              "name": "text",
+              "value": "=Dispatched! Email sent to {{ $('Confirm Vendor').item.json.vendor_name }} at {{ $('Confirm Vendor').item.json.email }}. Ticket {{ $('Parse Callback').item.json.ticket_id }} updated."
+            }
+          ]
+        }
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "cc2fc721-d39e-4336-a837-af5d60381163",
+      "name": "Build Preview Buttons",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1120,
+        80
+      ],
+      "parameters": {
+        "jsCode": "const data = $json;\nconst buttons = [];\n\n// Always show Confirm\nbuttons.push({text: \"Confirm Dispatch\", callback_data: \"confirm_dispatch||\" + data.ticket_id + \"||\" + data.category + \"||\" + data.vendor_index});\n\n// Show Next if more vendors available\nif (data.vendor_index + 1 < data.total_vendors) {\n  buttons.push({text: \"Next >>\", callback_data: \"dispatch||\" + data.ticket_id + \"||\" + data.category + \"||\" + (data.vendor_index + 1)});\n}\n\n// Always show \"Show All\" as fallback\nbuttons.push({text: \"Show All\", callback_data: \"manual||\" + data.ticket_id + \"||\" + data.category});\n\nreturn {\n  json: {\n    method: 'POST',\n    url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n    body: {\n      chat_id: '6216258938',\n      text: data.text,\n      reply_markup: { inline_keyboard: [buttons] }\n    }\n  }\n};"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "9195d528-3fa9-47cd-a88b-8f154a97049f",
+      "name": "Send Preview HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1360,
+        80
+      ],
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "method": "POST",
+        "options": {},
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "sendBody": true,
+        "specifyBody": "json"
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "97f36eb7-5928-4c52-855d-84f47b5316fd",
+      "name": "Clear Messages",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        -896,
+        -400
+      ],
+      "parameters": {
+        "query": "DELETE FROM messages; SELECT 'messages cleared' as result;",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "4459cc6e-4058-447f-b99a-1a09d99b68f1",
+      "name": "Clear Tickets",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        -608,
+        -400
+      ],
+      "parameters": {
+        "query": "DELETE FROM maintenance_requests; SELECT 'maintenance_requests cleared' as result;",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "merge-data",
+      "name": "Merge Tenant + Message",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        544,
+        480
+      ],
+      "parameters": {
+        "jsCode": "// Merge normalized message data with tenant data\nlet normalized = {};\ntry { normalized = $('Normalize Telegram').item.json; } catch(e) {\n  try { normalized = $('Normalize Email').item.json; } catch(e2) {\n    try { normalized = $('Normalize SMS').item.json; } catch(e3) {\n      try { normalized = $('Normalize WhatsApp').item.json; } catch(e4) {\n        normalized = {};\n      }\n    }\n  }\n}\n\nconst tenant = $('Lookup Tenant').item.json;\n\nreturn [{\n  json: {\n    ...tenant,\n    norm_chat_id: normalized.chat_id || tenant.telegram_id || '',\n    norm_message: normalized.message || '',\n    norm_channel: normalized.channel || '',\n    norm_ext_id: normalized.external_message_id || '',\n    norm_subject: normalized.subject || '',\n    norm_sender_identifier: normalized.sender_identifier || '',\n    norm_has_media: normalized.has_media || false,\n    norm_media_type: normalized.media_type || '',\n    norm_media_id: normalized.media_id || '',\n    norm_media_url: normalized.media_url || '',\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "wa-normalize",
+      "name": "Normalize WhatsApp",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -480,
+        704
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wa-ch",
+              "name": "channel",
+              "type": "string",
+              "value": "whatsapp"
+            },
+            {
+              "id": "wa-sender",
+              "name": "sender_identifier",
+              "type": "string",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "id": "wa-msg",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.text || '' }}"
+            },
+            {
+              "id": "wa-subj",
+              "name": "subject",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "wa-chat",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "id": "wa-media",
+              "name": "has_media",
+              "type": "boolean",
+              "value": "={{ $json.has_image || $json.has_video || $json.has_audio || $json.has_document || false }}"
+            },
+            {
+              "id": "wa-mtype",
+              "name": "media_type",
+              "type": "string",
+              "value": "={{ $json.has_image ? 'image' : ($json.has_video ? 'video' : ($json.has_audio ? 'voice' : ($json.has_document ? 'document' : ''))) }}"
+            },
+            {
+              "id": "wa-extid",
+              "name": "external_message_id",
+              "type": "string",
+              "value": "=wa_{{ $json.message_id || $now.toMillis() }}"
+            },
+            {
+              "id": "bc0c7884-6f37-4221-9ceb-d8daa9e4f08d",
+              "name": "media_id",
+              "type": "string",
+              "value": "={{ $json.image_id || $json.video_id || $json.audio_id || $json.document_id || '' }}"
+            },
+            {
+              "id": "ecf3221a-df62-46ad-86dc-443fe7a9c4db",
+              "name": "media_url",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "wa-parse",
+      "name": "Parse WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -960,
+        608
+      ],
+      "parameters": {
+        "jsCode": "// Extract message from Meta WhatsApp webhook payload\nconst body = $input.first().json.body || $input.first().json;\nif (body.entry?.[0]?.changes?.[0]?.value?.statuses) { return []; }\nconst value = body.entry?.[0]?.changes?.[0]?.value;\nconst message = value?.messages?.[0];\nif (!message || !message.from) { return []; }\nreturn [{\n  json: {\n    from: message.from,\n    message_id: message.id || '',\n    text: message.text?.body || message.image?.caption || message.video?.caption || '',\n    type: message.type || 'text',\n    has_image: !!message.image,\n    has_video: !!message.video,\n    has_audio: !!message.audio,\n    has_document: !!message.document,\n    image_id: message.image?.id || '',\n    video_id: message.video?.id || '',\n    audio_id: message.audio?.id || '',\n    document_id: message.document?.id || '',\n    contact_name: value?.contacts?.[0]?.profile?.name || '',\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "58e00d1a-826b-4195-9032-a5377a6c418d",
+      "name": "WA Verify",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1200,
+        752
+      ],
+      "webhookId": "7bddd1ed-f08c-4aad-a2ed-d489878aea07",
+      "parameters": {
+        "path": "whatsapp-intake",
+        "options": {},
+        "responseMode": "responseNode"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "cdd45f3d-399d-41ea-9508-08725810fb86",
+      "name": "Return Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -960,
+        752
+      ],
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}"
+      },
+      "typeVersion": 1.1
+    },
+    {
+      "id": "3e08f34b-d101-42de-902f-2a1cbc79674f",
+      "name": "WhatsApp Incoming",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1200,
+        608
+      ],
+      "webhookId": "9babb4fd-4025-4f09-ade8-5562cf5c7909",
+      "parameters": {
+        "path": "whatsapp-intake",
+        "options": {},
+        "httpMethod": "POST"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "parse-sms",
+      "name": "Parse SMS",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -960,
+        912
+      ],
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet from = '', body = '', messageSid = '', mediaUrl = '', numMedia = 0;\nif (raw.body && typeof raw.body === 'object' && raw.body.From) {\n  from = raw.body.From; body = raw.body.Body || ''; messageSid = raw.body.MessageSid || '';\n  mediaUrl = raw.body.MediaUrl0 || ''; numMedia = parseInt(raw.body.NumMedia || '0');\n} else if (raw.body && typeof raw.body === 'string') {\n  const params = new URLSearchParams(raw.body);\n  from = params.get('From') || ''; body = params.get('Body') || ''; messageSid = params.get('MessageSid') || '';\n  mediaUrl = params.get('MediaUrl0') || ''; numMedia = parseInt(params.get('NumMedia') || '0');\n} else {\n  from = raw.From || raw.from || ''; body = raw.Body || '';\n  messageSid = raw.MessageSid || ''; mediaUrl = raw.MediaUrl0 || ''; numMedia = parseInt(raw.NumMedia || '0');\n}\nif (!from && !body && numMedia === 0) { return []; }\nreturn [{ json: { phone: from.replace(/^\\+/, ''), message: body, message_sid: messageSid, channel: 'sms', media_url: mediaUrl, num_media: numMedia } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "5d1c50ed-190e-4761-97f6-42c25a31d642",
+      "name": "Resolve Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        480,
+        1200
+      ],
+      "parameters": {
+        "query": "UPDATE maintenance_requests SET status = 'resolved', updated_at = NOW() \nWHERE ticket_id = CASE \n  WHEN '{{ $json.ticket_id }}' LIKE 'TK-%' THEN '{{ $json.ticket_id }}'\n  ELSE (SELECT ticket_id FROM maintenance_requests WHERE phone LIKE '%' || RIGHT('{{ $json.ticket_id }}', 10) || '%' OR telegram_id = '{{ $json.ticket_id }}' ORDER BY created_at DESC LIMIT 1)\nEND\nRETURNING ticket_id, status",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "5bf0c4b6-49e6-4f5d-b41e-23e8ec3c1797",
+      "name": "Resolved Ack",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        720,
+        1200
+      ],
+      "parameters": {
+        "jsCode": "const chatId = String($('Telegram Trigger').item.json.callback_query.message.chat.id);\nconst resolved = $('Resolve Ticket').first()?.json;\nconst ticketId = resolved?.ticket_id || '';\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('vid\u00e9o') || false;\n\nconst msg = isFrench\n  ? 'Super! Le billet ' + ticketId + ' a \u00e9t\u00e9 marqu\u00e9 comme r\u00e9solu. Merci!'\n  : 'Great! Ticket ' + ticketId + ' has been marked as resolved. Thank you!';\n\n// Send ack message\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg },\n  json: true\n});\n\nreturn [{ json: { chat_id: chatId, ticket_id: ticketId, ack_msg: msg } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "225112a8-6e16-4520-8a1f-70d208540145",
+      "name": "Not Resolved Ack",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        480,
+        1360
+      ],
+      "parameters": {
+        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('vid\u00e9o') || false;\n\nconst msg = isFrench\n  ? 'Pas de souci! Quelqu\\'un de notre \u00e9quipe vous contactera bient\u00f4t.'\n  : 'No worries! Someone from our team will follow up with you soon.';\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg },\n  json: true\n});\nreturn [{ json: result }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "36b41b40-3576-4805-b82b-311f0400a621",
+      "name": "Has Media?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        848,
+        672
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1a4e69d0-09b5-4399-8e0c-e8e56b213c75",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Merge Tenant + Message').item.json.norm_has_media }}",
+              "rightValue": true
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.3
+    },
+    {
+      "id": "a52d1cd2-2c86-4bfe-b3dc-a4a3fc9487b5",
+      "name": "Search Repair Videos",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1424,
+        480
+      ],
+      "parameters": {
+        "query": "SELECT title, video_url, keywords::text as keywords, category FROM repair_videos ORDER BY title",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "3c8b7c76-d825-4a23-bffc-c99b42de55b3",
+      "name": "Match Video AI",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1632,
+        480
+      ],
+      "parameters": {
+        "jsCode": "// AI-powered video matching using Claude Haiku\nconst videos = $('Search Repair Videos').all().map(v => v.json);\n\n// Get tenant message from Build AI Payload (upstream node)\nlet message = '';\nlet channel = '';\nlet chat_id = '';\nlet phone = '';\nlet email = '';\nlet responseText = '';\n\ntry {\n  const payload = $('Build AI Payload').item.json;\n  message = (payload.message || '').trim();\n  channel = payload.channel || '';\n  chat_id = payload.chat_id || '';\n  phone = payload.phone || '';\n  email = payload.email || '';\n} catch(e) {\n  // Fallback: try to get from Merge Tenant + Message\n  try {\n    const merged = $('Merge Tenant + Message').item.json;\n    message = (merged.norm_message || '').trim();\n    channel = merged.norm_channel || '';\n    chat_id = merged.norm_chat_id || '';\n    phone = merged.phone || '';\n    email = merged.email || '';\n  } catch(e2) {}\n}\n\ntry {\n  responseText = $('Call AI Agent').item.json.response_text || '';\n} catch(e) {}\n\nif (!message || message.length < 5) return [{ json: { has_video: false } }];\n\nconst videoList = videos.map((v, i) => i + ': \"' + v.title + '\"').join('\\n');\n\nlet bestVideo = null;\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.anthropic.com/v1/messages',\n    headers: {\n      'x-api-key': process.env.ANTHROPIC_API_KEY,\n      'anthropic-version': '2023-06-01',\n      'content-type': 'application/json'\n    },\n    body: {\n      model: 'claude-haiku-4-5-20251001',\n      max_tokens: 20,\n      messages: [{\n        role: 'user',\n        content: 'The tenant sent this message: \"' + message + '\"\\n\\nAvailable repair videos:\\n' + videoList + '\\n\\nRULES:\\n- Reply with ONLY a number OR \"none\"\\n- A video is relevant ONLY if the tenant\\'s message describes the EXACT same problem the video solves\\n- \"toilet\" issues only match toilet videos, \"faucet\" only faucet, etc.\\n- If tenant says \"thank you\", \"ok\", \"yes\", or confirms something \u2014 reply \"none\"\\n- When in doubt, reply \"none\"'\n      }]\n    },\n    json: true,\n    timeout: 10000\n  });\n\n  const aiAnswer = (response.content?.[0]?.text || '').trim().toLowerCase().split(/[\\s\\n]/)[0];\n  if (aiAnswer !== 'none' && !isNaN(parseInt(aiAnswer))) {\n    const idx = parseInt(aiAnswer);\n    if (idx >= 0 && idx < videos.length) bestVideo = videos[idx];\n  }\n} catch(e) {\n  // API timeout or error \u2014 skip video suggestion\n  return [{ json: { has_video: false } }];\n}\n\nreturn [{\n  json: {\n    has_video: bestVideo !== null,\n    video_url: bestVideo?.video_url || '',\n    video_title: bestVideo?.title || '',\n    channel: channel,\n    chat_id: chat_id,\n    phone: phone,\n    email: email,\n    response_text: responseText\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "16b90a2b-53af-4f07-a7e7-5f6b532a910e",
+      "name": "Send Video Followup",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1824,
+        480
+      ],
+      "parameters": {
+        "jsCode": "// Send video as follow-up if matched\nconst input = $input.first().json;\nif (!input.has_video || !input.video_url) return [{ json: { sent: false } }];\n\nconst channel = input.channel;\nconst chat_id = input.chat_id;\nconst phone = (input.phone || '').replace(/[^0-9]/g, '');\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('merci');\n\nconst videoMsg = isFrench\n  ? 'Cette vid\u00e9o pourrait vous aider :\\n' + input.video_title + '\\n' + input.video_url\n  : 'This video might help:\\n' + input.video_title + '\\n' + input.video_url;\n\nconst ticketLookup = input.chat_id || '';\n\nif (channel === 'telegram') {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n    body: { chat_id: chat_id, text: videoMsg },\n    json: true\n  });\n\n  const questionText = isFrench \n    ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n    : 'Did this video help resolve your issue?';\n\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n    body: {\n      chat_id: chat_id,\n      text: questionText,\n      reply_markup: JSON.stringify({\n        inline_keyboard: [[\n          { text: isFrench ? 'Oui \u2705' : 'Yes \u2705', callback_data: 'video_yes||' + ticketLookup },\n          { text: isFrench ? 'Non \u274c' : 'No \u274c', callback_data: 'video_no||' + ticketLookup }\n        ]]\n      })\n    },\n    json: true\n  });\n} else if (channel === 'whatsapp') {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://graph.facebook.com/v21.0/1002910989571888/messages',\n    headers: { 'Content-Type': 'application/json' },\n    body: { messaging_product: 'whatsapp', to: phone, type: 'text', text: { body: videoMsg } },\n    json: true\n  });\n}\n\n// Log the video suggestion as a message\ntry {\n  const { Pool } = require('pg');\n  // Can't use require in n8n code nodes, use helpers instead\n} catch(e) {}\n\nreturn [{ json: { sent: true, channel: channel, video_title: input.video_title, chat_id: chat_id, video_url: input.video_url, videoMsg: videoMsg } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "5e8f37db-5c7f-4247-a2e4-75b4f5b450ec",
+      "name": "Reopen Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1200,
+        1600
+      ],
+      "parameters": {
+        "query": "UPDATE maintenance_requests SET status = 'open', updated_at = NOW() WHERE ticket_id = CASE WHEN '{{ $json.ticket_id }}' LIKE 'TK-%' THEN '{{ $json.ticket_id }}' ELSE (SELECT ticket_id FROM maintenance_requests WHERE phone LIKE '%' || RIGHT('{{ $json.ticket_id }}', 10) || '%' OR telegram_id = '{{ $json.ticket_id }}' ORDER BY created_at DESC LIMIT 1) END RETURNING ticket_id, status",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "7014adca-433a-46cb-aa24-fef1f62a3986",
+      "name": "Reopen Ack",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1408,
+        1600
+      ],
+      "parameters": {
+        "jsCode": "const chatId = $('Telegram Trigger').item.json.callback_query.message.chat.id;\nconst reopened = $('Reopen Ticket').first()?.json;\nconst ticketId = reopened?.ticket_id || '';\nconst isFrench = $('Telegram Trigger').item.json.callback_query?.message?.text?.includes('probl\u00e8me') || false;\n\nconst msg = isFrench\n  ? 'Merci de nous avoir inform\u00e9. Le billet ' + ticketId + ' a \u00e9t\u00e9 r\u00e9ouvert et quelqu\\'un vous contactera bient\u00f4t.'\n  : 'Thank you for letting us know. Ticket ' + ticketId + ' has been reopened and someone will follow up with you shortly.';\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: String(chatId), text: msg },\n  json: true\n});\n\nreturn [{ json: { chat_id: String(chatId), ticket_id: ticketId, ack_msg: msg } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "98344bbf-abdb-4dc7-ba85-7ff5d5383a1d",
+      "name": "Send Typing",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -576,
+        512
+      ],
+      "parameters": {
+        "jsCode": "// Send typing indicator + check if AI already responded recently (dedup)\nconst msg = $('Telegram Trigger').item.json.message;\nif (!msg || !msg.chat) return [];\n\nconst chatId = String(msg.chat.id);\n\n// Send typing indicator immediately\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendChatAction',\n  body: { chat_id: chatId, action: 'typing' },\n  json: true\n});\n\nreturn [{ json: { ...$('Telegram Trigger').item.json, typing_sent: true } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "746f1e4d-7ce1-437a-b452-ecd85bac3ce1",
+      "name": "Log Video Message",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        2032,
+        480
+      ],
+      "parameters": {
+        "query": "INSERT INTO messages (chat_id, sender, message_text, channel, created_at) SELECT '{{ $json.chat_id }}', 'Julia AI', '{{ ($json.videoMsg || '').replace(/'/g, \"''\") }}', '{{ $json.channel }}', NOW() WHERE '{{ $json.sent }}' = 'true'",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "b1ebbdb5-7ef6-4361-9524-735261be4dbc",
+      "name": "Log Resolution",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1408,
+        1200
+      ],
+      "parameters": {
+        "query": "INSERT INTO messages (chat_id, ticket_id, sender, message_text, channel, created_at) VALUES ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Steven Bartlett', 'Video helped \u2014 marked as resolved \u2705', 'telegram', NOW()), ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Julia AI', '{{ ($json.ack_msg || '').replace(/'/g, \"''\") }}', 'telegram', NOW() + INTERVAL '1 second')",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "b161f688-eb78-47ba-9b60-250d7fd373e1",
+      "name": "Log Reopen",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1600,
+        1600
+      ],
+      "parameters": {
+        "query": "INSERT INTO messages (chat_id, ticket_id, sender, message_text, channel, created_at) VALUES ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Steven Bartlett', 'Issue not resolved \u2014 ticket reopened', 'telegram', NOW()), ('{{ $json.chat_id }}', '{{ $json.ticket_id }}', 'Julia AI', '{{ ($json.ack_msg || '').replace(/'/g, \"''\") }}', 'telegram', NOW() + INTERVAL '1 second')",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "e022a74d-01de-4192-924c-eddf3e94c288",
+      "name": "Save Pending Media",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        992,
+        672
+      ],
+      "parameters": {
+        "query": "INSERT INTO pending_media (chat_id, file_id, channel, media_type, status) VALUES ('{{ $('Merge Tenant + Message').item.json.norm_chat_id }}', '{{ $('Merge Tenant + Message').item.json.norm_media_id }}', '{{ $('Merge Tenant + Message').item.json.norm_channel }}', '{{ $('Merge Tenant + Message').item.json.norm_media_type }}', 'pending') RETURNING id",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "9d39708f-7625-4621-9af4-360e20885951",
+      "name": "Send Category Prompt",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1120,
+        672
+      ],
+      "parameters": {
+        "jsCode": "// Check tenant's open tickets and prompt accordingly\nconst merged = $('Merge Tenant + Message').item.json;\nconst channel = merged.norm_channel;\nconst chatId = merged.norm_chat_id;\nconst phone = merged.phone || '';\nconst email = merged.email || '';\nconst pendingId = $('Save Pending Media').item.json.id;\n\n// Query open tickets for this tenant\nconst tickets = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://n8n.srv1285597.hstgr.cloud/webhook/ticket-ops',\n  body: { action: 'query', query: \"SELECT ticket_id, category, LEFT(summary, 40) as summary FROM maintenance_requests WHERE (phone = '\" + phone.replace(/'/g, \"''\") + \"' OR tenant_email = '\" + email.replace(/'/g, \"''\") + \"' OR telegram_id = '\" + chatId + \"') AND status NOT IN ('closed', 'resolved') ORDER BY created_at DESC LIMIT 5\" },\n  json: true\n}).catch(() => []);\n\n// Store pending_id for later lookup\nconst shortId = pendingId.slice(-12);\n\nif (channel === 'telegram') {\n  let messageText = '';\n  \n  if (tickets && tickets.length > 0) {\n    // Has open tickets \u2014 show numbered list\n    messageText = '\ud83d\udcf8 Photo received! Which ticket is this for?\\n\\n';\n    tickets.forEach((t, i) => {\n      const summary = t.summary || t.category || 'Unknown';\n      messageText += (i + 1) + '. ' + t.ticket_id + ' \u2014 ' + summary + '\\n';\n    });\n    messageText += (tickets.length + 1) + '. \ud83c\udd95 New issue\\n\\nReply with the number.';\n    \n    // Store the ticket mapping in pending_media for lookup when tenant replies\n    // We'll use the file_url field to store the JSON mapping\n    const mapping = tickets.map((t, i) => ({ num: i + 1, ticket_id: t.ticket_id }));\n    mapping.push({ num: tickets.length + 1, ticket_id: 'NEW' });\n    \n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://n8n.srv1285597.hstgr.cloud/webhook/ticket-ops',\n      body: { action: 'query', query: \"UPDATE pending_media SET file_url = '\" + JSON.stringify(mapping).replace(/'/g, \"''\") + \"' WHERE id = '\" + pendingId + \"'\" },\n      json: true\n    }).catch(() => {});\n    \n  } else {\n    // No open tickets \u2014 show category buttons for new ticket\n    messageText = '\ud83d\udcf8 Photo received! What is this about?';\n  }\n  \n  if (tickets && tickets.length > 0) {\n    // Send as text message (tenant replies with number)\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n      body: { chat_id: chatId, text: messageText },\n      json: true\n    });\n  } else {\n    // Send category buttons (no open tickets)\n    const categories = [\n      { text: '\ud83d\udd27 Plumbing', data: 'mc||plumb||' + shortId },\n      { text: '\u26a1 Electrical', data: 'mc||elec||' + shortId },\n      { text: '\ud83c\udf21\ufe0f Heating/AC', data: 'mc||hvac||' + shortId },\n      { text: '\ud83d\udeaa Maintenance', data: 'mc||maint||' + shortId },\n      { text: '\ud83d\udc1b Pest Control', data: 'mc||pest||' + shortId },\n      { text: '\ud83d\udccb Other', data: 'mc||other||' + shortId },\n    ];\n    \n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n      body: {\n        chat_id: chatId,\n        text: messageText,\n        reply_markup: JSON.stringify({\n          inline_keyboard: [\n            [{ text: categories[0].text, callback_data: categories[0].data }, { text: categories[1].text, callback_data: categories[1].data }],\n            [{ text: categories[2].text, callback_data: categories[2].data }, { text: categories[3].text, callback_data: categories[3].data }],\n            [{ text: categories[4].text, callback_data: categories[4].data }, { text: categories[5].text, callback_data: categories[5].data }]\n          ]\n        })\n      },\n      json: true\n    });\n  }\n}\n\nreturn [{ json: { sent: true, pending_id: pendingId, has_tickets: tickets && tickets.length > 0 } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "4418f3af-49f4-4f15-bb64-1f27f024714f",
+      "name": "Parse Media Category",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1200,
+        1808
+      ],
+      "parameters": {
+        "jsCode": "// Map short category codes back to full names\nconst callbackData = $('Parse Callback').item.json;\nconst shortCode = callbackData.ticket_id; // parts[1] = short category code\nconst shortId = callbackData.category;    // parts[2] = last 12 chars of pending_id\nconst chatId = callbackData.chat_id;\n\nconst codeMap = {\n  plumb: 'plumbing', elec: 'electrical', hvac: 'hvac',\n  maint: 'general_maintenance', pest: 'pest_control', other: 'general_inquiry'\n};\n\nconst category = codeMap[shortCode] || 'general_inquiry';\n\nreturn [{\n  json: {\n    short_id: shortId,\n    category: category,\n    chat_id: chatId\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "db25f402-6ef2-401b-9b2e-3002f2d91874",
+      "name": "Update Pending Category",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1408,
+        1808
+      ],
+      "parameters": {
+        "query": "UPDATE pending_media SET category = '{{ $json.category }}', status = 'categorized' WHERE id::text LIKE '%{{ $json.short_id }}' RETURNING *",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "2f44e8b6-5d75-4fd4-9c86-5963cd90d00f",
+      "name": "Media Category Ack",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1600,
+        1808
+      ],
+      "parameters": {
+        "jsCode": "const chatId = $('Parse Callback').item.json.chat_id;\nconst category = $json.category || 'unknown';\nconst isFrench = false; // TODO: detect language\n\nconst categoryLabels = {\n  plumbing: 'Plumbing', electrical: 'Electrical', hvac: 'Heating/AC',\n  general_maintenance: 'General Maintenance', pest_control: 'Pest Control',\n  general_inquiry: 'Other'\n};\n\nconst label = categoryLabels[category] || category;\nconst msg = 'Got it! Your photo has been logged under **' + label + '**. We\\'ll include it with your ticket.';\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage',\n  body: { chat_id: chatId, text: msg, parse_mode: 'Markdown' },\n  json: true\n});\n\nreturn [{ json: { sent: true } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "fc976ba6-eada-4d61-9a85-e27f0f861069",
+      "name": "Get Pending File",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1808,
+        1808
+      ],
+      "parameters": {
+        "query": "SELECT pm.id, pm.file_id, pm.media_type, pm.channel, pm.category, t.name as tenant_name, COALESCE(p.address, 'Unknown Property') as property FROM pending_media pm LEFT JOIN tenants t ON t.telegram_id = pm.chat_id::text LEFT JOIN properties p ON t.property_id = p.id WHERE pm.chat_id = {{ $('Parse Callback').item.json.chat_id }}::bigint AND pm.status = 'categorized' AND (pm.file_url IS NULL OR pm.file_url = '') ORDER BY pm.created_at DESC LIMIT 1",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "03d76908-add3-4daa-99fc-bd6380aa0a3d",
+      "name": "Has File?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2000,
+        1808
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c0aa20a3-cf38-4632-9f00-812ef0bf9001",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.file_id }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.3
+    },
+    {
+      "id": "fba90f50-64aa-42cf-aece-e29ef89280df",
+      "name": "TG Get File Path",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2208,
+        1712
+      ],
+      "parameters": {
+        "url": "=https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/getFile?file_id={{ $('Get Pending File').item.json.file_id }}",
+        "options": {}
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "71dfe8a0-faef-4686-b5b5-49782b89e786",
+      "name": "TG Download Photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2400,
+        1712
+      ],
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "e04a7c4b-8ed0-4018-9f4e-e4bf358e3c2b",
+      "name": "Upload Photo to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        2608,
+        1712
+      ],
+      "parameters": {
+        "name": "={{ $('Get Pending File').item.json.tenant_name || 'Unknown' }} - {{ $('Get Pending File').item.json.category || 'photo' }} - {{ $now.format('MMM-dd-yyyy HH-mm') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "options": {},
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m"
+        },
+        "authentication": ""
+      },
+      "typeVersion": 3
+    },
+    {
+      "id": "670a6914-5342-4a01-9f1c-8d44f1b2e25f",
+      "name": "Share Photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2800,
+        1712
+      ],
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.id }}/permissions",
+        "method": "POST",
+        "options": {},
+        "jsonBody": "={\"type\":\"anyone\",\"role\":\"reader\"}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "authentication": "oAuth2"
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "07850d4f-007f-48c7-98de-0f7d4d63d877",
+      "name": "Update Pending URL",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        3008,
+        1712
+      ],
+      "parameters": {
+        "query": "UPDATE pending_media SET file_url = 'https://drive.google.com/file/d/' || '{{ $('Upload Photo to Drive').item.json.id }}' || '/view', status = 'uploaded' WHERE id = '{{ $('Get Pending File').item.json.id }}' RETURNING id, file_url",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.6
+    },
+    {
+      "id": "check-bot-paused-001",
+      "name": "Check Bot Paused",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1340,
+        480
+      ],
+      "parameters": {
+        "query": "SELECT COALESCE((SELECT bot_paused FROM tenants WHERE phone = '{{ ($json.norm_phone || $json.phone || \"\").replace(/'/g, \"''\") }}' OR telegram_id::text = '{{ ($json.telegram_id || \"\").replace(/'/g, \"''\") }}' OR LOWER(email) = LOWER('{{ ($json.email || \"\").replace(/'/g, \"''\") }}') LIMIT 1), false) AS bot_paused",
+        "options": {},
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "bot-active-check-001",
+      "name": "Bot Active?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1540,
+        480
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "bot-active-cond-001",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.bot_paused }}",
+              "rightValue": false
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "restore-payload-001",
+      "name": "Restore Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        480
+      ],
+      "parameters": {
+        "jsCode": "return { json: $(\"Build AI Payload\").item.json };"
+      }
+    }
+  ],
+  "connections": {
+    "Has File?": {
+      "main": [
+        [
+          {
+            "node": "TG Get File Path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Parse SMS": {
+      "main": [
+        [
+          {
+            "node": "Normalize SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WA Verify": {
+      "main": [
+        [
+          {
+            "node": "Return Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ticket": {
+      "main": [
+        [
+          {
+            "node": "AI Vendor Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Media?": {
+      "main": [
+        [
+          {
+            "node": "Save Pending Media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build AI Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reopen Ack": {
+      "main": [
+        [
+          {
+            "node": "Log Reopen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bot Active?": {
+      "main": [
+        [
+          {
+            "node": "Restore Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Format List": {
+      "main": [
+        [
+          {
+            "node": "Send List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Typing": {
+      "main": [
+        [
+          {
+            "node": "Normalize Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share Photo": {
+      "main": [
+        [
+          {
+            "node": "Update Pending URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Vendor": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Callback?": {
+      "main": [
+        [
+          {
+            "node": "Remove Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Start Cmd?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolved Ack": {
+      "main": [
+        [
+          {
+            "node": "Log Resolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "Lookup Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Contractors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirm Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resolve Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not Resolved Ack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resolve Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reopen Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Media Category",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Show Preview": {
+      "main": [
+        [
+          {
+            "node": "Build Preview Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Vendor Msg": {
+      "main": [
+        [
+          {
+            "node": "Show Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku Confirm": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Confirm Vendor Msg",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Start Cmd?": {
+      "main": [
+        [
+          {
+            "node": "Extract Registration Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Typing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Tenant": {
+      "main": [
+        [
+          {
+            "node": "Tenant Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Vendor": {
+      "main": [
+        [
+          {
+            "node": "Get Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize SMS": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reopen Ticket": {
+      "main": [
+        [
+          {
+            "node": "Reopen Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tenant Found?": {
+      "main": [
+        [
+          {
+            "node": "Merge Tenant + Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unknown Tenant Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Messages": {
+      "main": [
+        [
+          {
+            "node": "Clear Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Ticket": {
+      "main": [
+        [
+          {
+            "node": "Confirm Vendor Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Vendor": {
+      "main": [
+        [
+          {
+            "node": "Confirm Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku Dispatch": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Vendor Msg",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Video AI": {
+      "main": [
+        [
+          {
+            "node": "Send Video Followup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Callback": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Normalize WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Buttons": {
+      "main": [
+        [
+          {
+            "node": "Parse Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Ticket": {
+      "main": [
+        [
+          {
+            "node": "Resolved Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contractors": {
+      "main": [
+        [
+          {
+            "node": "Format List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup by Phone": {
+      "main": [
+        [
+          {
+            "node": "Save Telegram ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Payload": {
+      "main": [
+        [
+          {
+            "node": "Check Bot Paused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Bot Paused": {
+      "main": [
+        [
+          {
+            "node": "Bot Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pending File": {
+      "main": [
+        [
+          {
+            "node": "Has File?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Telegram ID": {
+      "main": [
+        [
+          {
+            "node": "Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send AI Response": {
+      "main": [
+        [
+          {
+            "node": "Search Repair Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG Get File Path": {
+      "main": [
+        [
+          {
+            "node": "TG Download Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Callback?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG Download Photo": {
+      "main": [
+        [
+          {
+            "node": "Upload Photo to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Incoming": {
+      "main": [
+        [
+          {
+            "node": "Parse WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Vendor Msg": {
+      "main": [
+        [
+          {
+            "node": "Email Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Media Category Ack": {
+      "main": [
+        [
+          {
+            "node": "Get Pending File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Telegram": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Pending Media": {
+      "main": [
+        [
+          {
+            "node": "Send Category Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Inbound Message": {
+      "main": [
+        [
+          {
+            "node": "Has Media?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Video Followup": {
+      "main": [
+        [
+          {
+            "node": "Log Video Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Media Category": {
+      "main": [
+        [
+          {
+            "node": "Update Pending Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Repair Videos": {
+      "main": [
+        [
+          {
+            "node": "Match Video AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Preview Buttons": {
+      "main": [
+        [
+          {
+            "node": "Send Preview HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Photo to Drive": {
+      "main": [
+        [
+          {
+            "node": "Share Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Tenant + Message": {
+      "main": [
+        [
+          {
+            "node": "Log Inbound Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unknown Tenant Response": {
+      "main": [
+        [
+          {
+            "node": "Send Unknown Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Pending Category": {
+      "main": [
+        [
+          {
+            "node": "Media Category Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Registration Data": {
+      "main": [
+        [
+          {
+            "node": "Lookup by Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Clear Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \u2018Execute workflow\u2019": {
+      "main": [
+        [
+          {
+            "node": "Clear Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Payload": {
+      "main": [
+        [
+          {
+            "node": "Call AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "maxConcurrency": 1
+  },
+  "id": "6uqrzVIcH8GFznDf"
+}
