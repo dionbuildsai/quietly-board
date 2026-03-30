@@ -323,7 +323,16 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - WhatsApp status updates create ~3 empty 13ms executions per message
 - Dashboard has no login auth (relies on URL obscurity; Traefik basicauth planned)
 
-## Deployment Status
+## Deployment Policy
+**CRITICAL: This system is LIVE with a real client. Zero errors tolerated.**
+- Every change MUST be verified before deploying — no exceptions
+- Never deploy untested code to production
+- Always backup n8n workflows before importing changes
+- Keep changes minimal and targeted — do not refactor surrounding code
+- After deploying, verify the dashboard loads and key flows still work
+- If unsure whether a change is safe, ASK before deploying
+- n8n workflow changes: backup → import → publish → restart → verify
+
 **App went live: 2026-03-27**
 
 ### Post-Launch Monitoring

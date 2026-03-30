@@ -1,0 +1,345 @@
+{
+  "id": "owner-msg-sender-001",
+  "name": "[Owner] Message Sender",
+  "active": true,
+  "nodes": [
+    {
+      "id": "webhook-owner-001",
+      "name": "Owner Message Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "owner-message",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "fdb894ae-130a-4f95-9f87-a9cfc87033ca"
+    },
+    {
+      "id": "normalize-owner-001",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst text = (body.text || '').trim();\nreturn [{ json: {\n  ticket_id: body.ticket_id || '',\n  channel: body.channel || '',\n  chat_id: String(body.chat_id || ''),\n  phone: body.phone || '',\n  email: body.email || '',\n  text: text,\n  response_text: text,\n} }];"
+      }
+    },
+    {
+      "id": "log-owner-msg-001",
+      "name": "Log to Messages",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO messages (ticket_id, sender, message_text, channel, chat_id, created_at) VALUES ('{{ $json.ticket_id.replace(/'/g, \"''\") }}', 'owner', '{{ $json.text.replace(/'/g, \"''\") }}', '{{ $json.channel }}', '{{ $json.chat_id.replace(/'/g, \"''\") }}', NOW()) ON CONFLICT DO NOTHING",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "id": "switch-channel-001",
+      "name": "Route by Channel",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "sw-tg-001",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "sw-sms-001",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "sms",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sms"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "sw-wa-001",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "sw-em-001",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      }
+    },
+    {
+      "id": "send-telegram-001",
+      "name": "Send Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $json.chat_id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text.substring(0, 4090) }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "send-sms-001",
+      "name": "Send SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        880,
+        260
+      ],
+      "parameters": {
+        "from": "+14389009998",
+        "to": "={{ $json.phone }}",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "credentials": {
+        "twilioApi": {
+          "id": "ijmhKNa9AFRv7Rjr",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "id": "send-whatsapp-001",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        420
+      ],
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1002910989571888",
+        "recipientPhoneNumber": "={{ $json.phone.replace(/[^0-9]/g, '') }}",
+        "textBody": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "whatsAppApi": {
+          "id": "we3yhVhUwWRnkTGz",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "id": "send-email-001",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        880,
+        580
+      ],
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Julia Inc - Property Management",
+        "message": "={{ $json.text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ws18m1zty0x1WwiD",
+          "name": "dionfwang"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Owner Message Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Log to Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Messages": {
+      "main": [
+        [
+          {
+            "node": "Route by Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Channel": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "7620dbf8-e590-4e73-9fbf-8d7c1760aae1",
+  "meta": null
+}
