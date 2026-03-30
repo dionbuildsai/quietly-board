@@ -388,8 +388,18 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Cross-channel:** Photos sent on Telegram can be linked to a WhatsApp ticket and vice versa
 - **TODO:** Build media management page (gallery view of all uploads, filterable by tenant/ticket)
 
+## Documentation
+- **CLAUDE.md** (this file) — system architecture, workflows, database, credentials, technical reference
+- **RUNBOOK.md** — operational procedures: restarts, deployments, common fixes, emergency procedures, database operations
+- **Materials/system-guide.html** — client-facing complete system guide (styled HTML, A-to-Z reference)
+- **Materials/onboarding.html** — onboarding guide (subset of system guide)
+- **Materials/tenant-welcome-email.html** — email template for tenants (English + French)
+- **Materials/sop-tenant-integration.html** — SOP for adding tenants
+
+---
+
 ## Cross-Channel Behavior
-- `Link Ongoing Messages` has NO channel filter — if a tenant messages on WhatsApp about an existing Telegram ticket, the messages link to that ticket
+- `Link Ongoing Messages` now has channel filter (fixed 2026-03-29) — messages only link to tickets from the same channel
 - AI Classifier creates separate tickets for DIFFERENT issues in the same category (e.g., sink leak ≠ clogged drain, even though both plumbing)
 - Conversation query shows ALL messages with matching `ticket_id` regardless of channel
 - Dashboard: tickets list and detail page show multi-channel icons when messages come from multiple channels
@@ -430,3 +440,20 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - Conversation bubbles: colored channel icon replaces "via telegram" text
 - Error workflow assigned to all 7 critical workflows
 - Cleaned broken media files, stale DB references, orphaned pending_media
+
+## Changelog (2026-03-29 session — onboarding day)
+- **Julia onboarded as first live client** — 60 tenants, 3 properties, vendors added
+- Fixed cross-channel message linking: added `AND channel = '...'` to `Link Ongoing Messages` in AI Agent (was linking WhatsApp messages to Telegram tickets)
+- Dashboard: added phone validation on tenant form (country code required, auto-strip formatting)
+- Dashboard: tickets page split into active (top) and resolved/closed (collapsed below)
+- Dashboard: added Help page with 5 tutorial videos
+- Dashboard: renamed onboarding page to Help with PlayCircle icon
+- Bulk-fixed 44 tenant phone numbers: added `1` country code prefix to Canadian numbers (514, 438, 819)
+- Error workflow (`ZK5jzQ8cMlLiMdeZ`) now assigned to ALL 8 workflows (was only 4)
+- Added zero-error deployment policy to CLAUDE.md
+- ElevenLabs voice agent: fixed language switching (English-only unless caller speaks French first)
+- ElevenLabs voice agent: unregistered callers now get polite redirect + hang up (no ticket created)
+- Telegram bot display name changed to "Property Management" (username remains @dion_property_manager_bot)
+- Created client-facing documentation: system-guide.html, tenant-welcome-email.html, sop-tenant-integration.html
+- Created RUNBOOK.md for operational procedures
+- Owner notifications now fully dynamic via settings table (no hardcoded chat IDs)

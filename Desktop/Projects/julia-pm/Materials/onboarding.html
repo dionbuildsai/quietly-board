@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Management System — Onboarding Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    color: #1C1A27;
+    line-height: 1.7;
+    background: #fff;
+    font-size: 15px;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cover {-after: always; }
+    h2 {-after: avoid; }
+    .steps, .box, .tbl {-inside: avoid; }
+  }
+
+  /* ─── Cover ─────────────────────────────────────────── */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #573CFA 0%, #3D1FD4 100%);
+    color: white;
+    padding: 60px;
+    position: relative;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  }
+  .cover * { position: relative; z-index: 1; }
+  .cover h1 { font-size: 44px; font-weight: 700; margin-bottom: 16px; letter-spacing: -1px; line-height: 1.15; }
+  .cover .subtitle { font-size: 20px; font-weight: 400; opacity: 0.85; margin-bottom: 56px; }
+  .cover .divider { width: 60px; height: 3px; background: rgba(255,255,255,0.35); border-radius: 2px; margin-bottom: 56px; }
+  .cover .prepared { font-size: 14px; opacity: 0.6; line-height: 1.8; }
+  .cover .prepared strong { opacity: 1; font-weight: 600; }
+
+  /* ─── Pages ─────────────────────────────────────────── */
+  .page { max-width: 780px; margin: 0 auto; padding: 36px 48px; }
+
+  h2 {
+    font-size: 24px; font-weight: 700; color: #573CFA;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 2px solid #F0EDFF;
+    letter-spacing: -0.3px;
+    margin-top: 32px;
+  }
+  .page > h2:first-child { margin-top: 0; }
+  h3 { font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
+  p { margin-bottom: 10px; }
+
+  /* ─── Boxes ─────────────────────────────────────────── */
+  .box {
+    padding: 18px 22px;
+    border-radius: 10px;
+    margin: 16px 0;
+  }
+  .box-purple { background: #F0EDFF; border-left: 4px solid #573CFA; }
+  .box-orange { background: #FFF8F0; border-left: 4px solid #F88D1A; }
+  .box-green  { background: #F0FFF5; border-left: 4px solid #02864A; }
+  .box p { margin-bottom: 6px; }
+  .box p:last-child { margin-bottom: 0; }
+
+  /* ─── Info Grid ─────────────────────────────────────── */
+  .info-grid { display: grid; grid-template-columns: 150px 1fr; gap: 6px 20px; margin: 16px 0; }
+  .info-grid .label { font-weight: 600; color: #888; font-size: 14px; }
+  .info-grid .val { font-weight: 500; }
+
+  /* ─── Step List ─────────────────────────────────────── */
+  .steps { list-style: none; counter-reset: s; margin: 20px 0; }
+  .steps li {
+    counter-increment: s;
+    padding: 12px 14px 12px 52px;
+    position: relative;
+    margin-bottom: 8px;
+    background: #FAFAFA;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .steps li::before {
+    content: counter(s);
+    position: absolute; left: 16px; top: 15px;
+    width: 30px; height: 30px;
+    background: #573CFA; color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+
+  /* ─── Channel Cards ─────────────────────────────────── */
+  .channels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .ch {
+    border: 1px solid #E8E6F0;
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .ch .icon { font-size: 24px; margin-bottom: 4px; }
+  .ch .name { font-weight: 700; font-size: 15px; }
+  .ch .desc { font-size: 12px; color: #888; margin-top: 4px; }
+  .ch-wide { grid-column: 1 / -1; }
+
+  /* ─── Table ─────────────────────────────────────────── */
+  .tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-size: 14px; }
+  .tbl th {
+    background: #573CFA; color: white;
+    padding: 13px 18px; text-align: left; font-weight: 600;
+  }
+  .tbl th:first-child { border-radius: 10px 0 0 0; }
+  .tbl th:last-child  { border-radius: 0 10px 0 0; }
+  .tbl td { padding: 13px 18px; border-bottom: 1px solid #F0EDFF; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:nth-child(even) td { background: #FAFAFA; }
+
+  /* ─── Footer ────────────────────────────────────────── */
+  .footer { text-align: center; padding: 48px; color: #999; font-size: 13px; }
+  .footer a { color: #573CFA; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ COVER ══════════════════════ -->
+<div class="cover">
+  <h1>Property Management<br>System Guide</h1>
+  <p class="subtitle">Your AI-powered tenant communication platform</p>
+  <div class="divider"></div>
+  <p class="prepared">
+    Prepared by <strong>Quietly Systems Inc</strong><br>
+    March 2026
+  </p>
+</div>
+
+<!-- ══════════════════════ WELCOME ══════════════════════ -->
+<div class="page">
+  <h2>Welcome</h2>
+  <p>Your property management system is now live. It automatically handles tenant messages across five communication channels, creates maintenance tickets, and keeps you informed via Telegram notifications.</p>
+  <p>This guide will walk you through everything you need to know to manage your properties using the dashboard.</p>
+
+  <div class="box box-purple">
+    <p><strong>Dashboard:</strong> julia.srv1285597.hstgr.cloud</p>
+    <p><strong>Password:</strong> quietly2024</p>
+    <p><strong>Tenant Phone:</strong> +1 438-900-9998</p>
+    <p><strong>Support:</strong> hello@quietly.systems</p>
+  </div>
+
+  <h3>How It Works</h3>
+  <ol class="steps">
+    <li>A tenant reaches out via any channel &mdash; Telegram, WhatsApp, SMS, Email, or Phone</li>
+    <li>The AI bot responds automatically and asks clarifying questions</li>
+    <li>A ticket is created on your dashboard with a full summary</li>
+    <li>You receive a Telegram notification with the ticket details</li>
+    <li>If the issue is urgent, you get dispatch buttons to contact a vendor immediately</li>
+  </ol>
+
+
+  <h2>Communication Channels</h2>
+  <p>Tenants can reach you through any of these channels. All messages flow into the same dashboard.</p>
+
+  <div class="channels">
+    <div class="ch">
+      <div class="icon">💬</div>
+      <div class="name">Telegram</div>
+      <div class="desc">Bot chat &mdash; tenants message directly</div>
+    </div>
+    <div class="ch">
+      <div class="icon">📱</div>
+      <div class="name">WhatsApp</div>
+      <div class="desc">Business number &mdash; text + photos</div>
+    </div>
+    <div class="ch">
+      <div class="icon">✉️</div>
+      <div class="name">SMS</div>
+      <div class="desc">Text messages to +1 438-900-9998</div>
+    </div>
+    <div class="ch">
+      <div class="icon">📧</div>
+      <div class="name">Email</div>
+      <div class="desc">Tenant emails handled automatically</div>
+    </div>
+    <div class="ch ch-wide">
+      <div class="icon">📞</div>
+      <div class="name">Phone</div>
+      <div class="desc">AI voice agent answers calls to +1 438-900-9998 &mdash; logs tickets from the conversation</div>
+    </div>
+  </div>
+
+  <p>When a tenant sends a photo (on Telegram or WhatsApp), the system asks which ticket to attach it to. Photos appear as thumbnails in the ticket conversation and in the Attachments section.</p>
+
+
+  <h2>Your Dashboard</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Page</th><th>What It Does</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Dashboard</strong></td><td>Overview &mdash; ticket stats, recent activity</td></tr>
+      <tr><td><strong>Inbox</strong></td><td>Unread ticket notifications &mdash; click to view</td></tr>
+      <tr><td><strong>Tickets</strong></td><td>All tickets &mdash; click any row to see the full conversation</td></tr>
+      <tr><td><strong>Tenants</strong></td><td>Add, edit, or remove tenants (name, phone, unit, property)</td></tr>
+      <tr><td><strong>Vendors</strong></td><td>Manage vendor contacts organized by category</td></tr>
+      <tr><td><strong>Properties</strong></td><td>Manage property addresses</td></tr>
+      <tr><td><strong>Settings</strong></td><td>Configure your Telegram notification account</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Ticket Detail View</h3>
+  <p>When you click on a ticket, you see:</p>
+  <ul style="margin: 12px 0 12px 24px;">
+    <li><strong>Left panel:</strong> Ticket details &mdash; tenant, property, category, summary, attachments</li>
+    <li><strong>Right panel:</strong> Full conversation between the tenant and the bot, including photos</li>
+    <li><strong>Top right:</strong> Bot toggle, mark resolved, and delete buttons</li>
+  </ul>
+
+
+  <h2>Common Actions</h2>
+
+  <h3>Pause the Bot &amp; Reply Manually</h3>
+  <ol class="steps">
+    <li>Open a ticket and click <strong>Bot OFF</strong> (top right)</li>
+    <li>A text input appears at the bottom &mdash; type your message and press Send</li>
+    <li>Your message is sent directly to the tenant via their original channel</li>
+    <li>When you leave the ticket page, the bot automatically resumes</li>
+  </ol>
+
+  <h3>Close a Ticket</h3>
+  <p>Open a ticket &rarr; click <strong>Mark Resolved</strong>. The bot stops responding to that conversation thread.</p>
+
+  <h3>Delete a Ticket</h3>
+  <p>Open a ticket &rarr; click <strong>Delete</strong> &rarr; confirm. This permanently removes the ticket, all messages, photos, and files.</p>
+
+  <h3>Delete a Message</h3>
+  <p>Hover over any message in the conversation &rarr; click the red <strong>X</strong> &rarr; confirm.</p>
+
+  <div class="box box-orange">
+    <p><strong>Important:</strong> Deleting a ticket or message cannot be undone. Make sure you no longer need the information before deleting.</p>
+  </div>
+
+
+  <h2>Telegram Notifications</h2>
+  <p>You receive Telegram notifications for:</p>
+  <ul style="margin: 12px 0 24px 24px;">
+    <li>Every new ticket created (with category, tenant name, and summary)</li>
+    <li>Urgent tickets (with buttons to dispatch a vendor or view contractors)</li>
+  </ul>
+
+  <h3>Change Your Notification Account</h3>
+  <ol class="steps">
+    <li>Go to <strong>Settings</strong> &rarr; <strong>Telegram</strong></li>
+    <li>Enter a new <strong>Owner Chat ID</strong> in the field</li>
+    <li>Click <strong>Save</strong> &mdash; a 6-digit verification code is sent to the new Telegram account</li>
+    <li>Enter the code on the dashboard and click <strong>Confirm</strong></li>
+    <li>Notifications now go to the new account</li>
+  </ol>
+
+  <div class="box box-purple">
+    <p><strong>How to find your Chat ID:</strong> Open Telegram &rarr; search for <strong>@userinfobot</strong> &rarr; send <strong>/start</strong> &rarr; it replies with your Chat ID number.</p>
+  </div>
+
+  <h2 style="margin-top: 52px;">What the Bot Does NOT Do</h2>
+  <ul style="margin: 12px 0 12px 24px;">
+    <li>It does <strong>not</strong> call emergency services or tell tenants to evacuate</li>
+    <li>It does <strong>not</strong> promise timelines or commit to sending contractors without your permission</li>
+    <li>It does <strong>not</strong> reply to people whose phone or email isn't in the system</li>
+    <li>If the AI can't handle something, it logs the ticket &mdash; you take over manually</li>
+  </ul>
+
+
+  <h2>Getting Help</h2>
+
+  <div class="box box-green">
+    <p><strong>If the bot stops replying to tenants:</strong></p>
+    <p>1. Open your dashboard &mdash; if it loads normally, the issue is likely temporary</p>
+    <p>2. Email <strong>hello@quietly.systems</strong> with what happened</p>
+    <p>3. You can always message tenants manually in the meantime (pause bot &rarr; reply)</p>
+  </div>
+
+  <div class="info-grid" style="margin-top: 24px;">
+    <div class="label">Support Email</div>
+    <div class="val">hello@quietly.systems</div>
+    <div class="label">Website</div>
+    <div class="val">quietly.systems</div>
+    <div class="label">Dashboard</div>
+    <div class="val">julia.srv1285597.hstgr.cloud</div>
+    <div class="label">Tenant Number</div>
+    <div class="val">+1 438-900-9998</div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Quietly Systems Inc &mdash; Property Management Automation</p>
+  <p><a href="https://quietly.systems">quietly.systems</a> &nbsp;|&nbsp; <a href="mailto:hello@quietly.systems">hello@quietly.systems</a></p>
+</div>
+
+</body>
+</html>

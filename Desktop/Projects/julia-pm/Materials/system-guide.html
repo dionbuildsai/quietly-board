@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Management System — Complete Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; color: #1C1A27; line-height: 1.7; background: #fff; font-size: 15px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cover { page-break-after: always; }
+    h2 { page-break-after: avoid; }
+    .steps, .box, .tbl { break-inside: avoid; }
+  }
+
+  .cover {
+    height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+    background: linear-gradient(135deg, #573CFA 0%, #3D1FD4 100%); color: white; padding: 60px; position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  }
+  .cover * { position: relative; z-index: 1; }
+  .cover h1 { font-size: 42px; font-weight: 700; margin-bottom: 16px; letter-spacing: -1px; line-height: 1.15; }
+  .cover .subtitle { font-size: 20px; font-weight: 400; opacity: 0.85; margin-bottom: 56px; }
+  .cover .divider { width: 60px; height: 3px; background: rgba(255,255,255,0.35); border-radius: 2px; margin-bottom: 56px; }
+  .cover .prepared { font-size: 14px; opacity: 0.6; line-height: 1.8; }
+  .cover .prepared strong { opacity: 1; font-weight: 600; }
+
+  .page { max-width: 780px; margin: 0 auto; padding: 36px 48px; }
+  .toc { max-width: 780px; margin: 0 auto; padding: 48px; }
+  .toc h2 { font-size: 24px; font-weight: 700; color: #573CFA; margin-bottom: 24px; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc li { counter-increment: toc; padding: 10px 0; border-bottom: 1px solid #F0EDFF; font-size: 15px; }
+  .toc li::before { content: counter(toc) "."; color: #573CFA; font-weight: 700; margin-right: 12px; display: inline-block; width: 24px; }
+
+  h2 {
+    font-size: 24px; font-weight: 700; color: #573CFA;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 2px solid #F0EDFF; letter-spacing: -0.3px; margin-top: 48px;
+  }
+  .page > h2:first-child { margin-top: 0; }
+  h3 { font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
+  p { margin-bottom: 10px; }
+  ul, ol { margin: 10px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+
+  .box { padding: 18px 22px; border-radius: 10px; margin: 16px 0; }
+  .box-purple { background: #F0EDFF; border-left: 4px solid #573CFA; }
+  .box-orange { background: #FFF8F0; border-left: 4px solid #F88D1A; }
+  .box-green  { background: #F0FFF5; border-left: 4px solid #02864A; }
+  .box-red    { background: #FFF0F0; border-left: 4px solid #E8083E; }
+  .box p { margin-bottom: 6px; }
+  .box p:last-child { margin-bottom: 0; }
+
+  .steps { list-style: none; counter-reset: s; margin: 20px 0; }
+  .steps li {
+    counter-increment: s; padding: 14px 14px 14px 56px; position: relative;
+    margin-bottom: 10px; background: #FAFAFA; border-radius: 8px; font-size: 14px;
+  }
+  .steps li::before {
+    content: counter(s); position: absolute; left: 16px; top: 16px;
+    width: 30px; height: 30px; background: #573CFA; color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .steps li strong { color: #1C1A27; }
+  .steps li .sub { display: block; font-size: 13px; color: #666; margin-top: 4px; }
+
+  .channels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .ch { border: 1px solid #E8E6F0; border-radius: 10px; padding: 16px 12px; text-align: center; }
+  .ch .icon { font-size: 24px; margin-bottom: 4px; }
+  .ch .name { font-weight: 700; font-size: 15px; }
+  .ch .desc { font-size: 12px; color: #888; margin-top: 4px; }
+  .ch-wide { grid-column: 1 / -1; }
+
+  .tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-size: 14px; }
+  .tbl th { background: #573CFA; color: white; padding: 13px 18px; text-align: left; font-weight: 600; }
+  .tbl th:first-child { border-radius: 10px 0 0 0; }
+  .tbl th:last-child  { border-radius: 0 10px 0 0; }
+  .tbl td { padding: 13px 18px; border-bottom: 1px solid #F0EDFF; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:nth-child(even) td { background: #FAFAFA; }
+
+  .info-grid { display: grid; grid-template-columns: 170px 1fr; gap: 6px 20px; margin: 16px 0; }
+  .info-grid .label { font-weight: 600; color: #888; font-size: 14px; }
+  .info-grid .val { font-weight: 500; }
+
+  .footer { text-align: center; padding: 48px; color: #999; font-size: 13px; }
+  .footer a { color: #573CFA; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ COVER ══════════════════════ -->
+<div class="cover">
+  <h1>Property Management<br>System Guide</h1>
+  <p class="subtitle">Complete reference for your AI-powered tenant communication platform</p>
+  <div class="divider"></div>
+  <p class="prepared">
+    Prepared by <strong>Quietly Systems Inc</strong><br>
+    March 2026
+  </p>
+</div>
+
+<!-- ══════════════════════ TABLE OF CONTENTS ══════════════════════ -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li>System Overview</li>
+    <li>Getting Started</li>
+    <li>Communication Channels</li>
+    <li>Your Dashboard</li>
+    <li>Managing Tenants</li>
+    <li>Managing Vendors</li>
+    <li>Managing Properties</li>
+    <li>Ticket Lifecycle</li>
+    <li>Responding to Tenants</li>
+    <li>Vendor Dispatch</li>
+    <li>Notifications</li>
+    <li>Photos &amp; Media</li>
+    <li>Voice Agent (Phone Calls)</li>
+    <li>What the Bot Does NOT Do</li>
+    <li>Troubleshooting</li>
+    <li>Quick Reference</li>
+  </ol>
+</div>
+
+<!-- ══════════════════════ CONTENT ══════════════════════ -->
+<div class="page">
+
+  <!-- 1. SYSTEM OVERVIEW -->
+  <h2>1. System Overview</h2>
+  <p>Your property management system automatically handles tenant communication across five channels. When a tenant sends a message or calls, the AI assistant responds, creates a maintenance ticket, and notifies you via Telegram.</p>
+
+  <p>Here is how every interaction flows:</p>
+  <ol class="steps">
+    <li><strong>Tenant reaches out</strong> via Telegram, WhatsApp, SMS, Email, or Phone</li>
+    <li><strong>AI identifies the tenant</strong> by their phone number, email, or Telegram account</li>
+    <li><strong>AI responds</strong> &mdash; asks clarifying questions and suggests self-help solutions</li>
+    <li><strong>A ticket is created</strong> on your dashboard with a full summary</li>
+    <li><strong>You receive a Telegram notification</strong> with the ticket details</li>
+    <li><strong>If urgent</strong>, you get dispatch buttons to contact a vendor immediately</li>
+  </ol>
+
+  <div class="box box-green">
+    <p><strong>The system runs 24/7.</strong> Tenants can reach out at any time and the AI will respond immediately. You only need to step in when you choose to.</p>
+  </div>
+
+
+  <!-- 2. GETTING STARTED -->
+  <h2>2. Getting Started</h2>
+
+  <div class="box box-purple">
+    <p><strong>Dashboard:</strong> julia.srv1285597.hstgr.cloud</p>
+    <p><strong>Tenant Number:</strong> +1 438-900-9998 (calls, SMS, WhatsApp)</p>
+    <p><strong>Telegram Bot:</strong> t.me/dion_property_manager_bot</p>
+    <p><strong>Support:</strong> hello@quietly.systems</p>
+  </div>
+
+  <h3>First-time setup</h3>
+  <ol class="steps">
+    <li><strong>Log in to the dashboard</strong><span class="sub">Open the dashboard URL in your browser. Enter the password when prompted.</span></li>
+    <li><strong>Set up your Telegram notifications</strong><span class="sub">Go to Settings &rarr; Telegram &rarr; enter your Chat ID &rarr; verify with the 6-digit code. See the Notifications section for details.</span></li>
+    <li><strong>Add your properties</strong><span class="sub">Go to Properties &rarr; Add Property. Enter the name and full address for each building.</span></li>
+    <li><strong>Add your tenants</strong><span class="sub">Go to Tenants &rarr; Add Tenant. Fill in their name, phone (with country code), email, unit, and property.</span></li>
+    <li><strong>Add your vendors</strong><span class="sub">Go to Vendors &rarr; Add Vendor. Enter their name, email, phone, and service category.</span></li>
+    <li><strong>Send the welcome email to tenants</strong><span class="sub">Use the email template provided. Tenants click the Telegram or WhatsApp link to get started.</span></li>
+  </ol>
+
+
+  <!-- 3. COMMUNICATION CHANNELS -->
+  <h2>3. Communication Channels</h2>
+  <p>Tenants can reach you through any of these channels. All messages flow into the same dashboard.</p>
+
+  <div class="channels">
+    <div class="ch">
+      <div class="icon">&#x1F4AC;</div>
+      <div class="name">Telegram</div>
+      <div class="desc">Fastest response &mdash; interactive buttons, photo support</div>
+    </div>
+    <div class="ch">
+      <div class="icon">&#x1F4F1;</div>
+      <div class="name">WhatsApp</div>
+      <div class="desc">Message +1 438-900-9998 &mdash; text + photos</div>
+    </div>
+    <div class="ch">
+      <div class="icon">&#x2709;&#xFE0F;</div>
+      <div class="name">SMS</div>
+      <div class="desc">Text +1 438-900-9998</div>
+    </div>
+    <div class="ch">
+      <div class="icon">&#x1F4E7;</div>
+      <div class="name">Email</div>
+      <div class="desc">Tenant emails handled automatically</div>
+    </div>
+    <div class="ch ch-wide">
+      <div class="icon">&#x1F4DE;</div>
+      <div class="name">Phone</div>
+      <div class="desc">Call +1 438-900-9998 &mdash; AI voice assistant available 24/7, logs tickets from the conversation</div>
+    </div>
+  </div>
+
+  <div class="box box-purple">
+    <p><strong>Recommended channels:</strong> For the fastest service, encourage tenants to use <strong>Telegram</strong>, <strong>WhatsApp</strong>, or <strong>Phone</strong>. These provide instant responses, photo support, and interactive buttons.</p>
+  </div>
+
+  <p><strong>Unregistered callers:</strong> Only tenants whose phone number, email, or Telegram ID is in the system will receive responses. Unknown senders receive a message asking them to contact their property manager.</p>
+
+
+  <!-- 4. YOUR DASHBOARD -->
+  <h2>4. Your Dashboard</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Page</th><th>What It Does</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Dashboard</strong></td><td>Overview &mdash; ticket stats, category breakdown, recent tickets, time saved by automation</td></tr>
+      <tr><td><strong>Inbox</strong></td><td>Unread ticket notifications &mdash; click to view, dismiss when reviewed</td></tr>
+      <tr><td><strong>Tickets</strong></td><td>All tickets &mdash; active tickets on top, resolved/closed collapsed below. Filter by property and tenant. Click any row for full details.</td></tr>
+      <tr><td><strong>Tenants</strong></td><td>Add, edit, or remove tenants. Grouped by property.</td></tr>
+      <tr><td><strong>Vendors</strong></td><td>Manage vendor contacts organized by service category.</td></tr>
+      <tr><td><strong>Properties</strong></td><td>Manage building names and addresses.</td></tr>
+      <tr><td><strong>Help</strong></td><td>Video tutorials covering all major features.</td></tr>
+      <tr><td><strong>Settings</strong></td><td>Configure your Telegram notification account.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Ticket Detail View</h3>
+  <p>When you click on a ticket, you see:</p>
+  <ul>
+    <li><strong>Left panel:</strong> Ticket details &mdash; tenant name, property, unit, category, summary, attachments</li>
+    <li><strong>Right panel:</strong> Full conversation between the tenant and the bot, including photos</li>
+    <li><strong>Top right:</strong> Bot toggle (pause/resume), Mark Resolved, and Delete buttons</li>
+  </ul>
+  <p>For phone call tickets, the conversation panel shows an audio recording player instead of a text thread.</p>
+
+  <h3>Auto-refresh</h3>
+  <p>The dashboard refreshes automatically every 30 seconds. The inbox notification badge updates every 15 seconds. You do not need to manually refresh the page.</p>
+
+  <h3>AI Chat</h3>
+  <p>The floating chat widget in the bottom-left corner lets you ask questions about your data in plain language. For example: "How many plumbing tickets were opened this week?" or "Which tenant has the most tickets?"</p>
+
+
+  <!-- 5. MANAGING TENANTS -->
+  <h2>5. Managing Tenants</h2>
+
+  <h3>Adding a tenant</h3>
+  <ol class="steps">
+    <li><strong>Go to Tenants</strong> in the sidebar</li>
+    <li><strong>Click "Add Tenant"</strong> (top right)</li>
+    <li><strong>Fill in the details:</strong>
+      <span class="sub">
+        &bull; <strong>Name:</strong> First Last<br>
+        &bull; <strong>Phone:</strong> With country code, digits only (e.g. 15145551234)<br>
+        &bull; <strong>Email:</strong> Tenant's email address<br>
+        &bull; <strong>Property:</strong> Select from dropdown<br>
+        &bull; <strong>Unit Number:</strong> e.g. 203, 4B<br>
+        &bull; <strong>Language:</strong> English or French<br>
+        &bull; <strong>Telegram ID:</strong> Leave blank &mdash; auto-captured when tenant messages the bot
+      </span>
+    </li>
+    <li><strong>Click Save</strong></li>
+  </ol>
+
+  <div class="box box-red">
+    <p><strong>Phone number rules:</strong></p>
+    <p>&bull; Canadian numbers MUST start with <strong>1</strong> (country code): <strong>1</strong>5145551234</p>
+    <p>&bull; Digits only &mdash; no spaces, dashes, or brackets</p>
+    <p>&bull; International numbers: include their country code (e.g. 21698047018)</p>
+    <p>&bull; The system will warn you if the format is wrong</p>
+  </div>
+
+  <div class="box box-green">
+    <p><strong>Telegram ID:</strong> You never need to enter this manually. When a tenant sends their first message to the Telegram bot, the system captures their ID automatically. You can verify this happened by checking the Telegram ID column on the Tenants page.</p>
+  </div>
+
+  <h3>Editing a tenant</h3>
+  <p>Click the pencil icon next to any tenant &rarr; update their details &rarr; Save.</p>
+
+  <h3>Removing a tenant</h3>
+  <p>Click Delete next to the tenant. This removes their profile &mdash; the bot will no longer respond to their messages. Past tickets and messages are preserved for your records.</p>
+
+
+  <!-- 6. MANAGING VENDORS -->
+  <h2>6. Managing Vendors</h2>
+  <p>Vendors are the contractors the system can dispatch when a ticket is urgent.</p>
+
+  <h3>Adding a vendor</h3>
+  <ol class="steps">
+    <li><strong>Go to Vendors</strong> in the sidebar</li>
+    <li><strong>Click "Add Vendor"</strong></li>
+    <li><strong>Fill in:</strong> Name, email, phone, and category</li>
+    <li><strong>Click Save</strong></li>
+  </ol>
+
+  <h3>Categories</h3>
+  <p>Each vendor is assigned to a service category. When a ticket is dispatched, the system looks up vendors matching the ticket's category. Available categories:</p>
+  <ul>
+    <li>Plumbing</li>
+    <li>Electrical</li>
+    <li>HVAC (heating, ventilation, air conditioning)</li>
+    <li>Appliance</li>
+    <li>Pest Control</li>
+    <li>Locksmith</li>
+    <li>General Maintenance</li>
+  </ul>
+
+  <div class="box box-orange">
+    <p><strong>Tip:</strong> Make sure you have at least one vendor for each common category (plumbing, electrical, HVAC, locksmith). Without a vendor on file, the dispatch buttons won't have anyone to contact.</p>
+  </div>
+
+
+  <!-- 7. MANAGING PROPERTIES -->
+  <h2>7. Managing Properties</h2>
+  <p>Properties represent your buildings. Each tenant is linked to a property.</p>
+
+  <h3>Adding a property</h3>
+  <ol class="steps">
+    <li><strong>Go to Properties</strong> in the sidebar</li>
+    <li><strong>Click "Add Property"</strong></li>
+    <li><strong>Enter the property name and full address</strong></li>
+    <li><strong>Click Save</strong></li>
+  </ol>
+  <p><strong>Important:</strong> Add properties before adding tenants, since each tenant must be linked to a property.</p>
+
+
+  <!-- 8. TICKET LIFECYCLE -->
+  <h2>8. Ticket Lifecycle</h2>
+
+  <h3>How tickets are created</h3>
+  <p>A ticket is created automatically whenever a tenant reports an issue, asks a question, or makes a request. This happens on the very first message &mdash; even while the AI is still asking clarifying questions. You do not need to create tickets manually.</p>
+
+  <h3>Ticket statuses</h3>
+  <table class="tbl">
+    <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Open</strong></td><td>Active ticket &mdash; conversation is ongoing or awaiting action</td></tr>
+      <tr><td><strong>Resolved</strong></td><td>Tenant confirmed the issue is fixed</td></tr>
+      <tr><td><strong>Closed</strong></td><td>Ticket has been closed (e.g. video suggestion helped)</td></tr>
+      <tr><td><strong>Wait for Approval</strong></td><td>Vendor dispatch pending your approval</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Active vs. Closed view</h3>
+  <p>On the Tickets page, <strong>active tickets</strong> (open, wait_for_approval) appear at the top. <strong>Resolved and closed tickets</strong> are hidden by default in a collapsible section at the bottom &mdash; click "Resolved / Closed" to expand.</p>
+
+  <h3>Closing a ticket manually</h3>
+  <p>Open a ticket &rarr; click <strong>Mark Resolved</strong> (top right). The bot stops responding to that conversation. If the tenant messages again about a new issue, a new ticket is created automatically.</p>
+
+  <h3>Deleting a ticket</h3>
+  <p>Open a ticket &rarr; click <strong>Delete</strong> &rarr; confirm. This permanently removes the ticket, all messages, and attached photos. <strong>This cannot be undone.</strong></p>
+
+
+  <!-- 9. RESPONDING TO TENANTS -->
+  <h2>9. Responding to Tenants</h2>
+
+  <h3>Letting the bot handle it</h3>
+  <p>By default, the AI bot handles all tenant conversations automatically. It asks clarifying questions, suggests self-help solutions, and creates tickets. You only need to intervene when you want to.</p>
+
+  <h3>Pausing the bot &amp; replying manually</h3>
+  <ol class="steps">
+    <li><strong>Open a ticket</strong> and click <strong>Bot OFF</strong> (top right)<span class="sub">The button turns amber to show the bot is paused.</span></li>
+    <li><strong>A text input appears</strong> at the bottom of the conversation<span class="sub">Type your message and press Enter or click Send.</span></li>
+    <li><strong>Your message is sent directly to the tenant</strong><span class="sub">It goes via whatever channel they used (Telegram, WhatsApp, SMS, or Email).</span></li>
+    <li><strong>Bot auto-resumes</strong> when you leave the ticket page<span class="sub">You don't need to manually turn it back on. Closing the tab or navigating away does it automatically.</span></li>
+  </ol>
+
+  <div class="box box-purple">
+    <p><strong>Auto-resume:</strong> The bot automatically resumes when you leave the ticket page or close the browser tab. This ensures only one ticket is paused at a time and you can't accidentally leave the bot off permanently.</p>
+  </div>
+
+  <div class="box box-orange">
+    <p><strong>Note:</strong> You can only send manual messages on <strong>open</strong> tickets. If a ticket is resolved or closed, the input field will not appear.</p>
+  </div>
+
+
+  <!-- 10. VENDOR DISPATCH -->
+  <h2>10. Vendor Dispatch</h2>
+
+  <h3>How it works</h3>
+  <p>When a tenant confirms an urgent issue (e.g. confirmed flooding, no heat in winter), you receive a Telegram notification with two buttons:</p>
+
+  <table class="tbl">
+    <thead><tr><th>Button</th><th>What It Does</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Auto Dispatch</strong></td><td>System looks up the best vendor for the category, drafts a message using AI, shows you a preview, and asks you to confirm before sending</td></tr>
+      <tr><td><strong>Show Contractors</strong></td><td>Shows you the vendor list for that category so you can choose manually</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Auto Dispatch flow</h3>
+  <ol class="steps">
+    <li><strong>You tap "Auto Dispatch"</strong> on the Telegram notification</li>
+    <li><strong>System looks up vendors</strong> matching the ticket category</li>
+    <li><strong>AI drafts a vendor message</strong> with the issue details</li>
+    <li><strong>You see a preview</strong> with Confirm / Cancel buttons</li>
+    <li><strong>You confirm</strong> &rarr; vendor receives an email with the issue details</li>
+  </ol>
+
+  <div class="box box-orange">
+    <p><strong>Important:</strong> The system never dispatches a vendor without your explicit confirmation. You always see a preview and must tap Confirm.</p>
+  </div>
+
+
+  <!-- 11. NOTIFICATIONS -->
+  <h2>11. Notifications</h2>
+
+  <h3>What you receive</h3>
+  <ul>
+    <li><strong>Every new ticket</strong> &mdash; category, tenant name, unit, property, and summary</li>
+    <li><strong>Urgent tickets</strong> &mdash; same details plus Auto Dispatch / Show Contractors buttons</li>
+  </ul>
+
+  <h3>Where notifications go</h3>
+  <p>All notifications are sent to the Telegram account linked in your dashboard Settings. Only one account can receive notifications at a time.</p>
+
+  <h3>Changing your notification account</h3>
+  <ol class="steps">
+    <li><strong>Find your Chat ID:</strong> Open Telegram &rarr; search for <strong>@userinfobot</strong> &rarr; send <strong>/start</strong> &rarr; it replies with your Chat ID number</li>
+    <li><strong>Go to Settings</strong> on your dashboard &rarr; <strong>Telegram</strong></li>
+    <li><strong>Enter the new Chat ID</strong> and click <strong>Save</strong></li>
+    <li><strong>A 6-digit verification code</strong> is sent to the new Telegram account</li>
+    <li><strong>Enter the code</strong> on the dashboard and click <strong>Confirm</strong></li>
+  </ol>
+
+  <h3>Inbox badge</h3>
+  <p>The sidebar shows an unread count badge on the Inbox icon. It updates every 15 seconds. Resolved and closed tickets are automatically excluded from the count.</p>
+
+
+  <!-- 12. PHOTOS & MEDIA -->
+  <h2>12. Photos &amp; Media</h2>
+
+  <h3>How tenants send photos</h3>
+  <p>Tenants can send photos via <strong>Telegram</strong> or <strong>WhatsApp</strong>. When a photo is received:</p>
+  <ol class="steps">
+    <li><strong>System asks:</strong> "Which ticket is this photo for?" with buttons showing open tickets</li>
+    <li><strong>Tenant selects</strong> the relevant ticket</li>
+    <li><strong>Photo is saved</strong> and linked to that ticket</li>
+  </ol>
+
+  <h3>Viewing photos</h3>
+  <p>Photos appear in two places on the ticket detail page:</p>
+  <ul>
+    <li><strong>In the conversation:</strong> as inline images within the message thread</li>
+    <li><strong>In the Attachments section:</strong> as thumbnails below the ticket details</li>
+  </ul>
+
+
+  <!-- 13. VOICE AGENT -->
+  <h2>13. Voice Agent (Phone Calls)</h2>
+
+  <p>When a tenant calls <strong>+1 438-900-9998</strong>, an AI voice assistant answers the call.</p>
+
+  <h3>What the voice agent does</h3>
+  <ol class="steps">
+    <li><strong>Identifies the caller</strong> by their phone number and greets them by name</li>
+    <li><strong>Asks what they're calling about</strong></li>
+    <li><strong>Asks 1-2 clarifying questions</strong> to understand the issue</li>
+    <li><strong>Logs a maintenance ticket</strong> with the full details</li>
+    <li><strong>Confirms</strong> the request has been logged and hangs up</li>
+  </ol>
+
+  <p>Call recordings are available on the dashboard. When you open a phone ticket, you see an audio player instead of a text conversation.</p>
+
+  <div class="box box-purple">
+    <p><strong>Available 24/7.</strong> The voice agent answers calls at any time of day or night. Tenants do not need to leave a voicemail.</p>
+  </div>
+
+  <div class="box box-orange">
+    <p><strong>Unregistered callers:</strong> If the caller's phone number is not in the system, the voice agent will politely ask them to contact their property manager. No ticket is created.</p>
+  </div>
+
+
+  <!-- 14. WHAT THE BOT DOES NOT DO -->
+  <h2>14. What the Bot Does NOT Do</h2>
+
+  <ul>
+    <li>It does <strong>not</strong> call emergency services or tell tenants to evacuate &mdash; your safety decisions are yours alone</li>
+    <li>It does <strong>not</strong> promise timelines (e.g. "someone will be there tomorrow")</li>
+    <li>It does <strong>not</strong> commit to sending contractors without your explicit approval</li>
+    <li>It does <strong>not</strong> reply to people whose phone or email isn't registered in the system</li>
+    <li>It does <strong>not</strong> share your personal information or contact details with tenants</li>
+    <li>If the AI can't handle something, it logs the ticket and you take over manually</li>
+  </ul>
+
+  <h3>Emergency protocol</h3>
+  <p>If a tenant confirms real danger (flames, gas leak, flooding), the bot:</p>
+  <ul>
+    <li>Tells the tenant their safety is the priority and the team is being notified</li>
+    <li>Sends you an <strong>urgent notification</strong> with dispatch buttons</li>
+    <li>Never tells the tenant to leave or vacate &mdash; that decision is yours</li>
+  </ul>
+
+  <h3>Self-help first</h3>
+  <p>The bot suggests tenants try simple fixes before dispatching a vendor (e.g. plunger for a clogged toilet, checking the breaker panel for electrical issues). This saves you money and reduces unnecessary service calls.</p>
+
+
+  <!-- 15. TROUBLESHOOTING -->
+  <h2>15. Troubleshooting</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Problem</th><th>Likely Cause</th><th>Solution</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Tenant messages but gets no reply</td>
+        <td>Phone/email not in the system, or wrong format</td>
+        <td>Check the tenant's phone number on the dashboard. Must include country code (e.g. 15145551234).</td>
+      </tr>
+      <tr>
+        <td>Tenant not recognized on phone</td>
+        <td>Caller's number doesn't match any tenant record</td>
+        <td>Add the tenant with the correct phone number including country code.</td>
+      </tr>
+      <tr>
+        <td>No Telegram notifications</td>
+        <td>Chat ID not set or not verified</td>
+        <td>Go to Settings &rarr; Telegram &rarr; re-enter and verify your Chat ID.</td>
+      </tr>
+      <tr>
+        <td>Bot not responding after pausing</td>
+        <td>Bot was paused on a resolved ticket</td>
+        <td>The bot only responds on open tickets. If the ticket is resolved, the bot won't resume on it. New messages will create a new ticket.</td>
+      </tr>
+      <tr>
+        <td>Telegram ID column is blank</td>
+        <td>Tenant hasn't messaged the bot yet</td>
+        <td>Ask the tenant to send any message to the Telegram bot. The ID captures automatically.</td>
+      </tr>
+      <tr>
+        <td>WhatsApp messages not showing in ticket</td>
+        <td>Message linked to wrong ticket</td>
+        <td>Contact support &mdash; this is a technical issue that can be fixed.</td>
+      </tr>
+      <tr>
+        <td>Dashboard not loading</td>
+        <td>Server may be restarting</td>
+        <td>Wait 1-2 minutes and try again. If it persists, email support.</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <!-- 16. QUICK REFERENCE -->
+  <h2>16. Quick Reference</h2>
+
+  <div class="info-grid">
+    <div class="label">Dashboard</div>
+    <div class="val">julia.srv1285597.hstgr.cloud</div>
+    <div class="label">Tenant Phone</div>
+    <div class="val">+1 438-900-9998</div>
+    <div class="label">Telegram Bot</div>
+    <div class="val">t.me/dion_property_manager_bot</div>
+    <div class="label">WhatsApp</div>
+    <div class="val">wa.me/14389009998</div>
+    <div class="label">Support Email</div>
+    <div class="val">hello@quietly.systems</div>
+    <div class="label">Help Videos</div>
+    <div class="val">Dashboard &rarr; Help (in sidebar)</div>
+  </div>
+
+  <div class="box box-green">
+    <p><strong>Need help?</strong> Email <strong>hello@quietly.systems</strong> or message your system administrator. The team monitors the system continuously and is notified automatically when errors occur.</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>Quietly Systems Inc &mdash; Property Management System Guide &mdash; March 2026</p>
+  <p><a href="https://quietly.systems">quietly.systems</a> &nbsp;|&nbsp; <a href="mailto:hello@quietly.systems">hello@quietly.systems</a></p>
+</div>
+
+</body>
+</html>

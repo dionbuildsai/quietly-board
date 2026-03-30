@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP — Tenant Integration</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; color: #1C1A27; line-height: 1.7; background: #fff; font-size: 15px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { page-break-inside: avoid; }
+  }
+
+  .cover {
+    height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+    background: linear-gradient(135deg, #573CFA 0%, #3D1FD4 100%); color: white; padding: 60px; position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  }
+  .cover * { position: relative; z-index: 1; }
+  .cover h1 { font-size: 40px; font-weight: 700; margin-bottom: 16px; letter-spacing: -1px; line-height: 1.15; }
+  .cover .subtitle { font-size: 20px; font-weight: 400; opacity: 0.85; margin-bottom: 56px; }
+  .cover .divider { width: 60px; height: 3px; background: rgba(255,255,255,0.35); border-radius: 2px; margin-bottom: 56px; }
+  .cover .prepared { font-size: 14px; opacity: 0.6; line-height: 1.8; }
+  .cover .prepared strong { opacity: 1; font-weight: 600; }
+
+  .page { max-width: 780px; margin: 0 auto; padding: 36px 48px; }
+
+  h2 {
+    font-size: 24px; font-weight: 700; color: #573CFA;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 2px solid #F0EDFF; letter-spacing: -0.3px; margin-top: 40px;
+  }
+  .page > h2:first-child { margin-top: 0; }
+  h3 { font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
+  p { margin-bottom: 10px; }
+
+  .box { padding: 18px 22px; border-radius: 10px; margin: 16px 0; }
+  .box-purple { background: #F0EDFF; border-left: 4px solid #573CFA; }
+  .box-orange { background: #FFF8F0; border-left: 4px solid #F88D1A; }
+  .box-green  { background: #F0FFF5; border-left: 4px solid #02864A; }
+  .box-red    { background: #FFF0F0; border-left: 4px solid #E8083E; }
+  .box p { margin-bottom: 6px; }
+  .box p:last-child { margin-bottom: 0; }
+
+  .steps { list-style: none; counter-reset: s; margin: 20px 0; }
+  .steps li {
+    counter-increment: s; padding: 14px 14px 14px 56px; position: relative;
+    margin-bottom: 10px; background: #FAFAFA; border-radius: 8px; font-size: 14px;
+  }
+  .steps li::before {
+    content: counter(s); position: absolute; left: 16px; top: 16px;
+    width: 30px; height: 30px; background: #573CFA; color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .steps li strong { color: #1C1A27; }
+  .steps li .sub { display: block; font-size: 13px; color: #666; margin-top: 4px; }
+
+  .tbl { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-size: 14px; }
+  .tbl th { background: #573CFA; color: white; padding: 13px 18px; text-align: left; font-weight: 600; }
+  .tbl th:first-child { border-radius: 10px 0 0 0; }
+  .tbl th:last-child  { border-radius: 0 10px 0 0; }
+  .tbl td { padding: 13px 18px; border-bottom: 1px solid #F0EDFF; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:nth-child(even) td { background: #FAFAFA; }
+
+  .checklist { list-style: none; margin: 16px 0; }
+  .checklist li { padding: 10px 14px 10px 40px; position: relative; margin-bottom: 6px; background: #FAFAFA; border-radius: 8px; font-size: 14px; }
+  .checklist li::before { content: ''; position: absolute; left: 14px; top: 13px; width: 18px; height: 18px; border: 2px solid #573CFA; border-radius: 4px; }
+
+  .phase-label {
+    display: inline-block; background: #573CFA; color: white;
+    font-size: 11px; font-weight: 700; padding: 4px 14px;
+    border-radius: 20px; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .phase-label.orange { background: #F88D1A; }
+  .phase-label.green { background: #02864A; }
+
+  .footer { text-align: center; padding: 48px; color: #999; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ COVER ══════════════════════ -->
+<div class="cover">
+  <h1>Tenant Integration<br>Standard Operating Procedure</h1>
+  <p class="subtitle">Step-by-step guide for adding tenants to the property management system</p>
+  <div class="divider"></div>
+  <p class="prepared">
+    Prepared by <strong>Quietly Systems Inc</strong><br>
+    March 2026
+  </p>
+</div>
+
+<!-- ══════════════════════ OVERVIEW ══════════════════════ -->
+<div class="page">
+
+  <h2>Overview</h2>
+  <p>This SOP covers the complete process of integrating a new tenant into the property management system &mdash; from collecting their information to verifying all communication channels are working. Follow each phase in order.</p>
+
+  <div class="box box-purple">
+    <p><strong>Estimated time per tenant:</strong> 5&ndash;10 minutes (setup) + verification once tenant responds</p>
+    <p><strong>Tools needed:</strong> Dashboard access, tenant's contact information</p>
+    <p><strong>Dashboard:</strong> julia.srv1285597.hstgr.cloud</p>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Phase</th><th>What Happens</th><th>Who</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1. Gather Info</strong></td><td>Collect tenant contact details</td><td>Landlord</td></tr>
+      <tr><td><strong>2. Add to System</strong></td><td>Create tenant record on dashboard</td><td>Landlord</td></tr>
+      <tr><td><strong>3. Send Welcome Email</strong></td><td>Email tenant with channel instructions</td><td>Landlord</td></tr>
+      <tr><td><strong>4. Telegram Activation</strong></td><td>Tenant messages the bot, system captures their ID</td><td>Tenant</td></tr>
+      <tr><td><strong>5. Verify</strong></td><td>Confirm all channels are working</td><td>Landlord</td></tr>
+    </tbody>
+  </table>
+
+
+  <!-- ══════════════════════ PHASE 1 ══════════════════════ -->
+  <h2>Phase 1 — Gather Tenant Information</h2>
+  <span class="phase-label">BEFORE YOU START</span>
+
+  <p>Collect the following details for each tenant. All fields are important for the system to identify tenants across channels.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Field</th><th>Format</th><th>Required?</th><th>Why It Matters</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Full Name</strong></td><td>First Last</td><td>Yes</td><td>Displayed on tickets and notifications</td></tr>
+      <tr><td><strong>Phone Number</strong></td><td>With country code (e.g. 15145551234)</td><td>Yes</td><td>Used for SMS, WhatsApp, and phone call identification</td></tr>
+      <tr><td><strong>Email</strong></td><td>tenant@email.com</td><td>Yes</td><td>Used for email channel identification + vendor dispatch notifications</td></tr>
+      <tr><td><strong>Unit Number</strong></td><td>e.g. 203, 4B</td><td>Yes</td><td>Included in tickets so you know which unit</td></tr>
+      <tr><td><strong>Property</strong></td><td>Select from existing properties</td><td>Yes</td><td>Links tenant to the correct building</td></tr>
+      <tr><td><strong>Telegram ID</strong></td><td>Numeric (e.g. 6274604148)</td><td>No*</td><td>Auto-captured when tenant messages the bot</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box box-green">
+    <p><strong>* Telegram ID:</strong> You do NOT need to collect this manually. The system captures it automatically when the tenant sends their first message to the Telegram bot. Leave this field blank during setup.</p>
+  </div>
+
+  <div class="box box-orange">
+    <p><strong>Phone number format:</strong> Always include the country code WITHOUT the + sign. For Canadian numbers: <strong>1</strong> + area code + number. Example: <strong>15145551234</strong> (not +1-514-555-1234 or 514-555-1234).</p>
+    <p>This exact format is critical &mdash; the system uses it to match incoming SMS, WhatsApp messages, and phone calls to the correct tenant.</p>
+  </div>
+
+
+  <!-- ══════════════════════ PHASE 2 ══════════════════════ -->
+  <h2>Phase 2 — Add Tenant to the Dashboard</h2>
+  <span class="phase-label">DASHBOARD</span>
+
+  <ol class="steps">
+    <li>
+      <strong>Log in to the dashboard</strong>
+      <span class="sub">Open julia.srv1285597.hstgr.cloud in your browser.</span>
+    </li>
+    <li>
+      <strong>Make sure the property exists first</strong>
+      <span class="sub">Go to <strong>Properties</strong> in the sidebar. If the tenant's building is not listed, click <strong>Add Property</strong> and enter the property name and full address. Save it before proceeding.</span>
+    </li>
+    <li>
+      <strong>Go to the Tenants page</strong>
+      <span class="sub">Click <strong>Tenants</strong> in the sidebar.</span>
+    </li>
+    <li>
+      <strong>Click "Add Tenant"</strong>
+      <span class="sub">The button is at the top right of the page.</span>
+    </li>
+    <li>
+      <strong>Fill in the tenant details</strong>
+      <span class="sub">
+        &bull; <strong>Name:</strong> Full name (First Last)<br>
+        &bull; <strong>Phone:</strong> With country code, no spaces or dashes (e.g. 15145551234)<br>
+        &bull; <strong>Email:</strong> Tenant's email address<br>
+        &bull; <strong>Unit Number:</strong> Their unit (e.g. 203)<br>
+        &bull; <strong>Property:</strong> Select from the dropdown<br>
+        &bull; <strong>Telegram ID:</strong> Leave blank &mdash; it will be filled automatically
+      </span>
+    </li>
+    <li>
+      <strong>Click Save</strong>
+      <span class="sub">The tenant now appears in the Tenants list, grouped under their property.</span>
+    </li>
+  </ol>
+
+  <div class="box box-red">
+    <p><strong>Common mistakes to avoid:</strong></p>
+    <p>&bull; Do NOT add the + sign to phone numbers &mdash; just digits (15145551234)</p>
+    <p>&bull; Do NOT leave the phone blank &mdash; it's needed for SMS, WhatsApp, and phone identification</p>
+    <p>&bull; Do NOT add the same phone number for two different tenants &mdash; the system uses it as a unique identifier</p>
+    <p>&bull; Do NOT manually enter a Telegram ID &mdash; let the system capture it automatically</p>
+  </div>
+
+
+  <!-- ══════════════════════ PHASE 3 ══════════════════════ -->
+  <h2>Phase 3 — Send the Welcome Email</h2>
+  <span class="phase-label orange">COMMUNICATION</span>
+
+  <ol class="steps">
+    <li>
+      <strong>Open the welcome email template</strong>
+      <span class="sub">Use the template provided (English and French versions available). Choose the appropriate language for each tenant.</span>
+    </li>
+    <li>
+      <strong>Personalize the email</strong>
+      <span class="sub">
+        &bull; Replace <strong>[Owner Name]</strong> with your name<br>
+        &bull; Replace <strong>[Company Name]</strong> with your company name<br>
+        &bull; Optionally add the tenant's name in the greeting ("Dear [Tenant Name]" instead of "Dear Tenant")
+      </span>
+    </li>
+    <li>
+      <strong>Send from your own email</strong>
+      <span class="sub">The email should come from <strong>you</strong> (the landlord), not from a third party. Tenants trust communication from their landlord.</span>
+    </li>
+    <li>
+      <strong>Confirm the Telegram link works</strong>
+      <span class="sub">Before sending, click the Telegram bot link in the email yourself to verify it opens correctly: <strong>t.me/julia_pm_bot</strong></span>
+    </li>
+  </ol>
+
+  <div class="box box-purple">
+    <p><strong>Tip &mdash; send in batches:</strong> If you have many tenants, consider sending to one building at a time. This lets you handle any questions before moving to the next group.</p>
+  </div>
+
+
+  <!-- ══════════════════════ PHASE 4 ══════════════════════ -->
+  <h2>Phase 4 — Telegram Activation</h2>
+  <span class="phase-label orange">TENANT ACTION REQUIRED</span>
+
+  <p>This is the only step that requires action from the tenant. When a tenant clicks the Telegram link and sends their first message, the system automatically:</p>
+
+  <ol class="steps">
+    <li>
+      <strong>Tenant opens the link</strong>
+      <span class="sub">They click <strong>t.me/julia_pm_bot</strong> from the welcome email (or search for <strong>@julia_pm_bot</strong> in Telegram).</span>
+    </li>
+    <li>
+      <strong>Tenant sends any message</strong>
+      <span class="sub">Even a simple "Hello" works. The system detects them by their Telegram account.</span>
+    </li>
+    <li>
+      <strong>System captures their Telegram ID</strong>
+      <span class="sub">The tenant's Telegram ID is automatically saved to their record in the database. You do not need to do anything.</span>
+    </li>
+    <li>
+      <strong>Bot responds</strong>
+      <span class="sub">The AI assistant greets them and asks how it can help. The tenant is now fully set up on Telegram.</span>
+    </li>
+  </ol>
+
+  <div class="box box-orange">
+    <p><strong>What if a tenant doesn't have Telegram?</strong></p>
+    <p>That's fine &mdash; Telegram is optional. They can still use WhatsApp, SMS, Email, or Phone. All channels work independently. However, you should encourage Telegram or WhatsApp as they provide the best experience (instant replies, photo support, interactive buttons).</p>
+  </div>
+
+  <div class="box box-orange">
+    <p><strong>What if a tenant messages but isn't recognized?</strong></p>
+    <p>If a tenant's phone number or email doesn't match any record in the system, the bot will not respond. Double-check that:</p>
+    <p>&bull; Their phone number in the dashboard matches exactly (same digits, with country code)</p>
+    <p>&bull; Their email is spelled correctly</p>
+    <p>&bull; They are messaging from the correct phone/account</p>
+  </div>
+
+
+  <!-- ══════════════════════ PHASE 5 ══════════════════════ -->
+  <h2>Phase 5 — Verify All Channels</h2>
+  <span class="phase-label green">VERIFICATION</span>
+
+  <p>After the tenant has been added and received the welcome email, verify that the system recognizes them on each channel they'll use.</p>
+
+  <h3>Quick Verification Checklist</h3>
+  <ul class="checklist">
+    <li><strong>Telegram:</strong> Tenant sent first message &rarr; bot responded &rarr; Telegram ID saved in dashboard</li>
+    <li><strong>WhatsApp:</strong> Tenant sent a WhatsApp message to +1 438-900-9998 &rarr; bot responded</li>
+    <li><strong>SMS:</strong> Tenant texted +1 438-900-9998 &rarr; bot responded via SMS</li>
+    <li><strong>Email:</strong> Tenant emailed from their registered address &rarr; bot responded via email</li>
+    <li><strong>Phone:</strong> Tenant called +1 438-900-9998 &rarr; voice agent greeted them by name</li>
+    <li><strong>Dashboard:</strong> Tenant appears under correct property with phone, email, and Telegram ID filled in</li>
+    <li><strong>Notification:</strong> You received a Telegram notification when the test ticket was created</li>
+  </ul>
+
+  <div class="box box-green">
+    <p><strong>You don't need to test all 5 channels for every tenant.</strong> If Telegram and one other channel work, the tenant is properly integrated. The important thing is that their phone and email are correct in the system.</p>
+  </div>
+
+  <h3>How to Confirm Telegram ID Was Captured</h3>
+  <ol class="steps">
+    <li>
+      <strong>Go to Tenants on the dashboard</strong>
+      <span class="sub">Find the tenant in the list.</span>
+    </li>
+    <li>
+      <strong>Click Edit on their record</strong>
+      <span class="sub">The Telegram ID field should now show a number (e.g. 6274604148). If it's blank, the tenant hasn't messaged the bot yet.</span>
+    </li>
+  </ol>
+
+
+  <!-- ══════════════════════ BULK ONBOARDING ══════════════════════ -->
+  <h2>Bulk Onboarding — Multiple Tenants</h2>
+
+  <p>When onboarding an entire building or portfolio, follow this workflow:</p>
+
+  <ol class="steps">
+    <li>
+      <strong>Prepare a list</strong>
+      <span class="sub">Gather name, phone (with country code), email, unit number, and property for every tenant. A simple spreadsheet works.</span>
+    </li>
+    <li>
+      <strong>Add the property first</strong>
+      <span class="sub">Make sure the property exists on the dashboard before adding any tenants.</span>
+    </li>
+    <li>
+      <strong>Add tenants one by one</strong>
+      <span class="sub">Go to Tenants &rarr; Add Tenant for each person. Double-check phone number format each time.</span>
+    </li>
+    <li>
+      <strong>Send the welcome email to all tenants</strong>
+      <span class="sub">Use BCC if sending to multiple tenants at once so they don't see each other's email addresses. Or send individually for a more personal touch.</span>
+    </li>
+    <li>
+      <strong>Track who has activated Telegram</strong>
+      <span class="sub">Over the next few days, check the Tenants page. Tenants who have messaged the bot will have their Telegram ID filled in. Follow up with those who haven't.</span>
+    </li>
+    <li>
+      <strong>Send a reminder after 3&ndash;5 days</strong>
+      <span class="sub">For tenants who haven't activated Telegram, send a short follow-up: "Just a reminder &mdash; you can reach us anytime on Telegram for fast maintenance support. Click here to get started: t.me/julia_pm_bot"</span>
+    </li>
+  </ol>
+
+
+  <!-- ══════════════════════ TROUBLESHOOTING ══════════════════════ -->
+  <h2>Troubleshooting</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Problem</th><th>Likely Cause</th><th>Solution</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Tenant messages bot but gets no reply</td>
+        <td>Phone/email doesn't match any record</td>
+        <td>Check the tenant's phone number format on the dashboard. Must include country code, digits only.</td>
+      </tr>
+      <tr>
+        <td>Telegram ID is blank after tenant messaged</td>
+        <td>Tenant messaged from a different Telegram account, or system didn't match them</td>
+        <td>Ask tenant to try again. If still blank, have them send /start to <strong>@julia_pm_bot</strong>.</td>
+      </tr>
+      <tr>
+        <td>Tenant gets reply on Telegram but not SMS</td>
+        <td>SMS uses phone number for lookup &mdash; might be formatted differently</td>
+        <td>Verify the phone number in the dashboard matches exactly what Twilio receives (digits with country code).</td>
+      </tr>
+      <tr>
+        <td>WhatsApp messages not going through</td>
+        <td>Tenant may be messaging the wrong number, or not using WhatsApp</td>
+        <td>Confirm they're messaging +1 438-900-9998 via WhatsApp (not regular SMS).</td>
+      </tr>
+      <tr>
+        <td>Voice agent doesn't greet tenant by name</td>
+        <td>Phone number mismatch (caller ID vs. stored number)</td>
+        <td>Check if the caller ID includes country code. Some phones show 5145551234 while DB has 15145551234.</td>
+      </tr>
+      <tr>
+        <td>Duplicate tenant records</td>
+        <td>Same person added twice with slightly different info</td>
+        <td>Delete the duplicate on the Tenants page. Keep the one with the Telegram ID filled in.</td>
+      </tr>
+      <tr>
+        <td>Tenant's email replies aren't picked up</td>
+        <td>Sending from a different email than the one in the system</td>
+        <td>Update the tenant's email on the dashboard to match what they're sending from.</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <!-- ══════════════════════ REMOVING A TENANT ══════════════════════ -->
+  <h2>Removing a Tenant</h2>
+
+  <p>When a tenant moves out:</p>
+
+  <ol class="steps">
+    <li>
+      <strong>Resolve or close any open tickets</strong>
+      <span class="sub">Go to Tickets &rarr; find their open tickets &rarr; Mark Resolved on each one.</span>
+    </li>
+    <li>
+      <strong>Delete the tenant record</strong>
+      <span class="sub">Go to Tenants &rarr; find the tenant &rarr; click Delete &rarr; confirm. The bot will stop responding to their messages.</span>
+    </li>
+  </ol>
+
+  <div class="box box-orange">
+    <p><strong>Note:</strong> Deleting a tenant does NOT delete their past tickets or message history. Those remain in the system for your records. Only the tenant's profile is removed, which stops the bot from recognizing future messages from that person.</p>
+  </div>
+
+
+  <!-- ══════════════════════ QUICK REFERENCE ══════════════════════ -->
+  <h2>Quick Reference</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Item</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard URL</td><td><strong>julia.srv1285597.hstgr.cloud</strong></td></tr>
+      <tr><td>Telegram Bot</td><td><strong>t.me/julia_pm_bot</strong> (@julia_pm_bot)</td></tr>
+      <tr><td>Tenant Phone / SMS / WhatsApp</td><td><strong>+1 438-900-9998</strong></td></tr>
+      <tr><td>Phone Number Format</td><td>Country code + number, digits only (e.g. 15145551234)</td></tr>
+      <tr><td>Support Email</td><td>hello@quietly.systems</td></tr>
+    </tbody>
+  </table>
+
+</div>
+
+<div class="footer">
+  <p>Quietly Systems Inc &mdash; Tenant Integration SOP v1.0 &mdash; March 2026</p>
+</div>
+
+</body>
+</html>
