@@ -457,3 +457,26 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - Created client-facing documentation: system-guide.html, tenant-welcome-email.html, sop-tenant-integration.html
 - Created RUNBOOK.md for operational procedures
 - Owner notifications now fully dynamic via settings table (no hardcoded chat IDs)
+
+## Changelog (2026-04-02 session — media fix + dev migration)
+- Fixed WhatsApp photo not showing: Cassandra's video downloaded from Meta API and linked to message
+- Fixed Mohamed's 4 photos (3 images + 1 video) — downloaded and linked
+- Root fix: WhatsApp media flow reordered — photos now download IMMEDIATELY when received, not after ticket selection
+- Link WA Media Immediate now uses `json_build_object()` for valid JSON (was string concatenation)
+- Link WA Media Immediate now matches by `external_message_id` (was matching empty text)
+- Added caption support: `Log WA Media Message` saves caption text (was hardcoded empty)
+- Added `Has Caption?` IF node + `Forward Caption to AI` — captions trigger AI response
+- Callback path simplified: `Is Media Callback?` just sets ticket_id (photo already downloaded)
+- Bot resumes when ticket deleted (was staying paused forever)
+- Migrated all 8 live workflows to dev server (srv1466948) — all imported inactive
+- Migrated live dashboard code to dev PM project
+- Dev PM dashboard rebuilt with live code, pointing to pm_dev_db (test data only)
+
+## Dev Server Setup (srv1466948.hstgr.cloud)
+- **PM Dashboard:** pm.srv1466948.hstgr.cloud (password: quietly2024)
+- **n8n:** n8n.srv1466948.hstgr.cloud
+- **Database:** pm_dev_db (test data — 1 tenant, 1 property, 1 vendor)
+- **Workflows:** All 8 PM workflows imported but INACTIVE — activate individually for testing
+- **Tokens:** All placeholders (DEV_BOT_TOKEN_REPLACE_ME, etc.) — need real dev tokens to test
+- **To test Telegram:** Create a dev bot via @BotFather, update dev settings + compose
+- **To test WhatsApp:** Use the same Meta test number or create a dev WABA
