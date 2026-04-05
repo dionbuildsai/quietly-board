@@ -269,7 +269,8 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Owner (Dion) Telegram Chat ID:** 6216258938
 - **Julia Telegram Chat ID:** 6274604148
 - **Twilio Number:** +14389009998
-- **WhatsApp Phone Number ID:** 1002910989571888
+- **WhatsApp Phone Number ID:** 971537566052793 (production — Julia's PM number +14389009998, same as Twilio)
+- **WhatsApp Test Phone Number ID:** 1002910989571888 (Meta sandbox — NOT used in workflows)
 - **Meta App ID:** 872554515351219
 
 ---
@@ -486,7 +487,7 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Settings table:** `pm_dev_db.settings` — 14 keys across 8 categories. Dashboard settings page at `/settings` with admin verification for encrypted fields.
 - **Centralized config (IN PROGRESS):** Workflows are being migrated to read from settings table via "Get Config" Postgres node (`SELECT json_object_agg(key, value) AS config FROM settings WHERE key IN (...)`). Some workflows partially migrated, 24 hardcoded values remain. See memory file `project_pm_config_migration.md` for full audit and fix list.
 - **Telegram:** Dev bot token `8230685505:AAF360s5aQrSR9nUw5EQscMjyH7PND0oYuU` (separate from live bot `8460031715`). Some Code/HTTP nodes read token from Get Config, but native Telegram nodes still use `property_management` credential which may have production token.
-- **WhatsApp:** Phone Number ID `1002910989571888` hardcoded in 6 native WhatsApp nodes. Access token from settings table in Code nodes. Test token (temporary 24h) in docker-compose `WHATSAPP_TOKEN`.
+- **WhatsApp:** All nodes now use `$env.WHATSAPP_TOKEN` + production Phone Number ID `971537566052793` (Julia's +14389009998). No native WhatsApp nodes remaining.
 - **Live server URL:** All `srv1285597` references removed from dev workflows (was in Forward to WA Intake — fixed to use `config.n8n_webhook_base_url`).
 - **Get Config pattern:** Runs as parallel branch from trigger (output 0). n8n processes output 0 first (breadth-first, single-threaded). Downstream Code nodes reference via `$('Get Config').first().json.config`. Native nodes use expressions: `={{ JSON.parse($('Get Config').first().json.config).key_name }}`.
 - **Native node expressions verified:** On n8n 2.10.4, all native node fields (WhatsApp `phoneNumberId`, Twilio `from`, Google Drive `folderId`, Telegram `chatId`) support `={{ }}` expressions. No need to convert to HTTP Request nodes.
@@ -533,7 +534,7 @@ WA Message POST → Parse Meta Message → Is WA Callback?
   - WhatsApp Meta Intake: `Send WA Confirmation`, `WA Media Ack` → HTTP Request with `$env`. `Send WA Ticket Prompt` and `Download WA Media` already used `$env`.
 - **WhatsApp Meta synced from live:** 4 missing nodes added (`Forward Caption to AI`, `Has Caption?`, `Link WA Media Immediate`, `Set Ticket on Message`). `Forward to WA Intake` URL fixed to use config instead of hardcoded live URL.
 - **Zero WhatsApp credential refs remaining:** Credential `we3yhVhUwWRnkTGz` removed from all workflow files.
-- **Phone Number IDs still hardcoded:** `1002910989571888` (Owner Msg, Dispatcher) and `971537566052793` (Intake, WA Meta). These are config, not secrets — can be moved to settings table later.
+- **Phone Number ID unified:** All workflows now use production `971537566052793` (Julia's +14389009998). Test ID `1002910989571888` removed.
 - **AI Agent message linking fix:** `Link Messages to Ticket` changed from `WHERE ticket_id IS NULL` to `WHERE created_at >= NOW() - INTERVAL '60 seconds'` — fixes new ticket conversations showing 0 messages.
 - **Media flow fix:** `Send Category Prompt` now wraps ticket query in try-catch and handles 0 tickets gracefully. Fixed duplicate `Log Inbound Message → Has Media?` connection that caused double messages.
 
