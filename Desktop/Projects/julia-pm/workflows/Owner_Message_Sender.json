@@ -222,24 +222,32 @@
     {
       "id": "send-whatsapp-001",
       "name": "Send WhatsApp",
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         880,
         420
       ],
       "parameters": {
-        "operation": "send",
-        "phoneNumberId": "1002910989571888",
-        "recipientPhoneNumber": "={{ $json.phone.replace(/[^0-9]/g, '') }}",
-        "textBody": "={{ $json.text }}",
-        "additionalFields": {}
-      },
-      "credentials": {
-        "whatsAppApi": {
-          "id": "we3yhVhUwWRnkTGz",
-          "name": "WhatsApp account"
-        }
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/1002910989571888/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: ($json.phone.replace(/[^0-9]/g, '')), type: 'text', text: { body: ($json.text) } }) }}",
+        "options": {}
       }
     },
     {

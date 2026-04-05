@@ -170,8 +170,15 @@
       "parameters": {
         "method": "GET",
         "url": "=https://graph.facebook.com/v21.0/{{ $json.media_id }}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "whatsAppApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
+            }
+          ]
+        },
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -181,20 +188,21 @@
         400
       ],
       "id": "a1b2c3d4-5555-4eee-b555-555555555555",
-      "name": "WA Get Media URL",
-      "credentials": {
-        "whatsAppApi": {
-          "id": "we3yhVhUwWRnkTGz",
-          "name": "WhatsApp account"
-        }
-      }
+      "name": "WA Get Media URL"
     },
     {
       "parameters": {
         "method": "GET",
         "url": "={{ $json.url }}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "whatsAppApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
+            }
+          ]
+        },
         "options": {
           "response": {
             "response": {
@@ -211,13 +219,7 @@
         400
       ],
       "id": "a1b2c3d4-6666-4fff-b666-666666666666",
-      "name": "WA Download",
-      "credentials": {
-        "whatsAppApi": {
-          "id": "we3yhVhUwWRnkTGz",
-          "name": "WhatsApp account"
-        }
-      }
+      "name": "WA Download"
     },
     {
       "parameters": {

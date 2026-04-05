@@ -206,27 +206,34 @@
       "webhookId": "164700ae-d6b8-467d-a146-210891c41f2d"
     },
     {
-      "parameters": {
-        "operation": "send",
-        "phoneNumberId": "1002910989571888",
-        "recipientPhoneNumber": "={{ $json.phone.replace(/[^0-9]/g, '') }}",
-        "textBody": "={{ $json.response_text.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '') }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.whatsApp",
-      "typeVersion": 1.1,
+      "id": "475a1441-01c0-40bc-9d2e-ed1d93afc1b3",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         112,
         640
       ],
-      "id": "475a1441-01c0-40bc-9d2e-ed1d93afc1b3",
-      "name": "Send WhatsApp",
-      "webhookId": "47d625fa-fa0d-416e-85e2-f6d2e306cf83",
-      "credentials": {
-        "whatsAppApi": {
-          "id": "we3yhVhUwWRnkTGz",
-          "name": "WhatsApp account"
-        }
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/1002910989571888/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: ($json.phone.replace(/[^0-9]/g, '')), type: 'text', text: { body: ($json.response_text.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '')) } }) }}",
+        "options": {}
       }
     },
     {

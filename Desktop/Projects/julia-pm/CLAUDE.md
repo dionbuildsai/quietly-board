@@ -524,10 +524,24 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Zero hardcoded bot tokens remaining:** All `8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8` references removed from all workflow files.
 - **Deployed to dev:** All 8 workflows imported and activated on dev server. `$env.TELEGRAM_BOT_TOKEN` = dev bot token (`8230685505`).
 
-## Credential Architecture (Telegram DONE, others planned)
-- **Telegram: COMPLETE** — All nodes use `$env.TELEGRAM_BOT_TOKEN` except `Telegram Trigger` (must stay native for webhook registration). `Send Owner Notification` (AI Agent) and `Send Voice Notification` (Voice Agent) were already using `$env` from prior session.
-- **Current state:** Telegram fully migrated. Other services (Twilio, WhatsApp, Gmail, Postgres) still use saved credentials.
+- **WhatsApp credential refactor (COMPLETE):** All native WhatsApp nodes converted to HTTP Request using `$env.WHATSAPP_TOKEN` with Bearer auth header.
+- **7 nodes converted across 5 workflows:**
+  - Owner Message Sender: `Send WhatsApp` → HTTP Request with `$env`.
+  - Response Channel Dispatcher: `Send WhatsApp` → HTTP Request with `$env`.
+  - Intake Channel Router: `Send WA Question` → HTTP Request with `$env`.
+  - Media Upload Handler: `WA Get Media URL`, `WA Download` → HTTP Request with `$env` Bearer auth (was using predefinedCredentialType).
+  - WhatsApp Meta Intake: `Send WA Confirmation`, `WA Media Ack` → HTTP Request with `$env`. `Send WA Ticket Prompt` and `Download WA Media` already used `$env`.
+- **WhatsApp Meta synced from live:** 4 missing nodes added (`Forward Caption to AI`, `Has Caption?`, `Link WA Media Immediate`, `Set Ticket on Message`). `Forward to WA Intake` URL fixed to use config instead of hardcoded live URL.
+- **Zero WhatsApp credential refs remaining:** Credential `we3yhVhUwWRnkTGz` removed from all workflow files.
+- **Phone Number IDs still hardcoded:** `1002910989571888` (Owner Msg, Dispatcher) and `971537566052793` (Intake, WA Meta). These are config, not secrets — can be moved to settings table later.
+- **AI Agent message linking fix:** `Link Messages to Ticket` changed from `WHERE ticket_id IS NULL` to `WHERE created_at >= NOW() - INTERVAL '60 seconds'` — fixes new ticket conversations showing 0 messages.
+- **Media flow fix:** `Send Category Prompt` now wraps ticket query in try-catch and handles 0 tickets gracefully. Fixed duplicate `Log Inbound Message → Has Media?` connection that caused double messages.
+
+## Credential Architecture (Telegram + WhatsApp DONE, others planned)
+- **Telegram: COMPLETE** — All nodes use `$env.TELEGRAM_BOT_TOKEN` except `Telegram Trigger` (must stay native for webhook registration).
+- **WhatsApp: COMPLETE** — All nodes use `$env.WHATSAPP_TOKEN` via Bearer auth header. No native WhatsApp nodes remaining.
+- **Current state:** Telegram + WhatsApp fully migrated. Twilio, Gmail, Postgres still use saved credentials.
 - **Target state:** Secrets (API keys, tokens) → `$env` vars in docker-compose (secure, not exposed in UI). Config (chat IDs, phone numbers, feature flags) → `settings` table (editable from dashboard).
-- **Migration approach:** Incremental — convert native nodes to Code nodes using `$env`/settings one service at a time. Next: Twilio, then WhatsApp, then Gmail.
+- **Migration approach:** Incremental — convert native nodes to Code/HTTP nodes using `$env`/settings one service at a time. Next: Twilio, then Gmail.
 - **Why:** Eliminates credential encryption mismatch between dev/live. Makes workflows fully portable. Secrets never visible in dashboard UI.
 - **n8n native node limitation:** Native nodes (Postgres, Telegram, Gmail, WhatsApp) only accept saved credentials from dropdown — cannot use `$env` directly. Must convert to Code or HTTP Request nodes.

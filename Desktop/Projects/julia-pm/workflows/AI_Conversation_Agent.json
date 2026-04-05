@@ -388,7 +388,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE messages SET ticket_id = '{{ $json.ticket_id }}' WHERE chat_id = '{{ ($('Format Output').item.json.chat_id || '').replace(/'/g, \"''\") }}' AND channel = '{{ $('Format Output').item.json.channel || '' }}' AND ticket_id IS NULL RETURNING *",
+        "query": "UPDATE messages SET ticket_id = '{{ $json.ticket_id }}' WHERE chat_id = '{{ ($('Format Output').item.json.chat_id || '').replace(/'/g, \"''\") }}' AND channel = '{{ $('Format Output').item.json.channel || '' }}' AND created_at >= NOW() - INTERVAL '60 seconds' RETURNING *",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
