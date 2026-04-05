@@ -216,7 +216,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v21.0/1002910989571888/messages",
+        "url": "=https://graph.facebook.com/v21.0/971537566052793/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
