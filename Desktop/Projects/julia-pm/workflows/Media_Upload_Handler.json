@@ -132,7 +132,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/getFile?file_id={{ $json.media_id }}",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getFile?file_id={{ $json.media_id }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -147,7 +147,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://api.telegram.org/file/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/{{ $json.result.file_path }}",
+        "url": "=https://api.telegram.org/file/bot{{ $env.TELEGRAM_BOT_TOKEN }}/{{ $json.result.file_path }}",
         "options": {
           "response": {
             "response": {

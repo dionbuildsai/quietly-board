@@ -345,8 +345,9 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 ## Server Access
 - **Host:** srv1285597.hstgr.cloud (IP: 76.13.96.3)
 - **SSH:** `ssh root@srv1285597.hstgr.cloud` — claude-code ed25519 key in `/root/.ssh/authorized_keys`
-- **PostgreSQL:** `docker exec -i $(docker ps --filter 'name=postgres' -q) psql -U quietly -d quietly_db`
-- **CRITICAL — n8n workflow Postgres patches require restart:** Direct `UPDATE workflow_entity SET nodes=...` in Postgres does NOT invalidate n8n's in-memory workflow cache. The updated nodes will exist in DB but n8n keeps running the old version. Always restart n8n after patching: `cd /docker/n8n && docker compose restart n8n`. New workflows also need a `shared_workflow` row (`projectId: OG7kkLwgqLqxkXvS`, `role: workflow:owner`) or n8n will fail to activate them.
+- **PostgreSQL (app data):** `docker exec -i $(docker ps --filter 'name=postgres' -q) psql -U quietly -d quietly_db`
+- **CRITICAL — n8n uses SQLite, NOT Postgres:** Both live (srv1285597) and dev (srv1466948) n8n instances store workflows/credentials in SQLite at `/home/node/.n8n/database.sqlite` inside the n8n container (on the `n8n_data` Docker volume). The Postgres `n8n` database exists but is NOT used by n8n for workflow storage. Postgres is only used for app data (tenants, tickets, messages, etc.) via the "Julia DB" / "Quietly DB" credential. Do NOT use `psql` queries against `workflow_entity` expecting to change n8n behavior — use `n8n import:workflow` CLI or the n8n UI instead.
+- **n8n workflow updates:** Use `n8n import:workflow --input=file.json` inside the n8n container, then restart: `docker compose restart n8n`. The `user-management:reset` command wipes the owner account — you'll need to re-create it via the setup screen.
 - **Dashboard deployment (SCP method):** Server `/docker/quietly-dash` is NOT a git repo. Deploy via:
   ```bash
   scp -r ~/Desktop/Quietly/quietly-dash/* root@srv1285597.hstgr.cloud:/docker/quietly-dash/
@@ -366,8 +367,10 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - `resolve_yes`/`resolve_no`/`mc` (media_cat) are new callback routes in Intake Channel Router switch
 - Message linking includes `AND channel = ...` to prevent cross-channel ticket pollution
 - Dashboard message query filters by channel; falls back to chat_id only if ticket_id returns 0 messages
-- AI Conversation Agent notification routing: `Is Urgent?` TRUE → `Notify Landlord` (Dion 6216258938) → `Is Dion? (notify)` → TRUE: done / FALSE: `Notify Landlord - Julia` (6274604148) → done. `Is Urgent?` FALSE → `Notify Non-Urgent` (HTTP node, Dion only, no Julia copy)
-- **Dion's test account in DB:** Aisha Brown — phone `15148319058`, telegram_id `6216258938`, email `dionbuildsai@gmail.com`
+- AI Conversation Agent notification routing: `Is Urgent?` → (both branches) → `Get Owner Chat ID` (settings table) → `Send Owner Notification` (Code node). Has "Is Dion?" check: if tenant phone contains `5148319058`, sends to Dion (`6216258938`) instead of Julia. Orphaned nodes `Notify Landlord` and `Notify Non-Urgent` are dead code (no connections).
+- Voice Agent notification routing: same pattern — `Get Owner Chat ID` → `Send Voice Notification` with "Is Dion?" check.
+- **Dispatch flow** (Intake Channel Router): `Show Preview`, `Build Preview Buttons`, `Send List`, `Dispatch Ack` all use `$('Parse Callback').item.json.chat_id` — dynamically routes to whoever pressed the Telegram button (Julia or Dion).
+- **Dion's test account in live DB:** "Dion Dev" — phone `15148319058`, telegram_id `6216258938`, email `dionbuildsai@gmail.com`. "Is Dion?" filter suppresses Julia notifications for Dion's test messages across all channels.
 - Manual trigger → Clear Messages → Clear Tickets (for dev/testing)
 - Intake Switch node has `fallbackOutput: "extra"` for unrecognized callback actions
 - **ANTHROPIC_API_KEY** must be set in BOTH n8n AND dashboard containers in docker-compose.yml (Match Video AI code node uses `$env.ANTHROPIC_API_KEY` for direct Haiku API calls)
@@ -475,8 +478,56 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 ## Dev Server Setup (srv1466948.hstgr.cloud)
 - **PM Dashboard:** pm.srv1466948.hstgr.cloud (password: quietly2024)
 - **n8n:** n8n.srv1466948.hstgr.cloud
-- **Database:** pm_dev_db (test data — 1 tenant, 1 property, 1 vendor)
-- **Workflows:** All 8 PM workflows imported but INACTIVE — activate individually for testing
-- **Tokens:** All placeholders (DEV_BOT_TOKEN_REPLACE_ME, etc.) — need real dev tokens to test
-- **To test Telegram:** Create a dev bot via @BotFather, update dev settings + compose
-- **To test WhatsApp:** Use the same Meta test number or create a dev WABA
+- **n8n version:** 2.10.4 (pinned to match live — Dockerfile uses `FROM docker.n8n.io/n8nio/n8n:2.10.4`)
+- **n8n database:** Postgres (`DB_TYPE=postgresdb` in container env). Database `n8n` on `quietly-postgres` container. **Stale SQLite file exists but is disabled/unused (renamed to .disabled on 2026-04-03).**
+- **n8n Postgres (app data):** `pm_dev_db` on same `quietly-postgres` container (test data — 1 tenant, 1 property, 1 vendor)
+- **Docker Compose:** `/docker/core/docker-compose.yml` — n8n env vars in `environment:` section (was fixed from `labels:` where they were ignored)
+- **n8n workflow publishing:** After `n8n import:workflow`, workflows are imported but DEACTIVATED. Must click **Publish** in the n8n UI for each workflow. There is no CLI command to publish — UI only.
+- **Settings table:** `pm_dev_db.settings` — 14 keys across 8 categories. Dashboard settings page at `/settings` with admin verification for encrypted fields.
+- **Centralized config (IN PROGRESS):** Workflows are being migrated to read from settings table via "Get Config" Postgres node (`SELECT json_object_agg(key, value) AS config FROM settings WHERE key IN (...)`). Some workflows partially migrated, 24 hardcoded values remain. See memory file `project_pm_config_migration.md` for full audit and fix list.
+- **Telegram:** Dev bot token `8230685505:AAF360s5aQrSR9nUw5EQscMjyH7PND0oYuU` (separate from live bot `8460031715`). Some Code/HTTP nodes read token from Get Config, but native Telegram nodes still use `property_management` credential which may have production token.
+- **WhatsApp:** Phone Number ID `1002910989571888` hardcoded in 6 native WhatsApp nodes. Access token from settings table in Code nodes. Test token (temporary 24h) in docker-compose `WHATSAPP_TOKEN`.
+- **Live server URL:** All `srv1285597` references removed from dev workflows (was in Forward to WA Intake — fixed to use `config.n8n_webhook_base_url`).
+- **Get Config pattern:** Runs as parallel branch from trigger (output 0). n8n processes output 0 first (breadth-first, single-threaded). Downstream Code nodes reference via `$('Get Config').first().json.config`. Native nodes use expressions: `={{ JSON.parse($('Get Config').first().json.config).key_name }}`.
+- **Native node expressions verified:** On n8n 2.10.4, all native node fields (WhatsApp `phoneNumberId`, Twilio `from`, Google Drive `folderId`, Telegram `chatId`) support `={{ }}` expressions. No need to convert to HTTP Request nodes.
+- **n8n credential encryption mismatch:** Credentials imported from live are encrypted with live's key. Dev has a different key, so native nodes using saved credentials (Telegram, Gmail, Postgres `JlETYTnhAwFrsmL9`) fail with "bad decrypt." Code nodes using `$env` work fine. Workflow logic is testable, but dev can't send actual messages via native nodes. Credential IDs are the same on both servers, so dev→live import just works (live has its own working encrypted copies).
+- **Media mount fixed:** Dashboard reads from `/docker/projects/pm/files/media:/app/media` (same dir n8n writes to). Permissions `chmod 777`.
+- **Published versions required:** n8n 2.10.4 requires entries in `workflow_published_version` table for sub-workflows called via Execute Workflow. Without them, `getPublishedWorkflowData` throws "Workflow is not active." Insert with: `INSERT INTO workflow_published_version ("workflowId", "publishedVersionId", "createdAt", "updatedAt") SELECT id, "versionId", NOW(), NOW() FROM workflow_entity WHERE id = '...'`.
+
+## Changelog (2026-04-04 session — media immediate download + notification routing)
+- **Dashboard: "📷 Photo" fallback** now only shows for tenant messages, not empty bot messages (`conversation-panel.tsx` line 61)
+- **Dashboard: local media rendering** was already working in `conversation-panel.tsx` (the old `message-thread.tsx` is dead code)
+- **SMS/Email video skip:** `Send Video Followup` in Intake returns `{ sent: false }` immediately for SMS and email channels (no video follow-up, no ghost empty message)
+- **Immediate media download (Telegram + SMS):** 3 new nodes added to Intake Channel Router: `Download Media Immediate` → `Update Pending Status` → `Link Media Immediate`. Chain: `Save Pending Media → Download Media Immediate → Update Pending Status → Link Media Immediate → Get Tickets for Media → Send Category Prompt`. Downloads photo immediately on receipt, links to message in DB so dashboard shows it right away.
+- **Link Media Immediate auto-assigns ticket_id:** Both Intake (`Link Media Immediate`) and WhatsApp Meta (`Link WA Media Immediate`) now set `ticket_id` to the latest open ticket for the tenant via subquery, so photos appear in ticket conversation immediately (not after tenant clicks ticket selection button).
+- **WhatsApp Meta `Set Ticket on Message` SQL fix:** `UPDATE ... ORDER BY ... LIMIT` is invalid Postgres — wrapped in subquery: `UPDATE ... WHERE id = (SELECT id ... ORDER BY ... LIMIT 1)`.
+- **"Is Dion?" notification filter:** Added to `Send Owner Notification` (AI Agent) and `Send Voice Notification` (Voice Agent). If tenant phone contains `5148319058`, notification goes to Dion (`6216258938`) instead of Julia. All other tenants → Julia via settings table `telegram_owner_chat_id`.
+- **Dispatch flow dynamic routing:** `Show Preview`, `Build Preview Buttons`, `Send List`, `Dispatch Ack` in Intake now use `$('Parse Callback').item.json.chat_id` instead of hardcoded `6216258938`. Replies go to whoever pressed the Telegram button.
+- **Vendor email formatting:** `Email Vendor` Gmail node expression changed from `={{ $json.text || $json.response }}` to `={{ ($json.text || $json.response).replace(/\n/g, '<br>') }}`. Gmail node uses HTML mode (default `emailType: 'html'`), so `\n` was ignored. Now renders proper line breaks.
+- **Vendor email prompt:** `Confirm Vendor Msg` Haiku prompt changed from "Julia from Julia Inc property management" to "Julia, the property manager".
+- **Timezone fix:** Live server changed from `Europe/Berlin` to `America/Toronto` (in `/docker/n8n/.env`).
+- **Dev server n8n pinned to 2.10.4:** Dockerfile changed to `FROM docker.n8n.io/n8nio/n8n:2.10.4` to match live. Version mismatch (2.14.2) was causing Execute Workflow node to return data on wrong output index.
+- **Dev media mount fixed:** Dashboard mount changed to `/docker/projects/pm/files/media:/app/media` (was `/docker/projects/pm/media:/app/media` — different dir from n8n). Permissions set to `777`.
+- **Twilio env vars added:** `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` added to both live and dev n8n containers (needed for SMS photo download in `Download Media Immediate` Code node).
+- **All fixes deployed to dev:** Intake Channel Router, WhatsApp Meta, AI Agent, Voice Agent — all patched and active on dev.
+
+## Changelog (2026-04-05 session — Telegram credential refactor)
+- **Telegram credential refactor (COMPLETE):** All native Telegram nodes (except Telegram Trigger) converted to HTTP Request or Code nodes using `$env.TELEGRAM_BOT_TOKEN`. Eliminates credential encryption mismatch between dev/live.
+- **22 nodes converted across 6 workflows:**
+  - Intake Channel Router: `Welcome Message`, `Remove Buttons` → HTTP Request. `Send Category Prompt`, `Build Preview Buttons`, `Resolved Ack`, `Not Resolved Ack`, `Send Video Followup`, `Reopen Ack`, `Send Typing`, `Media Category Ack` → Code with `$env`. `Send List`, `Dispatch Ack`, `TG Get File Path`, `TG Download Photo` → HTTP Request with `$env`.
+  - Ticket Management: `Notify Landlord` → HTTP Request with `$env`.
+  - AI Conversation Agent: `Notify Landlord` (dead code) → HTTP Request with `$env`. `Notify Non-Urgent` (dead code) → URL fixed to `$env`.
+  - Response Channel Dispatcher: `Send Telegram` → URL updated to `$env`. `Video Follow-up` → Code with `$env`.
+  - Owner Message Sender: `Send Telegram` → URL updated to `$env`.
+  - Media Upload Handler: `TG Get File`, `TG Download` → URL updated to `$env`.
+- **Telegram Trigger stays native:** Must keep `property_management` credential (`5uwoGp7iX1GQkMcu`) for webhook registration with Telegram API. Only native Telegram node remaining.
+- **Zero hardcoded bot tokens remaining:** All `8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8` references removed from all workflow files.
+- **Deployed to dev:** All 8 workflows imported and activated on dev server. `$env.TELEGRAM_BOT_TOKEN` = dev bot token (`8230685505`).
+
+## Credential Architecture (Telegram DONE, others planned)
+- **Telegram: COMPLETE** — All nodes use `$env.TELEGRAM_BOT_TOKEN` except `Telegram Trigger` (must stay native for webhook registration). `Send Owner Notification` (AI Agent) and `Send Voice Notification` (Voice Agent) were already using `$env` from prior session.
+- **Current state:** Telegram fully migrated. Other services (Twilio, WhatsApp, Gmail, Postgres) still use saved credentials.
+- **Target state:** Secrets (API keys, tokens) → `$env` vars in docker-compose (secure, not exposed in UI). Config (chat IDs, phone numbers, feature flags) → `settings` table (editable from dashboard).
+- **Migration approach:** Incremental — convert native nodes to Code nodes using `$env`/settings one service at a time. Next: Twilio, then WhatsApp, then Gmail.
+- **Why:** Eliminates credential encryption mismatch between dev/live. Makes workflows fully portable. Secrets never visible in dashboard UI.
+- **n8n native node limitation:** Native nodes (Postgres, Telegram, Gmail, WhatsApp) only accept saved credentials from dropdown — cannot use `$env` directly. Must convert to Code or HTTP Request nodes.

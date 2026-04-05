@@ -180,7 +180,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [

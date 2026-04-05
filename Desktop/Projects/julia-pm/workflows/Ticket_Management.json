@@ -475,27 +475,35 @@
     },
     {
       "parameters": {
-        "chatId": "6216258938",
-        "text": "=URGENT TICKET {{ $('Create Urgent Ticket').item.json.ticket_id }}\n\nTenant: {{ $('Create Urgent Ticket').item.json.tenant_name }}\nUnit: {{ $('Create Urgent Ticket').item.json.unit }}\nProperty: {{ $('Create Urgent Ticket').item.json.property }}\nCategory: {{ $('Create Urgent Ticket').item.json.category }}\n\n{{ $('Create Urgent Ticket').item.json.summary }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "6216258938"
+            },
+            {
+              "name": "text",
+              "value": "=URGENT TICKET {{ $('Create Urgent Ticket').item.json.ticket_id }}\n\nTenant: {{ $('Create Urgent Ticket').item.json.tenant_name }}\nUnit: {{ $('Create Urgent Ticket').item.json.unit }}\nProperty: {{ $('Create Urgent Ticket').item.json.property }}\nCategory: {{ $('Create Urgent Ticket').item.json.category }}\n\n{{ $('Create Urgent Ticket').item.json.summary }}"
+            },
+            {
+              "name": "parse_mode",
+              "value": "HTML"
+            }
+          ]
+        },
+        "options": {}
       },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         440,
         500
       ],
       "id": "19b8e696-d6a8-471b-bcd9-5df70d1499c9",
-      "name": "Notify Landlord",
-      "credentials": {
-        "telegramApi": {
-          "id": "5uwoGp7iX1GQkMcu",
-          "name": "property_management"
-        }
-      }
+      "name": "Notify Landlord"
     },
     {
       "parameters": {
@@ -791,5 +799,6 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false,
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
-  }
+  },
+  "id": "CnUFSXbeIk9GNI5t"
 }

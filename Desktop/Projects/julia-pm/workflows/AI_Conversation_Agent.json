@@ -338,51 +338,39 @@
     },
     {
       "parameters": {
-        "chatId": "6216258938",
-        "text": "=URGENT TICKET {{ $('Generate Ticket').item.json.ticket_id }}\n\nCategory: {{ $('Generate Ticket').item.json.category }}\nTenant: {{ $('Generate Ticket').item.json.tenant_name }}\nUnit: {{ $('Generate Ticket').item.json.unit }}\nProperty: {{ $('Generate Ticket').item.json.property }}\n\nSummary: {{ $('Generate Ticket').item.json.summary }}\n\nHow would you like to handle this?",
-        "replyMarkup": "inlineKeyboard",
-        "inlineKeyboard": {
-          "rows": [
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
             {
-              "row": {
-                "buttons": [
-                  {
-                    "text": "Auto Dispatch",
-                    "additionalFields": {
-                      "callback_data": "=dispatch||{{ $('Generate Ticket').item.json.ticket_id }}||{{ $('Generate Ticket').item.json.category }}"
-                    }
-                  },
-                  {
-                    "text": "Show Contractors",
-                    "additionalFields": {
-                      "callback_data": "=manual||{{ $('Generate Ticket').item.json.ticket_id }}||{{ $('Generate Ticket').item.json.category }}"
-                    }
-                  }
-                ]
-              }
+              "name": "chat_id",
+              "value": "6216258938"
+            },
+            {
+              "name": "text",
+              "value": "=URGENT TICKET {{ $('Generate Ticket').item.json.ticket_id }}\n\nCategory: {{ $('Generate Ticket').item.json.category }}\nTenant: {{ $('Generate Ticket').item.json.tenant_name }}\nUnit: {{ $('Generate Ticket').item.json.unit }}\nProperty: {{ $('Generate Ticket').item.json.property }}\n\nSummary: {{ $('Generate Ticket').item.json.summary }}\n\nHow would you like to handle this?"
+            },
+            {
+              "name": "parse_mode",
+              "value": "HTML"
+            },
+            {
+              "name": "reply_markup",
+              "value": "={{ JSON.stringify({ inline_keyboard: [[{ text: 'Auto Dispatch', callback_data: 'dispatch||' + $('Generate Ticket').item.json.ticket_id + '||' + $('Generate Ticket').item.json.category }, { text: 'Show Contractors', callback_data: 'manual||' + $('Generate Ticket').item.json.ticket_id + '||' + $('Generate Ticket').item.json.category }]] }) }}"
             }
           ]
         },
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
+        "options": {}
       },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         2144,
         208
       ],
       "id": "5d66a6c7-a298-4b92-8c73-bb199a4e9ed2",
-      "name": "Notify Landlord",
-      "webhookId": "c0c56476-e93a-4326-9e3e-1bb03cb57f85",
-      "credentials": {
-        "telegramApi": {
-          "id": "5uwoGp7iX1GQkMcu",
-          "name": "property_management"
-        }
-      }
+      "name": "Notify Landlord"
     },
     {
       "parameters": {
@@ -455,7 +443,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.telegram.org/botTELEGRAM_BOT_TOKEN_SET_IN_ENV/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
