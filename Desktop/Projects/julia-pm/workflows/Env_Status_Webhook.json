@@ -1,0 +1,78 @@
+{
+  "name": "[System] Env Status Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "env-status",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "env-status-webhook-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "env-status-webhook-uuid-001"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return sanitized env var status from the n8n container\nconst KEYS = [\n  // Telegram\n  { key: 'TELEGRAM_BOT_TOKEN', category: 'telegram', label: 'Bot Token' },\n  { key: 'TELEGRAM_OWNER_CHAT_ID', category: 'telegram', label: 'Owner Chat ID' },\n  // WhatsApp\n  { key: 'WHATSAPP_TOKEN', category: 'whatsapp', label: 'Access Token' },\n  { key: 'WHATSAPP_PHONE_NUMBER_ID', category: 'whatsapp', label: 'Phone Number ID' },\n  // Twilio\n  { key: 'TWILIO_ACCOUNT_SID', category: 'twilio', label: 'Account SID' },\n  { key: 'TWILIO_AUTH_TOKEN', category: 'twilio', label: 'Auth Token' },\n  { key: 'TWILIO_FROM_NUMBER', category: 'twilio', label: 'From Number' },\n  // Anthropic\n  { key: 'ANTHROPIC_API_KEY', category: 'anthropic', label: 'API Key' },\n  // n8n\n  { key: 'N8N_API_KEY', category: 'n8n', label: 'API Key' },\n  { key: 'N8N_HOST', category: 'n8n', label: 'Host' },\n  { key: 'WEBHOOK_URL', category: 'n8n', label: 'Webhook Base URL' },\n  { key: 'GENERIC_TIMEZONE', category: 'n8n', label: 'Timezone' },\n  // Google\n  { key: 'GOOGLE_DRIVE_ROOT_FOLDER', category: 'google', label: 'Drive Root Folder' },\n  { key: 'GOOGLE_DRIVE_UNSORTED_FOLDER', category: 'google', label: 'Drive Unsorted Folder' },\n  { key: 'GOOGLE_SHEET_REGISTRY_ID', category: 'google', label: 'Sheet Registry ID' },\n  // n8n DB\n  { key: 'DB_TYPE', category: 'database', label: 'DB Type' },\n  { key: 'DB_POSTGRESDB_HOST', category: 'database', label: 'DB Host' },\n  { key: 'DB_POSTGRESDB_PORT', category: 'database', label: 'DB Port' },\n  { key: 'DB_POSTGRESDB_DATABASE', category: 'database', label: 'DB Name' },\n  { key: 'DB_POSTGRESDB_USER', category: 'database', label: 'DB User' },\n  { key: 'DB_POSTGRESDB_PASSWORD', category: 'database', label: 'DB Password' }\n];\n\nfunction maskValue(value) {\n  if (!value) return '';\n  if (value.length <= 8) return '****';\n  return value.slice(0, 6) + '...' + value.slice(-4);\n}\n\nconst vars = KEYS.map(v => {\n  const value = $env[v.key] || '';\n  return {\n    key: v.key,\n    category: v.category,\n    label: v.label,\n    container: 'n8n',\n    configured: value.length > 0,\n    masked: maskValue(value),\n    length: value.length\n  };\n});\n\nreturn [{ json: { vars, server: 'n8n', timestamp: new Date().toISOString() } }];"
+      },
+      "id": "env-status-build-001",
+      "name": "Build Env Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "env-status-respond-001",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Env Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Env Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "env-status-webhook-001"
+}
