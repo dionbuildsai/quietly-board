@@ -538,6 +538,16 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **AI Agent message linking fix:** `Link Messages to Ticket` changed from `WHERE ticket_id IS NULL` to `WHERE created_at >= NOW() - INTERVAL '60 seconds'` — fixes new ticket conversations showing 0 messages.
 - **Media flow fix:** `Send Category Prompt` now wraps ticket query in try-catch and handles 0 tickets gracefully. Fixed duplicate `Log Inbound Message → Has Media?` connection that caused double messages.
 
+## Changelog (2026-04-07 session — dev WhatsApp isolation)
+- **Dev Meta App created:** `Quietly PM Dev` (App ID `933608786120731`) — separate Meta App for dev WhatsApp testing
+- **Dev System User created:** `dev-system-user` in N8N business — Employee role, only assigned to "Test WhatsApp Business Account" + Quietly PM Dev app. Permanent token generated for `whatsapp_business_messaging` + `whatsapp_business_management`
+- **Dev WhatsApp env vars deployed:** Both dev n8n and dev pm-dash containers updated with permanent dev token + test phone number ID `1002910989571888`
+- **Live n8n filter added (Parse Meta Message):** Drops test number traffic silently — `if (incomingPhoneId === '1002910989571888') return [];` — fully isolates dev test traffic from live processing while keeping production messages flowing normally. Same workflow on dev does NOT have this filter (dev needs to process the test number).
+- **Workflow JSONs updated:** Hardcoded `971537566052793` replaced with `$env.WHATSAPP_PHONE_NUMBER_ID` in 4 workflows (6 nodes) — now dev uses test ID, live uses prod ID via env var
+- **Vault entries added:** `pm/WhatsApp/DEV_ACCESS_TOKEN` + `pm/WhatsApp/DEV_PHONE_NUMBER_ID` (encrypted, accessible at vault.srv1466948.hstgr.cloud)
+- **Dev test number:** `+1 555-183-0681` (Meta sandbox) — only Dion's number `+15148319058` is in the allowed recipients list
+- **Webhook architecture:** Both `n8n` (live app) and `Quietly PM Dev` (dev app) are subscribed to the Test WABA. When messages hit `+15551830681`, both apps fire webhooks — dev processes the full chain, live drops it via the filter.
+
 ## Credential Architecture (Telegram + WhatsApp DONE, others planned)
 - **Telegram: COMPLETE** — All nodes use `$env.TELEGRAM_BOT_TOKEN` except `Telegram Trigger` (must stay native for webhook registration).
 - **WhatsApp: COMPLETE** — All nodes use `$env.WHATSAPP_TOKEN` via Bearer auth header. No native WhatsApp nodes remaining.
