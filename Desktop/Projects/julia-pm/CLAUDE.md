@@ -548,6 +548,25 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Dev test number:** `+1 555-183-0681` (Meta sandbox) — only Dion's number `+15148319058` is in the allowed recipients list
 - **Webhook architecture:** Both `n8n` (live app) and `Quietly PM Dev` (dev app) are subscribed to the Test WABA. When messages hit `+15551830681`, both apps fire webhooks — dev processes the full chain, live drops it via the filter.
 
+## Changelog (2026-04-07 evening — environment dashboard + live env hardening + audit + regression fixes)
+- **Environment dashboard section** added to dev pm-dash `/settings`: new `/api/environment` route + `EnvironmentCard` component show all env vars from BOTH dashboard and n8n containers, grouped by service (Telegram, WhatsApp, Twilio, Anthropic, ElevenLabs, n8n, Google, Database, Dashboard). Masked values + container badges. Fetches n8n vars via internal Docker network call to new `[System] Env Status Webhook` workflow (`env-status-webhook-001`) at `http://n8n:5678/webhook/env-status`. Graceful fallback if n8n unreachable.
+- **Dev dashboard Twilio fixed:** Replaced placeholder values (`AC1234567890`, `DEV_TWILIO_AUTH`) with real Twilio credentials sourced from dev n8n container. Added missing `TWILIO_FROM_NUMBER`.
+- **Live env vars added (additive, non-breaking):** `TELEGRAM_OWNER_CHAT_ID=6274604148`, `WHATSAPP_PHONE_NUMBER_ID=971537566052793`, `TWILIO_FROM_NUMBER=+14389009998` added to live n8n service. `TWILIO_FROM_NUMBER` alias added to live dashboard service. Pre-staged for credential refactor deployment.
+- **Live docker-compose duplicates cleaned:** Dashboard service env block had 9 duplicate entries (TELEGRAM_BOT_TOKEN x3, TWILIO_ACCOUNT_SID x4, TWILIO_AUTH_TOKEN x4, WHATSAPP_TOKEN x2). All deduped, reorganized, 24 → 16 lines. Same effective values (Docker was using last-write-wins).
+- **Backup of live compose:** `/docker/n8n/docker-compose.yml.bak.20260407-201128`
+- **Live containers restarted** (n8n + dashboard) cleanly, all 30 workflows reactivated, zero errors. Production traffic verified intact post-restart.
+- **3-way audit (LOCAL/DEV/LIVE) found 5 critical regressions** in LOCAL workflows that would have broken production if deployed:
+  1. AI Conversation Agent `Send Owner Notification` was missing the "Is Dion?" filter — would notify Julia for every Dion test
+  2. Voice Agent `Send Voice Notification` was missing the "Is Dion?" filter
+  3. Intake `Match Video AI` had placeholder `'ANTHROPIC_API_KEY_SET_IN_N8N_ENV'` string instead of `$env.ANTHROPIC_API_KEY` — would break ALL video matching
+  4. Intake `Show Preview` had hardcoded `chat_id: '6216258938'` instead of dynamic `$('Parse Callback').item.json.chat_id` — would send vendor previews to wrong chat
+  5. Intake `Build Preview Buttons` had same hardcoded chat_id bug
+- **All 5 regressions fixed in LOCAL** + deployed to dev. 10/10 verification checks passed (5 positive + 5 negative). DEV server re-export confirmed fixes are active in running workflows.
+- **Real-world validation of live "Is Dion?" filter:** Across 3 accidental tests today (Telegram, SMS via execution 4330, WhatsApp via execution 4316), all notifications routed to Dion's chat ID `6216258938`. Julia's chat ID `6274604148` only appeared as the settings table lookup result, never as the actual outgoing Telegram POST recipient. Zero notifications sent to Julia.
+- **Critical deployment doc:** `DEPLOYMENT_AUDIT_2026-04-07.md` — full 3-way audit findings, risk register, workflow-by-workflow deployment plan, mitigation steps, rollback files. Use this for the next live deployment session.
+- **Dev WhatsApp Meta fix:** `Forward to WA Intake` URL changed to use `$env.WEBHOOK_URL` instead of non-existent `Get Config` node reference (was throwing "Referenced node doesn't exist" error on dev).
+- **Live still pending credential refactor deployment:** All 8 PM workflows on live still have hardcoded `8460031715:AAE1...` Telegram tokens (20 occurrences), hardcoded `971537566052793` WhatsApp phone IDs (7), saved Telegram credential refs (5), and saved WhatsApp credential refs (7). Refactor is ready in LOCAL/DEV; deployment is the next session's task.
+
 ## Credential Architecture (Telegram + WhatsApp DONE, others planned)
 - **Telegram: COMPLETE** — All nodes use `$env.TELEGRAM_BOT_TOKEN` except `Telegram Trigger` (must stay native for webhook registration).
 - **WhatsApp: COMPLETE** — All nodes use `$env.WHATSAPP_TOKEN` via Bearer auth header. No native WhatsApp nodes remaining.
