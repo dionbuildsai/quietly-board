@@ -1,1 +1,914 @@
-{"id": "JO26ruzPNp1MQThL", "name": "Voice Agent \u2014 Log Maintenance Request", "active": true, "nodes": [{"parameters": {"respondWith": "allIncomingItems", "options": {}}, "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.5, "position": [1408, -128], "id": "c09c1de3-2309-46d0-925f-547f82b05363", "name": "Respond to Webhook"}, {"parameters": {"schema": {"__rl": true, "value": "public", "mode": "list", "cachedResultName": "public"}, "table": {"__rl": true, "value": "maintenance_requests", "mode": "list", "cachedResultName": "maintenance_requests"}, "columns": {"mappingMode": "autoMapInputData", "value": {"ticket_number": 0}, "matchingColumns": ["id"], "schema": [{"id": "id", "displayName": "id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false}, {"id": "ticket_number", "displayName": "ticket_number", "required": false, "defaultMatch": false, "display": true, "type": "number", "canBeUsedToMatch": true}, {"id": "tenant_name", "displayName": "tenant_name", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "tenant_phone", "displayName": "tenant_phone", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "property_id", "displayName": "property_id", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "unit_number", "displayName": "unit_number", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "category", "displayName": "category", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "description", "displayName": "description", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "urgency", "displayName": "urgency", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "status", "displayName": "status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "transcript", "displayName": "transcript", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "created_at", "displayName": "created_at", "required": false, "defaultMatch": false, "display": true, "type": "dateTime", "canBeUsedToMatch": true}, {"id": "updated_at", "displayName": "updated_at", "required": false, "defaultMatch": false, "display": true, "type": "dateTime", "canBeUsedToMatch": true}], "attemptToConvertTypes": false, "convertFieldsToString": false}, "options": {}}, "type": "n8n-nodes-base.postgres", "typeVersion": 2.6, "position": [700, -128], "id": "fea6a152-1b7e-4339-976f-f2c2964b51e2", "name": "Insert rows in a table", "credentials": {"postgres": {"id": "JlETYTnhAwFrsmL9", "name": "Quietly DB"}}}, {"parameters": {"assignments": {"assignments": [{"id": "a1", "name": "tenant_name", "value": "={{ $json.body.tenant_name }}", "type": "string"}, {"id": "a2", "name": "phone", "value": "={{ $json.body.tenant_phone.replace(/[^0-9]/g, '') }}", "type": "string"}, {"id": "a3", "name": "unit", "value": "={{ $json.body.unit_number }}", "type": "string"}, {"id": "a4", "name": "category", "value": "={{ $json.body.category }}", "type": "string"}, {"id": "a5", "name": "summary", "value": "={{ $json.body.description }}", "type": "string"}, {"id": "a6", "name": "urgency", "value": "={{ $json.body.urgency }}", "type": "string"}, {"id": "a7", "name": "tenant_message", "value": "={{ $json.body.tenant_message }}", "type": "string"}, {"id": "a8", "name": "channel", "value": "={{ $json.body.channel }}", "type": "string"}, {"id": "a9", "name": "ticket_id", "value": "={{ 'TK-' + $now.toMillis().toString(36).toUpperCase().slice(-8) }}", "type": "string"}, {"id": "a10", "name": "status", "value": "open", "type": "string"}]}, "options": {}}, "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [80, -128], "id": "cbcbc2cd-24e9-47ac-83d4-ed1a730df2d2", "name": "Edit Fields"}, {"parameters": {"operation": "executeQuery", "query": "SELECT \n  t.name as tenant_name,\n  t.unit_number,\n  t.phone,\n  p.name as property_name,\n  mr.ticket_id,\n  mr.category,\n  mr.summary,\n  mr.urgency,\n  mr.status,\n  mr.created_at\nFROM tenants t\nLEFT JOIN properties p ON t.property_id = p.id\nLEFT JOIN maintenance_requests mr \n  ON mr.phone = t.phone \n  AND mr.status NOT IN ('closed', 'resolved')\nWHERE t.phone = '{{ $json.body.tenant_phone.replace(/[^0-9]/g, '').replace(/'/g, \"''\") }}'\nORDER BY mr.created_at DESC\nLIMIT 5;", "options": {"alwaysOutputData": true}}, "type": "n8n-nodes-base.postgres", "typeVersion": 2.6, "position": [80, 112], "id": "fa1165ee-c421-4fbd-8d84-5e2fb796e929", "name": "Execute a SQL query", "credentials": {"postgres": {"id": "JlETYTnhAwFrsmL9", "name": "Quietly DB"}}}, {"parameters": {"respondWith": "allIncomingItems", "options": {}}, "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.5, "position": [304, 112], "id": "a96d698d-93f3-478a-b043-7ae0020bfa92", "name": "Respond to Webhook1"}, {"parameters": {"assignments": {"assignments": [{"id": "dabbf199-a42e-40b7-a1af-302bc108c9a8", "name": "duration_sec", "value": "={{ $json.body.duration_sec }}", "type": "string"}, {"id": "1494dc82-5ce7-48f3-bb69-cd12afdafe0a", "name": "full_transcript", "value": "={{ $json.body.full_transcript }}", "type": "string"}, {"id": "74f9da3e-faa6-4dba-9fc2-4d676ebe2743", "name": "=elevenlabs_call_id", "value": "={{ $json.body.call_id }}", "type": "string"}, {"id": "6a559e41-e2c4-41fe-b1db-4bcec03f4130", "name": "tenant_phone", "value": "={{ $json.body.tenant_phone }}", "type": "string"}]}, "options": {}}, "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [80, 336], "id": "053cb2f2-4e86-4063-9f8e-14fc7a0113b5", "name": "Edit Fields2"}, {"parameters": {"schema": {"__rl": true, "mode": "list", "value": "public"}, "table": {"__rl": true, "value": "call_logs", "mode": "list", "cachedResultName": "call_logs"}, "columns": {"mappingMode": "autoMapInputData", "value": {"duration_sec": 0}, "matchingColumns": ["id"], "schema": [{"id": "id", "displayName": "id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false}, {"id": "tenant_id", "displayName": "tenant_id", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "property_id", "displayName": "property_id", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "request_id", "displayName": "request_id", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "duration_sec", "displayName": "duration_sec", "required": false, "defaultMatch": false, "display": true, "type": "number", "canBeUsedToMatch": true}, {"id": "full_transcript", "displayName": "full_transcript", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "elevenlabs_call_id", "displayName": "elevenlabs_call_id", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}, {"id": "created_at", "displayName": "created_at", "required": false, "defaultMatch": false, "display": true, "type": "dateTime", "canBeUsedToMatch": true}], "attemptToConvertTypes": false, "convertFieldsToString": false}, "options": {}}, "type": "n8n-nodes-base.postgres", "typeVersion": 2.6, "position": [304, 336], "id": "71970662-f817-4f93-86d6-eb5a8fb5247b", "name": "Insert rows in a table1", "credentials": {"postgres": {"id": "JlETYTnhAwFrsmL9", "name": "Quietly DB"}}}, {"parameters": {"httpMethod": "POST", "path": "post-call-log", "options": {}}, "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [-144, 336], "id": "e022b39d-4ab5-40ab-b924-69590bf2c165", "name": "Post-Call", "webhookId": "a84041d7-1afc-47c0-add6-e41a11e2bf15"}, {"parameters": {"httpMethod": "POST", "path": "get-status", "responseMode": "responseNode", "options": {}}, "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [-144, 112], "id": "5e9c4932-db95-465d-98a0-d04064bd3f67", "name": "Get Status", "webhookId": "f1b6a1f6-aab4-41e9-bb5e-8e615a048c07"}, {"parameters": {"path": "log-maintenance", "responseMode": "responseNode", "options": {}, "httpMethod": "POST"}, "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [-144, -128], "id": "5e221960-9e6c-48b0-bba8-301274d45226", "name": "Log Maintenance", "webhookId": "d8902402-5f29-41bb-9f82-61ac565aaf4a"}, {"parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3}, "conditions": [{"id": "0a04ab7a-0cab-4c80-a00b-f05d190fd254", "leftValue": "={{ $('Insert rows in a table').item.json.urgency }}", "rightValue": "urgent", "operator": {"type": "string", "operation": "equals", "name": "filter.operator.equals"}}], "combinator": "and"}, "options": {}}, "type": "n8n-nodes-base.if", "typeVersion": 2.3, "position": [960, -128], "id": "ed9bcf9c-8e1b-4071-af1a-473452733b48", "name": "If"}, {"parameters": {"httpMethod": "POST", "path": "convai-init", "responseMode": "responseNode", "options": {}}, "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [0, -400], "id": "b3e4f5a6-c7d8-4e9f-a0b1-c2d3e4f5a6b7", "name": "Convai Init", "webhookId": "e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b"}, {"parameters": {"jsCode": "const callerId = $('Convai Init').first().json.body?.caller_id || '';\nconst cleanPhone = callerId.replace(/[^0-9]/g, '');\nreturn [{ json: { clean_phone: cleanPhone } }];"}, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [280, -400], "id": "d4e5f6a7-b8c9-4d0e-b1f2-a3b4c5d6e7f8", "name": "Extract Phone"}, {"parameters": {"respondWith": "firstIncomingItem", "options": {}}, "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.5, "position": [720, -400], "id": "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6", "name": "Respond Init"}, {"parameters": {"operation": "executeQuery", "query": "SELECT\n  COALESCE(t.name, 'there') AS tenant_name,\n  COALESCE(t.unit_number, '') AS unit_number,\n  COALESCE(t.phone, '') AS phone,\n  COALESCE(p.name, '') AS property_name\nFROM (SELECT 1) dummy\nLEFT JOIN tenants t ON t.phone = '{{ $json.clean_phone }}'\nLEFT JOIN properties p ON t.property_id = p.id\nLIMIT 1;", "options": {}}, "type": "n8n-nodes-base.postgres", "typeVersion": 2.6, "position": [500, -400], "id": "fddc0be7-4d2c-407c-8d91-83a65cd70c00", "name": "SQL Tenant Lookup", "credentials": {"postgres": {"id": "JlETYTnhAwFrsmL9", "name": "Quietly DB"}}}, {"parameters": {"jsCode": "const sql = $input.first().json;\nconst phone = $('Extract Phone').first().json.clean_phone;\nreturn [{\n  json: {\n    type: 'conversation_initiation_client_data',\n    dynamic_variables: {\n      caller_phone: sql.phone || phone,\n      tenant_name: sql.tenant_name || 'there',\n      unit_number: sql.unit_number || '',\n      property_name: sql.property_name || ''\n    }\n  }\n}];"}, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [700, -400], "id": "83ae6982-25b9-49fd-b823-5cd530eb15cb", "name": "Format Init"}, {"parameters": {"operation": "executeQuery", "query": "SELECT COALESCE(MAX(t.email), '') AS tenant_email, COALESCE(MAX(TRIM(COALESCE(p.name,'') || ' ' || COALESCE(p.address,''))), '') AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ $json.phone }}';", "options": {"alwaysOutputData": true}}, "type": "n8n-nodes-base.postgres", "typeVersion": 2.6, "position": [280, -128], "id": "b1c2d3e4-f5a6-7890-abcd-ef1234567890", "name": "Lookup Tenant Info", "credentials": {"postgres": {"id": "JlETYTnhAwFrsmL9", "name": "Quietly DB"}}}, {"parameters": {"jsCode": "const edit = $('Edit Fields').item.json;\nconst lookup = $input.first().json;\nreturn [{ json: {\n  tenant_name: edit.tenant_name,\n  phone: edit.phone,\n  tenant_phone: edit.phone,\n  unit: edit.unit,\n  unit_number: edit.unit,\n  category: edit.category,\n  summary: edit.summary,\n  description: edit.summary,\n  urgency: edit.urgency,\n  tenant_message: edit.tenant_message,\n  channel: edit.channel,\n  ticket_id: edit.ticket_id,\n  status: edit.status,\n  property: lookup.property_name || null,\n  tenant_email: lookup.tenant_email || null\n} }];"}, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [480, -128], "id": "a2b3c4d5-e6f7-8901-bcde-f12345678901", "name": "Merge for Insert"}, {"parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "conditions": [{"id": "c1", "leftValue": "={{ $json.urgency }}", "rightValue": "urgent", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "options": {}}, "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [940, -128], "id": "if001-phone-urgency", "name": "Urgent?"}, {"id": "voice-get-owner-chat", "name": "Get Owner Chat ID", "type": "n8n-nodes-base.postgres", "position": [1600, 600], "typeVersion": 2.5, "parameters": {"operation": "executeQuery", "query": "SELECT value AS owner_chat_id FROM settings WHERE key = 'telegram_owner_chat_id'", "options": {}}, "credentials": {"postgres": {"id": "JlETYTnhAwFrsmL9", "name": "Julia DB"}}}, {"id": "voice-send-owner-notif", "name": "Send Voice Notification", "type": "n8n-nodes-base.code", "position": [1840, 600], "typeVersion": 2, "parameters": {"jsCode": "const ownerChatId = $('Get Owner Chat ID').first().json.owner_chat_id;\nconst ticket = $('Edit Fields').item.json;\nconst isUrgent = ticket.urgency === 'urgent';\nconst botToken = $env.TELEGRAM_BOT_TOKEN || 'TELEGRAM_BOT_TOKEN_SET_IN_ENV';\n\nlet text = '';\nlet replyMarkup = null;\n\nif (isUrgent) {\n  text = '\\u{1F6A8} <b>URGENT TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit_number || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '') + '\\n'\n    + '<b>Channel:</b> Phone';\n  replyMarkup = JSON.stringify({\n    inline_keyboard: [[\n      { text: 'Auto Dispatch', callback_data: 'dispatch||' + ticket.ticket_id + '||' + (ticket.category || '') },\n      { text: 'Show Contractors', callback_data: 'manual||' + ticket.ticket_id + '||' + (ticket.category || '') }\n    ]]\n  });\n} else {\n  text = '\\u{1F4CB} <b>NEW TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit_number || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '') + '\\n'\n    + '<b>Channel:</b> Phone';\n}\n\nconst body = { chat_id: ownerChatId, text, parse_mode: 'HTML' };\nif (replyMarkup) body.reply_markup = replyMarkup;\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot' + botToken + '/sendMessage',\n  body,\n  json: true\n});\n\nreturn [{ json: { sent: true, ownerChatId, ticketId: ticket.ticket_id, isUrgent } }];"}}], "connections": {"Insert rows in a table": {"main": [[{"node": "Urgent?", "type": "main", "index": 0}]]}, "Edit Fields": {"main": [[{"node": "Lookup Tenant Info", "type": "main", "index": 0}]]}, "Execute a SQL query": {"main": [[{"node": "Respond to Webhook1", "type": "main", "index": 0}]]}, "Edit Fields2": {"main": [[{"node": "Insert rows in a table1", "type": "main", "index": 0}]]}, "Post-Call": {"main": [[{"node": "Edit Fields2", "type": "main", "index": 0}]]}, "Get Status": {"main": [[{"node": "Execute a SQL query", "type": "main", "index": 0}]]}, "Log Maintenance": {"main": [[{"node": "Edit Fields", "type": "main", "index": 0}]]}, "Respond to Webhook": {"main": [[]]}, "Convai Init": {"main": [[{"node": "Extract Phone", "type": "main", "index": 0}]]}, "Extract Phone": {"main": [[{"node": "SQL Tenant Lookup", "type": "main", "index": 0}]]}, "SQL Tenant Lookup": {"main": [[{"node": "Format Init", "type": "main", "index": 0}]]}, "Format Init": {"main": [[{"node": "Respond Init", "type": "main", "index": 0}]]}, "Lookup Tenant Info": {"main": [[{"node": "Merge for Insert", "type": "main", "index": 0}]]}, "Merge for Insert": {"main": [[{"node": "Insert rows in a table", "type": "main", "index": 0}]]}, "Urgent?": {"main": [[{"node": "Get Owner Chat ID", "type": "main", "index": 0}], [{"node": "Get Owner Chat ID", "type": "main", "index": 0}]]}, "Get Owner Chat ID": {"main": [[{"node": "Send Voice Notification", "type": "main", "index": 0}]]}, "Send Voice Notification": {"main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]}}, "settings": {"callerPolicy": "workflowsFromSameOwner", "errorWorkflow": "ZK5jzQ8cMlLiMdeZ", "availableInMCP": false, "executionOrder": "v1"}}
+{
+  "id": "JO26ruzPNp1MQThL",
+  "name": "Voice Agent \u2014 Log Maintenance Request",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1408,
+        -128
+      ],
+      "id": "c09c1de3-2309-46d0-925f-547f82b05363",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "maintenance_requests",
+          "mode": "list",
+          "cachedResultName": "maintenance_requests"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "ticket_number": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ticket_number",
+              "displayName": "ticket_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_name",
+              "displayName": "tenant_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_phone",
+              "displayName": "tenant_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "unit_number",
+              "displayName": "unit_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transcript",
+              "displayName": "transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        700,
+        -128
+      ],
+      "id": "fea6a152-1b7e-4339-976f-f2c2964b51e2",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "tenant_name",
+              "value": "={{ $json.body.tenant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "phone",
+              "value": "={{ $json.body.tenant_phone.replace(/[^0-9]/g, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "unit",
+              "value": "={{ $json.body.unit_number }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "category",
+              "value": "={{ $json.body.category }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "summary",
+              "value": "={{ $json.body.description }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "urgency",
+              "value": "={{ $json.body.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "tenant_message",
+              "value": "={{ $json.body.tenant_message }}",
+              "type": "string"
+            },
+            {
+              "id": "a8",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "a9",
+              "name": "ticket_id",
+              "value": "={{ 'TK-' + $now.toMillis().toString(36).toUpperCase().slice(-8) }}",
+              "type": "string"
+            },
+            {
+              "id": "a10",
+              "name": "status",
+              "value": "open",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        -128
+      ],
+      "id": "cbcbc2cd-24e9-47ac-83d4-ed1a730df2d2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  t.name as tenant_name,\n  t.unit_number,\n  t.phone,\n  p.name as property_name,\n  mr.ticket_id,\n  mr.category,\n  mr.summary,\n  mr.urgency,\n  mr.status,\n  mr.created_at\nFROM tenants t\nLEFT JOIN properties p ON t.property_id = p.id\nLEFT JOIN maintenance_requests mr \n  ON mr.phone = t.phone \n  AND mr.status NOT IN ('closed', 'resolved')\nWHERE t.phone = '{{ $json.body.tenant_phone.replace(/[^0-9]/g, '').replace(/'/g, \"''\") }}'\nORDER BY mr.created_at DESC\nLIMIT 5;",
+        "options": {
+          "alwaysOutputData": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        80,
+        112
+      ],
+      "id": "fa1165ee-c421-4fbd-8d84-5e2fb796e929",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        304,
+        112
+      ],
+      "id": "a96d698d-93f3-478a-b043-7ae0020bfa92",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dabbf199-a42e-40b7-a1af-302bc108c9a8",
+              "name": "duration_sec",
+              "value": "={{ $json.body.duration_sec }}",
+              "type": "string"
+            },
+            {
+              "id": "1494dc82-5ce7-48f3-bb69-cd12afdafe0a",
+              "name": "full_transcript",
+              "value": "={{ $json.body.full_transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "74f9da3e-faa6-4dba-9fc2-4d676ebe2743",
+              "name": "=elevenlabs_call_id",
+              "value": "={{ $json.body.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6a559e41-e2c4-41fe-b1db-4bcec03f4130",
+              "name": "tenant_phone",
+              "value": "={{ $json.body.tenant_phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        336
+      ],
+      "id": "053cb2f2-4e86-4063-9f8e-14fc7a0113b5",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "call_logs",
+          "mode": "list",
+          "cachedResultName": "call_logs"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "duration_sec": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_sec",
+              "displayName": "duration_sec",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "full_transcript",
+              "displayName": "full_transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "elevenlabs_call_id",
+              "displayName": "elevenlabs_call_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        304,
+        336
+      ],
+      "id": "71970662-f817-4f93-86d6-eb5a8fb5247b",
+      "name": "Insert rows in a table1",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "post-call-log",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        336
+      ],
+      "id": "e022b39d-4ab5-40ab-b924-69590bf2c165",
+      "name": "Post-Call",
+      "webhookId": "a84041d7-1afc-47c0-add6-e41a11e2bf15"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "get-status",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        112
+      ],
+      "id": "5e9c4932-db95-465d-98a0-d04064bd3f67",
+      "name": "Get Status",
+      "webhookId": "f1b6a1f6-aab4-41e9-bb5e-8e615a048c07"
+    },
+    {
+      "parameters": {
+        "path": "log-maintenance",
+        "responseMode": "responseNode",
+        "options": {},
+        "httpMethod": "POST"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -128
+      ],
+      "id": "5e221960-9e6c-48b0-bba8-301274d45226",
+      "name": "Log Maintenance",
+      "webhookId": "d8902402-5f29-41bb-9f82-61ac565aaf4a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0a04ab7a-0cab-4c80-a00b-f05d190fd254",
+              "leftValue": "={{ $('Insert rows in a table').item.json.urgency }}",
+              "rightValue": "urgent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        -128
+      ],
+      "id": "ed9bcf9c-8e1b-4071-af1a-473452733b48",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "convai-init",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -400
+      ],
+      "id": "b3e4f5a6-c7d8-4e9f-a0b1-c2d3e4f5a6b7",
+      "name": "Convai Init",
+      "webhookId": "e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const callerId = $('Convai Init').first().json.body?.caller_id || '';\nconst cleanPhone = callerId.replace(/[^0-9]/g, '');\nreturn [{ json: { clean_phone: cleanPhone } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        -400
+      ],
+      "id": "d4e5f6a7-b8c9-4d0e-b1f2-a3b4c5d6e7f8",
+      "name": "Extract Phone"
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        -400
+      ],
+      "id": "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6",
+      "name": "Respond Init"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  COALESCE(t.name, 'there') AS tenant_name,\n  COALESCE(t.unit_number, '') AS unit_number,\n  COALESCE(t.phone, '') AS phone,\n  COALESCE(p.name, '') AS property_name\nFROM (SELECT 1) dummy\nLEFT JOIN tenants t ON t.phone = '{{ $json.clean_phone }}'\nLEFT JOIN properties p ON t.property_id = p.id\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        500,
+        -400
+      ],
+      "id": "fddc0be7-4d2c-407c-8d91-83a65cd70c00",
+      "name": "SQL Tenant Lookup",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sql = $input.first().json;\nconst phone = $('Extract Phone').first().json.clean_phone;\nreturn [{\n  json: {\n    type: 'conversation_initiation_client_data',\n    dynamic_variables: {\n      caller_phone: sql.phone || phone,\n      tenant_name: sql.tenant_name || 'there',\n      unit_number: sql.unit_number || '',\n      property_name: sql.property_name || ''\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        -400
+      ],
+      "id": "83ae6982-25b9-49fd-b823-5cd530eb15cb",
+      "name": "Format Init"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(MAX(t.email), '') AS tenant_email, COALESCE(MAX(TRIM(COALESCE(p.name,'') || ' ' || COALESCE(p.address,''))), '') AS property_name FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone = '{{ $json.phone }}';",
+        "options": {
+          "alwaysOutputData": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        280,
+        -128
+      ],
+      "id": "b1c2d3e4-f5a6-7890-abcd-ef1234567890",
+      "name": "Lookup Tenant Info",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const edit = $('Edit Fields').item.json;\nconst lookup = $input.first().json;\nreturn [{ json: {\n  tenant_name: edit.tenant_name,\n  phone: edit.phone,\n  tenant_phone: edit.phone,\n  unit: edit.unit,\n  unit_number: edit.unit,\n  category: edit.category,\n  summary: edit.summary,\n  description: edit.summary,\n  urgency: edit.urgency,\n  tenant_message: edit.tenant_message,\n  channel: edit.channel,\n  ticket_id: edit.ticket_id,\n  status: edit.status,\n  property: lookup.property_name || null,\n  tenant_email: lookup.tenant_email || null\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -128
+      ],
+      "id": "a2b3c4d5-e6f7-8901-bcde-f12345678901",
+      "name": "Merge for Insert"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.urgency }}",
+              "rightValue": "urgent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        940,
+        -128
+      ],
+      "id": "if001-phone-urgency",
+      "name": "Urgent?"
+    },
+    {
+      "id": "voice-get-owner-chat",
+      "name": "Get Owner Chat ID",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        1600,
+        600
+      ],
+      "typeVersion": 2.5,
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT value AS owner_chat_id FROM settings WHERE key = 'telegram_owner_chat_id'",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Julia DB"
+        }
+      }
+    },
+    {
+      "id": "voice-send-owner-notif",
+      "name": "Send Voice Notification",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1840,
+        600
+      ],
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const ownerChatId = $('Get Owner Chat ID').first().json.owner_chat_id;\nconst ticket = $('Edit Fields').item.json;\nconst isUrgent = ticket.urgency === 'urgent';\nconst botToken = $env.TELEGRAM_BOT_TOKEN || 'TELEGRAM_BOT_TOKEN_SET_IN_ENV';\n// Is Dion testing? Route to Dion instead of Julia\nconst tenantPhone = $('Edit Fields').item.json.phone || '';\nconst isDion = tenantPhone.includes('5148319058');\nconst chatId = isDion ? '6216258938' : ownerChatId;\n\n\nlet text = '';\nlet replyMarkup = null;\n\nif (isUrgent) {\n  text = '\\u{1F6A8} <b>URGENT TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit_number || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '') + '\\n'\n    + '<b>Channel:</b> Phone';\n  replyMarkup = JSON.stringify({\n    inline_keyboard: [[\n      { text: 'Auto Dispatch', callback_data: 'dispatch||' + ticket.ticket_id + '||' + (ticket.category || '') },\n      { text: 'Show Contractors', callback_data: 'manual||' + ticket.ticket_id + '||' + (ticket.category || '') }\n    ]]\n  });\n} else {\n  text = '\\u{1F4CB} <b>NEW TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit_number || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '') + '\\n'\n    + '<b>Channel:</b> Phone';\n}\n\nconst body = { chat_id: chatId, text, parse_mode: 'HTML' };\nif (replyMarkup) body.reply_markup = replyMarkup;\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot' + botToken + '/sendMessage',\n  body,\n  json: true\n});\n\nreturn [{ json: { sent: true, ownerChatId: chatId, ticketId: ticket.ticket_id, isUrgent } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Urgent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post-Call": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Status": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Convai Init": {
+      "main": [
+        [
+          {
+            "node": "Extract Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Phone": {
+      "main": [
+        [
+          {
+            "node": "SQL Tenant Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL Tenant Lookup": {
+      "main": [
+        [
+          {
+            "node": "Format Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Init": {
+      "main": [
+        [
+          {
+            "node": "Respond Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Tenant Info": {
+      "main": [
+        [
+          {
+            "node": "Merge for Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge for Insert": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgent?": {
+      "main": [
+        [
+          {
+            "node": "Get Owner Chat ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Owner Chat ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Owner Chat ID": {
+      "main": [
+        [
+          {
+            "node": "Send Voice Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Voice Notification": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "ZK5jzQ8cMlLiMdeZ",
+    "availableInMCP": false,
+    "executionOrder": "v1"
+  }
+}
