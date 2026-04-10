@@ -200,23 +200,14 @@
     {
       "id": "send-sms-001",
       "name": "Send SMS",
-      "type": "n8n-nodes-base.twilio",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         880,
         260
       ],
       "parameters": {
-        "from": "+14389009998",
-        "to": "={{ $json.phone }}",
-        "message": "={{ $json.text }}",
-        "options": {}
-      },
-      "credentials": {
-        "twilioApi": {
-          "id": "ijmhKNa9AFRv7Rjr",
-          "name": "Twilio account"
-        }
+        "jsCode": "// Send SMS owner reply via Twilio REST API (refactored from native node to use $env)\nconst sid = $env.TWILIO_ACCOUNT_SID;\nconst token = $env.TWILIO_AUTH_TOKEN;\nconst fromNumber = $env.TWILIO_FROM_NUMBER || '+14389009998';\n\nif (!sid || !token) {\n  throw new Error('Missing Twilio credentials: TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN must be set');\n}\n\nconst to = $json.phone;\nconst messageBody = $json.text || '';\n\nconst auth = Buffer.from(sid + ':' + token).toString('base64');\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,\n  headers: {\n    'Authorization': 'Basic ' + auth,\n    'Content-Type': 'application/x-www-form-urlencoded'\n  },\n  body: new URLSearchParams({\n    From: fromNumber,\n    To: to,\n    Body: messageBody\n  }).toString(),\n  json: false,\n  returnFullResponse: false,\n  timeout: 15000\n});\n\nconst parsed = typeof response === 'string' ? JSON.parse(response) : response;\n\nreturn [{\n  json: {\n    sent: true,\n    sid: parsed.sid || null,\n    to: parsed.to || to,\n    from: parsed.from || fromNumber,\n    status: parsed.status || 'sent'\n  }\n}];"
       }
     },
     {

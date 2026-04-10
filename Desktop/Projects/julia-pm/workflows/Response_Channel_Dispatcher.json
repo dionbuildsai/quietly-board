@@ -155,25 +155,16 @@
       }
     },
     {
-      "parameters": {
-        "from": "+14389009998",
-        "to": "={{ $json.phone }}",
-        "message": "={{ $json.response_text.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '') }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.twilio",
-      "typeVersion": 1,
+      "id": "2b482fed-42eb-4e37-a72b-b7800a575230",
+      "name": "Send SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         128,
         288
       ],
-      "id": "2b482fed-42eb-4e37-a72b-b7800a575230",
-      "name": "Send SMS",
-      "credentials": {
-        "twilioApi": {
-          "id": "ijmhKNa9AFRv7Rjr",
-          "name": "Twilio account"
-        }
+      "parameters": {
+        "jsCode": "// Send SMS reply via Twilio REST API (refactored from native node to use $env)\nconst sid = $env.TWILIO_ACCOUNT_SID;\nconst token = $env.TWILIO_AUTH_TOKEN;\nconst fromNumber = $env.TWILIO_FROM_NUMBER || '+14389009998';\n\nif (!sid || !token) {\n  throw new Error('Missing Twilio credentials: TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN must be set');\n}\n\nconst to = $json.phone;\n// Strip HTML tags from response_text (matches behavior of original native node)\nconst messageBody = ($json.response_text || '')\n  .replace(/<br\\s*\\/?>/gi, '\\n')\n  .replace(/<\\/p>/gi, '\\n\\n')\n  .replace(/<[^>]*>/g, '');\n\nconst auth = Buffer.from(sid + ':' + token).toString('base64');\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,\n  headers: {\n    'Authorization': 'Basic ' + auth,\n    'Content-Type': 'application/x-www-form-urlencoded'\n  },\n  body: new URLSearchParams({\n    From: fromNumber,\n    To: to,\n    Body: messageBody\n  }).toString(),\n  json: false,\n  returnFullResponse: false,\n  timeout: 15000\n});\n\n// Parse Twilio response (it returns JSON despite the form-encoded request)\nconst parsed = typeof response === 'string' ? JSON.parse(response) : response;\n\nreturn [{\n  json: {\n    sent: true,\n    sid: parsed.sid || null,\n    to: parsed.to || to,\n    from: parsed.from || fromNumber,\n    status: parsed.status || 'sent',\n    body: parsed.body || messageBody\n  }\n}];"
       }
     },
     {
