@@ -471,7 +471,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE messages \nSET ticket_id = (\n  SELECT ticket_id FROM maintenance_requests \n  WHERE (phone = '{{ ($('Format Output').item.json.phone || '').replace(/'/g, \"''\") }}' OR tenant_email = '{{ ($('Format Output').item.json.email || '').replace(/'/g, \"''\") }}')\n  AND channel = '{{ $('Format Output').item.json.channel || '' }}'\n  AND status NOT IN ('closed', 'resolved')\n  ORDER BY created_at DESC LIMIT 1\n)\nWHERE chat_id = '{{ ($('Format Output').item.json.chat_id || '').replace(/'/g, \"''\") }}'\nAND channel = '{{ $('Format Output').item.json.channel || '' }}'\nAND ticket_id IS NULL\nRETURNING *",
+        "query": "UPDATE messages \nSET ticket_id = (\n  SELECT ticket_id FROM maintenance_requests \n  WHERE (phone = '{{ ($('Format Output').item.json.phone || '').replace(/'/g, \"''\") }}' OR tenant_email = '{{ ($('Format Output').item.json.email || '').replace(/'/g, \"''\") }}')\n  AND channel IN ('{{ $('Format Output').item.json.channel || '' }}', 'phone')\n  AND status NOT IN ('closed', 'resolved')\n  ORDER BY created_at DESC LIMIT 1\n)\nWHERE chat_id = '{{ ($('Format Output').item.json.chat_id || '').replace(/'/g, \"''\") }}'\nAND channel = '{{ $('Format Output').item.json.channel || '' }}'\nAND ticket_id IS NULL\nRETURNING *",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
