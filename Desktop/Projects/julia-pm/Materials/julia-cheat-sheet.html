@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Julia Inc — Property Management AI System</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f4f3ff;
+      color: #1C1A27;
+      padding: 32px;
+      font-size: 13px;
+    }
+
+    .page {
+      max-width: 820px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 40px rgba(87,60,250,0.10);
+    }
+
+    /* HEADER */
+    .header {
+      background: #1C1A27;
+      padding: 28px 36px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.3px;
+    }
+    .header-left p {
+      color: #9b97b8;
+      font-size: 12.5px;
+      margin-top: 3px;
+    }
+    .badge {
+      background: #573CFA;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+    }
+
+    /* BODY */
+    .body {
+      padding: 28px 36px 32px;
+    }
+
+    /* SECTION */
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #573CFA;
+      margin-bottom: 12px;
+      margin-top: 26px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    /* FLOW */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: #f7f6ff;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 4px;
+    }
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      text-align: center;
+    }
+    .flow-icon {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    .flow-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #1C1A27;
+    }
+    .flow-sub {
+      font-size: 10.5px;
+      color: #7b77a0;
+      margin-top: 2px;
+    }
+    .flow-arrow {
+      font-size: 16px;
+      color: #573CFA;
+      flex: 0 0 24px;
+      text-align: center;
+    }
+
+    /* CARDS GRID */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .card {
+      border: 1.5px solid #ebe9ff;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .card h3 {
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card ul {
+      padding-left: 16px;
+    }
+    .card ul li {
+      font-size: 12px;
+      color: #3d3a52;
+      line-height: 1.7;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #7b77a0;
+      padding: 0 10px 8px;
+      border-bottom: 1.5px solid #ebe9ff;
+    }
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #f2f1fb;
+      color: #3d3a52;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    .tag {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .tag-urgent { background: #fde8ec; color: #E8083E; }
+    .tag-normal { background: #eaf7f1; color: #02864A; }
+    .tag-info   { background: #ebe9ff; color: #573CFA; }
+
+    /* LINKS BOX */
+    .links-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .link-box {
+      background: #f7f6ff;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .link-box .link-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #573CFA;
+      margin-bottom: 4px;
+    }
+    .link-box .link-url {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #1C1A27;
+      word-break: break-all;
+    }
+    .link-box .link-note {
+      font-size: 10.5px;
+      color: #9b97b8;
+      margin-top: 2px;
+    }
+
+    /* RULES BOX */
+    .rules {
+      background: #1C1A27;
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: white;
+    }
+    .rules h3 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #9b97b8;
+      margin-bottom: 10px;
+    }
+    .rules-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 20px;
+    }
+    .rule-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: #d4d1e8;
+    }
+    .rule-item .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #573CFA;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    /* FOOTER */
+    .footer {
+      border-top: 1.5px solid #f0effa;
+      padding: 14px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-left {
+      font-size: 11px;
+      color: #9b97b8;
+    }
+    .footer-right {
+      font-size: 11px;
+      font-weight: 600;
+      color: #573CFA;
+    }
+
+    /* DIVIDER */
+    .divider {
+      height: 1.5px;
+      background: #f0effa;
+      margin: 20px 0;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Property Management AI — Quick Reference</h1>
+      <p>Julia Inc &nbsp;·&nbsp; Powered by Quietly Systems</p>
+    </div>
+    <div class="badge">CONFIDENTIAL</div>
+  </div>
+
+  <div class="body">
+
+    <!-- HOW IT WORKS -->
+    <div class="section-title">How It Works</div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-icon">💬</div>
+        <div class="flow-label">Tenant Messages</div>
+        <div class="flow-sub">via Telegram</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">🤖</div>
+        <div class="flow-label">AI Responds</div>
+        <div class="flow-sub">Claude AI (instant)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">🎫</div>
+        <div class="flow-label">Ticket Created</div>
+        <div class="flow-sub">Auto-classified</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">📊</div>
+        <div class="flow-label">You See It</div>
+        <div class="flow-sub">on Dashboard</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">🚨</div>
+        <div class="flow-label">Urgent Alert</div>
+        <div class="flow-sub">Telegram ping</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- WHAT TENANTS CAN DO -->
+    <div class="section-title">What Tenants Can Do (via Telegram)</div>
+    <div class="cards">
+      <div class="card">
+        <h3>🔧 Report Maintenance</h3>
+        <ul>
+          <li>Plumbing issues (leaks, drips, toilet)</li>
+          <li>Heating / AC problems</li>
+          <li>Electrical issues</li>
+          <li>Appliance problems</li>
+          <li>Pest control</li>
+          <li>Locksmith / entry issues</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>📋 General Requests</h3>
+        <ul>
+          <li>Lease questions</li>
+          <li>Parking requests</li>
+          <li>General inquiries</li>
+          <li>Send photos of the issue</li>
+          <li>Message in English or French</li>
+          <li>Check on open requests</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- TICKET TYPES -->
+    <div class="section-title">Ticket Priority Levels</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Priority</th>
+          <th>When It Triggers</th>
+          <th>What Happens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-urgent">Urgent</span></td>
+          <td>Tenant confirms active flood, fire, gas leak, or safety hazard</td>
+          <td>You get a Telegram notification with one-tap vendor dispatch</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-normal">Standard</span></td>
+          <td>Any maintenance request (default)</td>
+          <td>Ticket created, AI assists, video tip sent if available</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-info">Info Request</span></td>
+          <td>Lease, parking, or general question</td>
+          <td>AI answers, ticket logged for your records</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <!-- WHAT YOU SEE ON DASHBOARD -->
+    <div class="section-title">Your Dashboard Pages</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>What You Can Do</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Dashboard</strong></td>
+          <td>Overview — open tickets, resolved count, time saved, recent activity</td>
+        </tr>
+        <tr>
+          <td><strong>Inbox</strong></td>
+          <td>Unread ticket notifications — click to mark as viewed</td>
+        </tr>
+        <tr>
+          <td><strong>Tickets</strong></td>
+          <td>Filter by property or tenant, sort by date/urgency, click to view full chat</td>
+        </tr>
+        <tr>
+          <td><strong>Tenants</strong></td>
+          <td>Add, edit, or remove tenants and their contact info</td>
+        </tr>
+        <tr>
+          <td><strong>Vendors</strong></td>
+          <td>Manage your contractor list (used for urgent dispatch)</td>
+        </tr>
+        <tr>
+          <td><strong>Properties</strong></td>
+          <td>Manage your properties and manager contact details</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <!-- AI RULES -->
+    <div class="rules">
+      <h3>How the AI Behaves</h3>
+      <div class="rules-grid">
+        <div class="rule-item"><div class="dot"></div>Replies instantly, 24/7 — no manual response needed</div>
+        <div class="rule-item"><div class="dot"></div>Always asks before assuming severity ("smoke" = asks if cooking or fire)</div>
+        <div class="rule-item"><div class="dot"></div>Detects tenant language — replies in English or French automatically</div>
+        <div class="rule-item"><div class="dot"></div>Sends a YouTube repair video for common fixable issues</div>
+        <div class="rule-item"><div class="dot"></div>Creates a ticket on every message — even the first one</div>
+        <div class="rule-item"><div class="dot"></div>Handles up to 3 exchanges per issue, then wraps up</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- LINKS -->
+    <div class="section-title">Your Access Links</div>
+    <div class="links-row">
+      <div class="link-box">
+        <div class="link-label">Dashboard</div>
+        <div class="link-url">dash.srv1285597.hstgr.cloud</div>
+        <div class="link-note">Tickets, tenants, vendors, properties</div>
+      </div>
+      <div class="link-box">
+        <div class="link-label">Tenant Bot (Telegram)</div>
+        <div class="link-url">Share your bot link with tenants</div>
+        <div class="link-note">Tenants message this bot directly</div>
+      </div>
+      <div class="link-box">
+        <div class="link-label">Emergency Line</div>
+        <div class="link-url">438-900-9998</div>
+        <div class="link-note">Twilio number for SMS / calls</div>
+      </div>
+      <div class="link-box">
+        <div class="link-label">Urgent Alerts</div>
+        <div class="link-url">Your Telegram account</div>
+        <div class="link-note">Urgent tickets ping you directly</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left">For support, contact your Quietly Systems account manager.</div>
+    <div class="footer-right">quietly.systems</div>
+  </div>
+
+</div>
+</body>
+</html>

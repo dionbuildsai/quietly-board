@@ -1,0 +1,386 @@
+{
+  "new_nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.name AS tenant_name, t.phone, p.address AS property, t.unit_number AS unit FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.phone LIKE '%' || RIGHT('{{ $('WhatsApp Trigger1').item.json.messages[0].from }}', 10) || '%' LIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -8680,
+        13792
+      ],
+      "id": "a7c29400-e4c4-4ca1-b51f-a5de61305c44",
+      "name": "Lookup Tenant WA",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "fileFolder",
+        "queryString": "={{ $json.property }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m",
+            "mode": "id"
+          },
+          "includeTrashed": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -8400,
+        13792
+      ],
+      "id": "5303e63b-7182-4a85-996c-b149a9821e2e",
+      "name": "Check Property Folder WA",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e1a1da14-fc31-46cc-85e8-1cc4d4fb2dc6",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8120,
+        13792
+      ],
+      "id": "16381871-a6c0-4fbf-bc69-39171b131b22",
+      "name": "Property Exists? WA"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "folder",
+        "name": "={{ $('Lookup Tenant WA').item.json.property }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -7840,
+        13920
+      ],
+      "id": "192a8fa0-b96e-4203-8780-4b411d5c4c1c",
+      "name": "Create Property Folder WA",
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "fileFolder",
+        "queryString": "={{ $('Lookup Tenant WA').item.json.tenant_name }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -7560,
+        13792
+      ],
+      "id": "0d81b71f-e7a0-4bc9-a74a-6f2f45b8b48d",
+      "name": "Check Tenant Folder WA",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "790076bc-01eb-446f-a210-1482973ce1fe",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -7280,
+        13792
+      ],
+      "id": "d6cba742-2302-4f0b-84ce-75cb4db5a900",
+      "name": "Tenant Exists? WA"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "folder",
+        "name": "={{ $('Lookup Tenant WA').item.json.tenant_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create Property Folder WA').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -7000,
+        13920
+      ],
+      "id": "fafa4e3b-505d-428d-8c23-8aaca087e89e",
+      "name": "Create Tenant Folder WA",
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "inputDataFieldName": "={{ $('Download WhatsApp Media').item.binary['data'] }}",
+        "name": "={{ $('Lookup Tenant WA').item.json.tenant_name + ' - WA - ' + $now.format('MMM-dd-yyyy HH-mm') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6720,
+        13792
+      ],
+      "id": "8f511e2c-e98d-49f9-8b8c-0a4237ec91d2",
+      "name": "Upload WA Media",
+      "credentials": {
+        "googleApi": {
+          "id": "M7bSVcETzPuobYNc",
+          "name": "dionbuildsai Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO pending_media (file_id, chat_id, file_url, status, created_at) VALUES ('{{ $('WhatsApp Trigger1').item.json.messages[0].image.id || $('WhatsApp Trigger1').item.json.messages[0].video.id }}', '{{ $('WhatsApp Trigger1').item.json.messages[0].from }}', '{{ 'https://drive.google.com/drive/folders/' + $json.parents[0] }}', 'attached', NOW()) RETURNING *",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -6440,
+        13792
+      ],
+      "id": "a8d2cb43-9958-44cb-ac5b-d62e9d095c01",
+      "name": "Log WA Media to PG",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    }
+  ],
+  "new_connections": {
+    "Download WhatsApp Media": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Tenant WA": {
+      "main": [
+        [
+          {
+            "node": "Check Property Folder WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Property Folder WA": {
+      "main": [
+        [
+          {
+            "node": "Property Exists? WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Property Exists? WA": {
+      "main": [
+        [
+          {
+            "node": "Check Tenant Folder WA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Property Folder WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Property Folder WA": {
+      "main": [
+        [
+          {
+            "node": "Check Tenant Folder WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Tenant Folder WA": {
+      "main": [
+        [
+          {
+            "node": "Tenant Exists? WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tenant Exists? WA": {
+      "main": [
+        [
+          {
+            "node": "Upload WA Media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Tenant Folder WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tenant Folder WA": {
+      "main": [
+        [
+          {
+            "node": "Upload WA Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload WA Media": {
+      "main": [
+        [
+          {
+            "node": "Log WA Media to PG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

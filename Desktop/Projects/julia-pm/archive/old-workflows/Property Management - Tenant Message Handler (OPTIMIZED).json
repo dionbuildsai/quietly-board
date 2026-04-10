@@ -1,0 +1,4815 @@
+{
+  "name": "Property Management - Tenant Message Handler (OPTIMIZED)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "readStatus": "unread"
+        }
+      },
+      "id": "4df4c1ef-d7d5-4e31-b9bc-5509bb2c955c",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -6800,
+        -176
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ib5ffoxInNyz8gYt",
+          "name": "dionbuildsai gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "ec42e035-69c4-4263-95a5-d4ae5f5a1436",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -6800,
+        224
+      ],
+      "id": "0eb547ce-866c-46f9-a586-3a4d931fd127",
+      "name": "Urgent",
+      "webhookId": "ec42e035-69c4-4263-95a5-d4ae5f5a1436"
+    },
+    {
+      "parameters": {
+        "path": "12b2d2db-16cf-4433-b815-d94db031366c",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -6800,
+        32
+      ],
+      "id": "16982ffd-3c10-4c5d-9576-791a9cddd243",
+      "name": "General",
+      "webhookId": "12b2d2db-16cf-4433-b815-d94db031366c"
+    },
+    {
+      "parameters": {
+        "path": "51a88b30-9a1f-48bc-8f89-28923710b97a",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -6800,
+        416
+      ],
+      "id": "5e1b18c3-d9c3-428f-8958-d73a641d8a91",
+      "name": "Other",
+      "webhookId": "51a88b30-9a1f-48bc-8f89-28923710b97a"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -6800,
+        1296
+      ],
+      "id": "7c737a9b-683e-4e53-90c4-aa82490cc250",
+      "name": "Telegram Trigger",
+      "webhookId": "90103d0a-c2fd-440a-b0fb-968e42785824",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c06fa66d-a5e8-4e7b-8295-11ac3ca42137",
+              "name": "channel",
+              "value": "email",
+              "type": "string"
+            },
+            {
+              "id": "6c6b9966-fa54-41da-84d8-922510a70e3e",
+              "name": "sender_identifier",
+              "value": "={{ $json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "6fd81384-7d84-4240-81ed-cb44246fdda9",
+              "name": "message",
+              "value": "={{ $json.snippet || $json.textPlain || $json.text || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "fb766a07-af20-4033-88fe-040cd9553331",
+              "name": "subject",
+              "value": "={{ $json.subject || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "266742d4-3c92-4d84-9a0b-d4dc7275f3e2",
+              "name": "chat_id",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bffd5cf8-573c-475b-babb-17d8ff382bed",
+      "name": "Normalize Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6200,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8759729-9f8f-497a-b3a2-fca58a8e39e6",
+              "name": "channel",
+              "value": "sms",
+              "type": "string"
+            },
+            {
+              "id": "52c234f9-214b-4742-86e2-1d79fa6624ff",
+              "name": "sender_identifier",
+              "value": "={{ $json.query?.phone || $json.body?.phone || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "31470d8e-f598-425a-89d2-4b0988c03fb1",
+              "name": "message",
+              "value": "={{ $json.query?.message || $json.body?.message || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "0db10750-f35d-4be3-b706-752b6ef70a33",
+              "name": "subject",
+              "value": "SMS from Tenant",
+              "type": "string"
+            },
+            {
+              "id": "7777d80d-c602-4487-aa47-080769a7b422",
+              "name": "chat_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "c248d098-1bb4-4036-82de-5d103ae80d02",
+              "name": "sms_category",
+              "value": "={{ $json.query?.category || $json.body?.category || 'general' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3cb69c1e-62a3-42ac-93d7-376deb4a56ac",
+      "name": "Normalize SMS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6200,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ed6eb34a-7765-4a8d-a48e-9e5699de9f89",
+              "leftValue": "={{ $json.callback_query.message.reply_markup.inline_keyboard }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -6576,
+        1392
+      ],
+      "id": "2f716924-8ca2-4b41-a357-0108d8910f51",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.callback_query.message.chat.id }}",
+        "messageId": "={{ $json.callback_query.message.message_id }}",
+        "text": "=\u2699\ufe0f Processing...",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -6352,
+        1296
+      ],
+      "id": "acdee888-ae26-4a31-ae14-9ada8782f2dd",
+      "name": "Processing",
+      "webhookId": "f24fdc6a-0c6a-484c-9f38-2b21466ed685",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message?.chat?.id ||  $('Telegram Trigger').first().json.callback_query.message.chat.id}}",
+        "text": "=\u2699\ufe0f Processing...",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -6352,
+        1488
+      ],
+      "id": "bc6ee4e6-ecbb-43d6-b3ba-505e2bc7c556",
+      "name": "Processing...1",
+      "webhookId": "ea91ff07-e6d9-48e9-8614-91b9ef722328",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3d88fcbc-97b6-4b5f-8794-a14ad2135a80",
+              "name": "chat_id",
+              "value": "={{ $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id }}",
+              "type": "number"
+            },
+            {
+              "id": "23a15c51-fce0-4a8c-bf5f-d1ca3587cc39",
+              "name": "message_id",
+              "value": "={{ $('Telegram Trigger').item.json.message?.message_id || $('Telegram Trigger').item.json.callback_query?.message?.message_id }}",
+              "type": "number"
+            },
+            {
+              "id": "94fc21bf-6625-4716-b635-47c6eb1ba541",
+              "name": "data",
+              "value": "={{ $('Telegram Trigger').item.json.callback_query?.data || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "57b18079-49e4-4708-8ab4-446f5703c4bd",
+              "name": "message_text",
+              "value": "={{ $('Telegram Trigger').item.json.callback_query?.message?.text || $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "1c1eb807-f545-45df-8d1f-97914b070872",
+              "name": "caption",
+              "value": "={{ $('Telegram Trigger').item.json.message.caption || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6128,
+        1392
+      ],
+      "id": "ea182a02-aefd-4d02-8206-c1c5385b8ac6",
+      "name": "Set Telegram Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "22e9c5a0-9d1a-4d20-b703-4f74d216e978",
+              "name": "channel",
+              "value": "telegram",
+              "type": "string"
+            },
+            {
+              "id": "db913a7b-9848-432f-8061-f3970d351b4b",
+              "name": "sender_identifier",
+              "value": "={{ $('Set Telegram Data').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5bec4653-a29f-441b-b3ac-e2beb57ed0a2",
+              "name": "message",
+              "value": "={{ $('Set Telegram Data').item.json.message_text }}",
+              "type": "string"
+            },
+            {
+              "id": "f049ed1c-9311-40d3-820e-1235a694cd41",
+              "name": "subject",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "c4987b70-e04f-44b0-955e-4beaa0d10f71",
+              "name": "chat_id",
+              "value": "={{ $('Set Telegram Data').item.json.chat_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "899d885f-1998-4650-94a6-b78ad49e0814",
+      "name": "Normalize Telegram",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -5600,
+        1296
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "47a68935-6178-4ba9-9e89-ac35198f58c2",
+      "name": "Merge Point",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -5200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.*, t.name AS \"Tenant Name\", t.phone AS \"Phone\", t.unit_number AS \"Unit\", t.email AS \"Email\", p.address AS \"Property\", t.emergency_contact AS \"Emergency Contact\", t.notes AS \"Notes\", t.status AS \"Status\", t.telegram_id AS \"Telegram\", t.language_pref FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE CASE WHEN '{{ $json.channel }}' = 'email' THEN t.email = '{{ $json.sender_identifier }}' WHEN '{{ $json.channel }}' = 'sms' THEN t.phone LIKE '%' || '{{ $json.sender_identifier }}' || '%' WHEN '{{ $json.channel }}' = 'telegram' THEN t.telegram_id = '{{ $json.sender_identifier }}' END",
+        "options": {}
+      },
+      "id": "9d3b9200-2665-49d3-872a-e317c339b843",
+      "name": "Lookup Tenant",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4800,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "327a0f3c-82ea-4c74-8ee0-326b8b0cf16d",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8f2123db-a06c-4f9d-8cc0-ba8c125214b4",
+      "name": "Is Tenant?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4400,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "9c4ab921-7764-4327-b8bf-8704040175a1",
+      "name": "Unknown Sender",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -4400,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "579fd80c-d530-4e95-bc1f-428c67c610ab",
+              "name": "tenant_name",
+              "value": "={{ $('Lookup Tenant').item.json['Tenant Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "a12030e0-9439-4900-97f0-d461c3caac75",
+              "name": "phone",
+              "value": "={{ $('Lookup Tenant').item.json.Phone }}",
+              "type": "string"
+            },
+            {
+              "id": "c06b7429-c77f-4dae-ac94-0c8ef216941e",
+              "name": "unit",
+              "value": "={{ $('Lookup Tenant').item.json.Unit }}",
+              "type": "string"
+            },
+            {
+              "id": "705af5db-76eb-471c-b3a7-2412ca877a9b",
+              "name": "property",
+              "value": "={{ $('Lookup Tenant').item.json.Property }}",
+              "type": "string"
+            },
+            {
+              "id": "568d8203-c87b-4852-8012-b0ffc713f37c",
+              "name": "email",
+              "value": "={{ $('Lookup Tenant').item.json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "a835fe19-f916-4946-84df-542f4d0f2e11",
+              "name": "telegram_id",
+              "value": "={{ $('Lookup Tenant').item.json.Telegram }}",
+              "type": "string"
+            },
+            {
+              "id": "82c53f9a-695f-4d94-8ee0-cac74d46301b",
+              "name": "language_pref",
+              "value": "={{ $('Lookup Tenant').item.json.language_pref || 'fr' }}",
+              "type": "string"
+            },
+            {
+              "id": "6a586c46-672b-4c1d-925d-7bd0946c3bcd",
+              "name": "channel",
+              "value": "={{ $('Merge Point').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "33aa7f10-7c3a-4a43-b0cc-ae679833fe15",
+              "name": "message",
+              "value": "={{ $('Merge Point').item.json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "ab0b0768-0de2-4505-b756-07efc36073b9",
+              "name": "subject",
+              "value": "={{ $('Merge Point').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "f7938964-5441-4d8d-a459-60fde4354f20",
+              "name": "chat_id",
+              "value": "={{ $('Merge Point').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0dbcd38e-2a94-4e1c-8f23-8dc713cfbb25",
+              "name": "sender_identifier",
+              "value": "={{ $('Merge Point').item.json.sender_identifier }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9b1275fd-db5c-4eb1-b39d-36164b457cd6",
+      "name": "Prepare Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, ticket_id, tenant_name, COALESCE(phone, tenant_phone) AS phone, category, summary, keywords, status, created_at FROM maintenance_requests WHERE (tenant_phone = '{{ $json.phone }}' OR phone = '{{ $json.phone }}') AND status NOT IN ('closed') ORDER BY created_at DESC LIMIT 5",
+        "options": {}
+      },
+      "id": "ab41f5e4-5423-4faf-a772-f05e377485ce",
+      "name": "Get Open Tickets",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3600,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7490c556-4b28-409c-a4ea-537cf71c63ff",
+              "leftValue": "={{ !$json.isEmpty() }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f950296b-8c21-427f-88e9-4cc44c4015b5",
+      "name": "Has Open Tickets?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tenant message: {{ $('Prepare Data').item.json.message }}\n\nOpen ticket:\n- Ticket ID: {{ $json.ticket_id || 'NONE' }}\n- Category: {{ $json.category || 'NONE' }}\n- Summary: {{ $json.summary || 'NONE' }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a ticket matching assistant. Compare the tenant's message to the open ticket below and determine if they are related.\n\nRules:\n- If ANY ticket field is \"NONE\", return related: false\n- Return related: true if the message is about the same TOPIC as the open ticket\n- Return related: false ONLY if the message is about a completely unrelated topic\n- When in doubt, return true if the topic overlaps\n\nRespond with ONLY a raw JSON object. No markdown, no code blocks."
+            }
+          ]
+        }
+      },
+      "id": "7d814313-1851-458f-9fcc-e3017d26753c",
+      "name": "Classify Relatability",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -2800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "0d74d820-f4d3-4b10-8b0c-c0dce6be8ef5",
+      "name": "Haiku - Relatability",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -2800,
+        420
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"related\": true,\n  \"ticket_id\": \"TK-0225143022\",\n  \"reasoning\": \"Both about plumbing issue\"\n}"
+      },
+      "id": "95714397-884d-4d47-afb5-9594e957213f",
+      "name": "Relatability Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -2670,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c91a5d05-bdc4-4eea-b598-918a9ff79c4c",
+              "leftValue": "={{ $json.output?.related === false || $('Has Open Tickets?').item.json.isEmpty() }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "28568298-a69d-4f0f-b734-218da006eeeb",
+      "name": "Is New Ticket?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2400,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2713c8f9-6ec4-4b38-9a47-0d5262511496",
+              "name": "response_text",
+              "value": "={{ $json.language_pref === 'fr' ?\n'Bonjour ' + $json.tenant_name + ',\\n\\nNous avons bien re\u00e7u votre message. Celui-ci est suivi sous votre billet existant ' + $('Classify Relatability').item.json.output.ticket_id + '.\\n\\nNotre \u00e9quipe s\\'en occupe. Aucune action suppl\u00e9mentaire n\\'est requise de votre part.\\n\\n\u2014 Julia Inc Gestion Immobili\u00e8re'\n:\n'Hi ' + $json.tenant_name + ',\\n\\nWe received your message. This is being tracked under your existing ticket ' + $('Classify Relatability').item.json.output.ticket_id + '.\\n\\nOur team is on it. No further action is needed from your end.\\n\\n\u2014 Julia Inc Property Management'\n}}",
+              "type": "string"
+            },
+            {
+              "id": "6c54e81c-d344-4759-80bb-a5f07765987a",
+              "name": "tenant_name",
+              "value": "={{ $('Prepare Data').item.json.tenant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "848f242c-ee24-4764-aa64-ee715be1aab7",
+              "name": "language_pref",
+              "value": "={{ $('Prepare Data').item.json.language_pref }}",
+              "type": "string"
+            },
+            {
+              "id": "75041424-19a9-4026-a5c6-24723b56a89b",
+              "name": "channel",
+              "value": "={{ $('Prepare Data').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "c96a03fa-5aed-450b-a2ff-b43a3c84e8d8",
+              "name": "chat_id",
+              "value": "={{ $('Prepare Data').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2b2a2873-c6e6-4144-8182-37ff2c9af092",
+              "name": "email",
+              "value": "={{ $('Prepare Data').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "2c45f17d-dd98-4e28-bc9f-ea2bcff94be0",
+              "name": "phone",
+              "value": "={{ $('Prepare Data').item.json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "a8ff78a6-c584-4b4a-864b-0f100125d565",
+              "name": "matched_ticket_id",
+              "value": "={{ $('Classify Relatability').item.json.output.ticket_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d6cf1175-e1b4-49ec-81be-b4ee9e035bd6",
+      "name": "Ticket Exists Ack",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2000,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Message: {{ $('Prepare Data').item.json.message }}\nSubject: {{ $('Prepare Data').item.json.subject }}\nChannel: {{ $('Prepare Data').item.json.channel }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a property management assistant. Analyze the following tenant message and classify it.\n\nRespond ONLY with a valid JSON object (no markdown, no code blocks) with these fields:\n- \"urgency\": one of \"urgent\", \"not_urgent\", \"request\", \"question\", \"conversation\", \"not_our_responsibility\"\n- \"category\": one of \"plumbing\", \"electrical\", \"hvac\", \"appliance\", \"pest_control\", \"locksmith\", \"general_maintenance\", \"landscaping\", \"cleaning\", \"parking\", \"moving\", \"noise\", \"rent\", \"lease\", \"documents\", \"status_check\", \"greeting\", \"personal\", \"other\"\n- \"summary\": a brief 1-2 sentence summary of what the tenant needs\n- \"reasoning\": why you classified it this way\n- \"keyword\": a 2-6 word label for the issue\n\nIMPORTANT: Only classify as urgent or not_urgent if the issue is the LANDLORD'S responsibility. If it's the tenant's personal problem, classify as \"not_our_responsibility\".\n\nURGENT (landlord responsibility, requires immediate action):\n- Water leak, flooding, burst pipe\n- No heat in winter / no AC in extreme heat\n- Gas smell or carbon monoxide\n- Electrical hazard (sparking, burning smell)\n- Lock-out or security breach\n- Sewage backup, Fire damage\n- Broken window/door (security risk)\n- No hot water\n- Elevator stuck (with person inside)\n\nNOT_URGENT (landlord responsibility, not time-sensitive):\n- Routine repairs (loose cabinet, squeaky door, chipped paint)\n- Landlord-provided appliance not working\n- Minor plumbing (slow drain, running toilet)\n- Cosmetic issues, Pest sighting (non-infestation)\n\nREQUEST: Document requests, parking, permissions, moving coordination, payment arrangements\nQUESTION: Rent due dates, building rules, lease terms, facility locations\nNOT_OUR_RESPONSIBILITY: Pet accidents, personal belongings, roommate conflicts, tenant's own appliances, internet/cable, tenant negligence\nCONVERSATION: Greetings, thank you, ok, small talk\n\nNEVER make up URLs or resources. If unsure, say \"I'll check with our team and get back to you.\"\n"
+            }
+          ]
+        }
+      },
+      "id": "174b71ca-2b0a-4462-9949-88c4edd339e1",
+      "name": "Classify Message",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -2000,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "cfeb9396-a225-4617-a1e3-1eada71cecfc",
+      "name": "Haiku - Classify",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -2000,
+        720
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"urgency\": \"urgent\",\n  \"category\": \"plumbing\",\n  \"summary\": \"Tenant reports a burst pipe.\",\n  \"keyword\": \"burst kitchen pipe\",\n  \"reasoning\": \"Water leak is an emergency.\"\n}"
+      },
+      "id": "9bfbf322-a60a-4026-a188-406bb124e37b",
+      "name": "Classification Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -1870,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "06168e14-548c-4175-97cc-87168e6a1e64",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "urgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "urgent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bf47aff0-0c6b-4938-9896-08653bde003c",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "not_urgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "not_urgent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c9a72f27-38ef-461b-8390-6ae39c5477a2",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "request",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "request"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f2d2d3bb-7da5-444e-8597-29bde5698e89",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "conversation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2c85a1aa-ea85-493d-b004-39548a3bc320",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "not_our_responsibility",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "no_responsibility"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9cfe6edd-914f-4c8b-8fdd-ca7509a2c943",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "question",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "question"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": 3
+        }
+      },
+      "id": "14d987e6-2fdb-4462-b6db-1d59c3671507",
+      "name": "Route by Classification",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1500,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd16e04b-e1e6-44f5-8479-dc9c2c0c2567",
+              "name": "response_text",
+              "value": "={{ $json.language_pref === 'fr' ?\n'Bonjour ' + $json.tenant_name + ',\\n\\nMerci d\\'avoir signal\u00e9 ce probl\u00e8me. Il a \u00e9t\u00e9 marqu\u00e9 comme URGENT.\\n\\nNous avons d\u00e9j\u00e0 contact\u00e9 des sp\u00e9cialistes en ' + $json.category + ' et vous devriez recevoir des nouvelles sous peu.\\n\\nSi vous avez des photos du probl\u00e8me, n\\'h\u00e9sitez pas \u00e0 nous les envoyer.\\n\\n\u2014 Julia, Julia Inc Gestion Immobili\u00e8re'\n:\n'Hi ' + $json.tenant_name + ',\\n\\nThank you for reporting this issue. It has been flagged as URGENT.\\n\\nWe have already contacted ' + $json.category + ' specialists and you should expect to hear back shortly.\\n\\nIf you have photos of the issue, feel free to send them to us.\\n\\n\u2014 Julia, Julia Inc Property Management'\n}}",
+              "type": "string"
+            },
+            {
+              "id": "2f08b841-2079-4ca4-8ffc-3556b6832a49",
+              "name": "category",
+              "value": "={{ $json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "2df21305-e971-4227-8670-3106493823e5",
+              "name": "summary",
+              "value": "={{ $json.output.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "9863cdec-a6b0-46e3-9310-0dbd336ed93a",
+              "name": "keyword",
+              "value": "={{ $json.output.keyword }}",
+              "type": "string"
+            },
+            {
+              "id": "675c8adc-4a41-4f7c-89cb-f2c9abefde61",
+              "name": "tenant_name",
+              "value": "={{ $('Prepare Data').item.json.tenant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "168ab45e-c2ad-4172-9f1b-53c7f24e58cf",
+              "name": "language_pref",
+              "value": "={{ $('Prepare Data').item.json.language_pref }}",
+              "type": "string"
+            },
+            {
+              "id": "8a2e6210-8406-40fc-9605-568a08085ec7",
+              "name": "channel",
+              "value": "={{ $('Prepare Data').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "0556dceb-b4b9-48ba-9cfd-2107031b30f8",
+              "name": "chat_id",
+              "value": "={{ $('Prepare Data').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "acfc1df9-fb73-4383-9703-5564957dac7c",
+              "name": "email",
+              "value": "={{ $('Prepare Data').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "999d3393-fc97-498a-bee5-0285c1a88a8e",
+              "name": "phone",
+              "value": "={{ $('Prepare Data').item.json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "b88809f0-a26f-4e06-940f-361d08cc614f",
+              "name": "unit",
+              "value": "={{ $('Prepare Data').item.json.unit }}",
+              "type": "string"
+            },
+            {
+              "id": "24530f78-5308-42a7-88eb-d4be643cd9c0",
+              "name": "property",
+              "value": "={{ $('Prepare Data').item.json.property }}",
+              "type": "string"
+            },
+            {
+              "id": "7566ac24-c4ca-47dd-a73a-8b3271e9a5a5",
+              "name": "telegram_id",
+              "value": "={{ $('Prepare Data').item.json.telegram_id }}",
+              "type": "string"
+            },
+            {
+              "id": "56846f50-3163-442c-a4ef-25aaac9dfb82",
+              "name": "message",
+              "value": "={{ $('Prepare Data').item.json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a009a5c2-2ac5-4f09-befd-870c2e37beee",
+      "name": "Urgent Ack Template",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89f4a62c-dbf4-42f1-a52b-906efa13dbec",
+              "name": "response_text",
+              "value": "={{ $json.language_pref === 'fr' ?\n'Bonjour ' + $json.tenant_name + ',\\n\\nMerci de nous avoir contact\u00e9s. Nous avons bien re\u00e7u votre message concernant : ' + $json.summary + '.\\n\\nNotre \u00e9quipe examinera votre demande et vous r\u00e9pondra dans un d\u00e9lai de 1 \u00e0 3 jours ouvrables.\\n\\nPour les urgences, appelez le : 438-900-9998\\n\\n\u2014 Julia Inc Gestion Immobili\u00e8re'\n:\n'Hi ' + $json.tenant_name + ',\\n\\nThank you for reaching out. We have received your message regarding: ' + $json.summary + '.\\n\\nOur team will review and get back to you within 1-3 business days.\\n\\nFor emergencies, please call: 438-900-9998\\n\\n\u2014 Julia Inc Property Management'\n}}",
+              "type": "string"
+            },
+            {
+              "id": "3d687e01-8e57-4691-9957-7a23a2f6743e",
+              "name": "summary",
+              "value": "={{ $json.output.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "e45f45f7-c51a-4d87-bd5c-01933cf07abf",
+              "name": "category",
+              "value": "={{ $json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "090f77aa-48b5-4cb1-8786-60613634b3ae",
+              "name": "keyword",
+              "value": "={{ $json.output.keyword }}",
+              "type": "string"
+            },
+            {
+              "id": "24c6de42-726f-484d-a297-9c7062a42264",
+              "name": "tenant_name",
+              "value": "={{ $('Prepare Data').item.json.tenant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "b4c62b04-d668-4ae2-9e42-f64a251af7c6",
+              "name": "language_pref",
+              "value": "={{ $('Prepare Data').item.json.language_pref }}",
+              "type": "string"
+            },
+            {
+              "id": "855f0f6b-4247-4b4c-bd45-bec3915381c3",
+              "name": "channel",
+              "value": "={{ $('Prepare Data').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "060064d1-4801-4855-8190-69ce4d7322bc",
+              "name": "chat_id",
+              "value": "={{ $('Prepare Data').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a43da1a2-699b-41d3-a0a8-a5a819d20eac",
+              "name": "email",
+              "value": "={{ $('Prepare Data').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "5547c19d-4a2e-4286-9841-d28a42d53299",
+              "name": "phone",
+              "value": "={{ $('Prepare Data').item.json.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "443f2740-9abc-4895-8e7c-c8f671b34570",
+      "name": "Non-Urgent Ack Template",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1000,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "93909745-a746-4cae-a1f9-9786710b6738",
+              "name": "response_text",
+              "value": "={{ (() => {\n  const lang = $json.language_pref;\n  const cat = $json.category;\n  if (cat === 'greeting') return lang === 'fr' ? 'Bonjour! Comment puis-je vous aider aujourd\\'hui? \u2014 Julia Inc' : 'Hi! How can I help you today? \u2014 Julia Inc';\n  if (cat === 'status_check') return lang === 'fr' ? 'Merci! Laissez-nous savoir si vous avez besoin d\\'autre chose. \u2014 Julia Inc' : 'Thanks! Let us know if you need anything else. \u2014 Julia Inc';\n  return lang === 'fr' ? 'Merci pour votre message! Comment pouvons-nous vous aider? \u2014 Julia Inc' : 'Thanks for your message! How can we help? \u2014 Julia Inc';\n})() }}",
+              "type": "string"
+            },
+            {
+              "id": "7191826a-c80d-4e7e-af18-0acef31420bb",
+              "name": "category",
+              "value": "={{ $json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "708b90af-b476-462f-96aa-15ab3d184382",
+              "name": "tenant_name",
+              "value": "={{ $('Prepare Data').item.json.tenant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f444d36b-0018-469c-90f1-ff10aee720a1",
+              "name": "language_pref",
+              "value": "={{ $('Prepare Data').item.json.language_pref }}",
+              "type": "string"
+            },
+            {
+              "id": "87a2d588-bba9-4eda-b619-73b4330df9d9",
+              "name": "channel",
+              "value": "={{ $('Prepare Data').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "7f6da87b-2660-4591-9d04-e95e47821f30",
+              "name": "chat_id",
+              "value": "={{ $('Prepare Data').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0d254386-cee3-49c7-8278-71318ce12780",
+              "name": "email",
+              "value": "={{ $('Prepare Data').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "c39df4f8-419f-4157-814d-9855fdc15f16",
+              "name": "phone",
+              "value": "={{ $('Prepare Data').item.json.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d8014054-d45a-4053-963a-fa4877954b21",
+      "name": "Conversational Template",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1000,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Urgency: {{ $json.output.urgency }}\nCategory: {{ $json.output.category }}\nSummary: {{ $json.output.summary }}\n\nTenant Name: {{ $('Prepare Data').item.json.tenant_name }}\nTenant Message: {{ $('Prepare Data').item.json.message }}"
+            }
+          ]
+        },
+        "options": {
+          "system": "You are a professional and friendly property management assistant.\n\nWrite a warm reply that:\n1. Thanks them for reaching out\n2. Acknowledges what they reported\n3. Says our team will review and get back within 1-3 business days\nKeep it 2-3 sentences. Sign off as Julia Inc Property Management.\nRespond in the tenant's language ({{ $json.language_pref === 'fr' ? 'French' : 'English' }}).\n\nQuebec Landlord Obligations (Civil Code):\nLANDLORD MUST: Maintain dwelling in habitable condition (art. 1854, 1910, 1911), ensure peaceful enjoyment (art. 1851), make necessary repairs (art. 1864).\nTENANT RESPONSIBLE FOR: Minor maintenance, personal belongings, damage they cause, their own appliances."
+        }
+      },
+      "id": "977f07aa-26a8-4330-b24f-7fdf5b2fc2da",
+      "name": "AI Response",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        1100
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Category: {{ $json.output.category }}\nSummary: {{ $json.output.summary }}\n\nTenant Name: {{ $('Prepare Data').item.json.tenant_name }}\nTenant Message: {{ $('Prepare Data').item.json.message }}"
+            }
+          ]
+        },
+        "options": {
+          "system": "You are a friendly property management assistant for Julia Inc.\nPolitely explain that this issue falls under the tenant's responsibility, not the landlord's.\nBe empathetic but clear. Keep it 2-3 sentences. Sign off as Julia Inc Property Management.\nRespond in the tenant's language ({{ $json.language_pref === 'fr' ? 'French' : 'English' }}).\n\nQuebec Civil Code reference: Tenants are responsible for minor maintenance, personal belongings, damage they cause, their own appliances and furniture, pet-related cleanup."
+        }
+      },
+      "id": "983fe802-c12a-406b-8f5b-c4b1c149b7ec",
+      "name": "No Responsibility Response",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        1400
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9bb35933-8a60-4598-b2a7-fd361e28b057",
+              "name": "response_text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "849e2b3b-0294-4812-918d-7c6005935a42",
+              "name": "channel",
+              "value": "={{ $('Prepare Data').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "e24687b4-3e9e-4d62-89c2-47f8efc113df",
+              "name": "chat_id",
+              "value": "={{ $('Prepare Data').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "dc0afb7d-a744-44e4-98e1-04fc19032702",
+              "name": "email",
+              "value": "={{ $('Prepare Data').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "27c7c7af-d501-465c-a265-a9b4310b362b",
+              "name": "phone",
+              "value": "={{ $('Prepare Data').item.json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "be21a2d1-775b-4e90-90c7-deba379f9f4e",
+              "name": "tenant_name",
+              "value": "={{ $('Prepare Data').item.json.tenant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "fd671fd1-c98b-4569-bf37-d5eec6d36c2d",
+              "name": "summary",
+              "value": "={{ $('Classify Message').item.json.output.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "091fb6c2-6057-4217-8b3f-f85443fc2953",
+              "name": "category",
+              "value": "={{ $('Classify Message').item.json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "c08a40b7-50c9-4e15-a2b5-f804e1298b19",
+              "name": "keyword",
+              "value": "={{ $('Classify Message').item.json.output.keyword }}",
+              "type": "string"
+            },
+            {
+              "id": "4250ae01-766a-4cf9-98f8-4d7c687c21a3",
+              "name": "language_pref",
+              "value": "={{ $('Prepare Data').item.json.language_pref }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "78cbddc5-9c8d-488c-942c-2976ec3f4b9a",
+      "name": "Format AI Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -500,
+        1250
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b2ce5f1f-1d26-4453-abac-7607f0426f4c",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "457a730c-7333-4018-9f0a-5c03aa38f4c5",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "sms",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sms"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cef84316-0e6b-47b5-aeb8-bdf3d27f178c",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "08cc5e44-9e48-47bb-9737-9b32710e593c",
+      "name": "Channel Dispatcher",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Re: {{ $('Prepare Data').item.json.subject }}",
+        "message": "={{ $json.response_text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a2dc27b2-7ffa-41ac-aa68-a9c188825f7c",
+      "name": "Send Email Response",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        400
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ib5ffoxInNyz8gYt",
+          "name": "dionbuildsai gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "=+14389009998",
+        "to": "={{ $json.phone }}",
+        "message": "={{ $json.response_text.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '') }}",
+        "options": {}
+      },
+      "id": "cf95f04e-ec88-4749-9b9a-de071e317730",
+      "name": "Send SMS Response",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        400,
+        600
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "ijmhKNa9AFRv7Rjr",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.response_text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "aa7a31b2-b01c-41f5-a3da-ed6776ea1712",
+      "name": "Send Telegram Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        800
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT vendor_name AS \"Vendor Name\", email AS \"Email\", phone AS \"Phone\" FROM vendors WHERE category = '{{ $json.category }}'",
+        "options": {}
+      },
+      "id": "77d3f172-96bc-40d2-a5b1-19d56f3e54e7",
+      "name": "Lookup Vendor",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -500,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Issue category: {{ $('Urgent Ack Template').item.json.category }}\nIssue summary: {{ $('Urgent Ack Template').item.json.summary }}\nVendor name: {{ $json['Vendor Name'] }}\nProperty address: {{ $('Urgent Ack Template').item.json.property }}\nUnit: {{ $('Urgent Ack Template').item.json.unit }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a property management coordinator. Write a brief, professional message to a vendor about an urgent tenant issue.\n\nWrite a concise message that:\n1. Short introduction identifying this as an urgent request from Julia Inc\n2. Describes the issue clearly\n3. Asks them to respond ASAP with availability\n4. Includes the property address on a new line\n5. Provides callback number: 514-831-9058 on a new line\n6. Signs off as Julia\n\nKeep it under 5 sentences. Be direct and professional. Format as HTML."
+            }
+          ]
+        }
+      },
+      "id": "73e588d4-200c-4b01-b98f-e1b08d66b0a5",
+      "name": "AI Vendor Message",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "id": "f1d2716a-211a-4623-a8c2-9e94b969380e",
+      "name": "Haiku - Vendor",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -100,
+        220
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"subject\": \"Urgent Plumbing Request - Julia Inc\",\n  \"body\": \"<p>Hi vendor...</p>\"\n}"
+      },
+      "id": "e4474298-f6d4-461c-8af2-9ca20d77a1dc",
+      "name": "Vendor Message Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        30,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Lookup Vendor').item.json['Email'] }}",
+        "subject": "={{ $json.output.subject }}",
+        "message": "={{ $json.output.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "35884463-4959-4d78-b1ed-8b8e9936a425",
+      "name": "Email Vendor",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        300,
+        -100
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ib5ffoxInNyz8gYt",
+          "name": "dionbuildsai gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "=+14389009998",
+        "to": "={{ $('Lookup Vendor').item.json['Phone'] }}",
+        "message": "={{ $json.output.body.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '') }}",
+        "options": {}
+      },
+      "id": "f6b7c579-0380-481f-a9d1-e64263e9eaef",
+      "name": "SMS Vendor",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        300,
+        100
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "ijmhKNa9AFRv7Rjr",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e3c2ad01-c930-421b-90d8-9f619e176206",
+              "name": "ticket_id",
+              "value": "={{ 'TK-' + $now.setZone('America/New_York').format('MMddHHmmss') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "abe77a72-e13e-42c0-916c-0b817834d87c",
+      "name": "Generate Ticket ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO maintenance_requests (ticket_id, tenant_name, phone, property, unit, channel, type, category, summary, status, keywords, tenant_message, telegram_id, created_at, updated_at) VALUES ('{{ $json.ticket_id }}', '{{ $('Prepare Data').item.json.tenant_name }}', '{{ $('Prepare Data').item.json.phone }}', '{{ $('Prepare Data').item.json.property }}', '{{ $('Prepare Data').item.json.unit }}', '{{ $('Prepare Data').item.json.channel }}', '{{ $('Classify Message').item.json.output.urgency }}', '{{ $('Classify Message').item.json.output.category }}', '{{ $('Classify Message').item.json.output.summary }}', '{{ $('Classify Message').item.json.output.urgency === \"urgent\" ? \"wait_for_approval\" : \"open\" }}', '{{ $('Classify Message').item.json.output.keyword }}', '{{ $('Prepare Data').item.json.message }}', '{{ $('Prepare Data').item.json.telegram_id }}', NOW(), NOW()) RETURNING *",
+        "options": {}
+      },
+      "id": "4b154e8e-d6f6-4c37-a087-9c494528dc26",
+      "name": "Create Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1654455059,
+          "mode": "list",
+          "cachedResultName": "Open tickets"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ticket_id": "={{ $json.ticket_id }}",
+            "created_at": "={{ $now.setZone('America/New_York').format('yyyy-MM-dd HH:mm') }}",
+            "tenant_name": "={{ $json.tenant_name }}",
+            "phone": "={{ $json.phone }}",
+            "unit": "={{ $json.unit }}",
+            "property": "={{ $json.property }}",
+            "channel": "={{ $json.channel }}",
+            "type": "={{ $json.type }}",
+            "category": "={{ $json.category }}",
+            "summary": "={{ $json.summary }}",
+            "status": "={{ $json.status }}",
+            "keywords": "={{ $json.keywords }}",
+            "tenant_message": "={{ $json.tenant_message }}",
+            "telegram": "={{ $json.telegram_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "44703ad7-e25e-4ebb-aecc-e34068f026ef",
+      "name": "Mirror Ticket to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1100,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WNOgZsgLVbrx2XuZ",
+          "name": "dionbuildsai Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO messages (chat_id, message_id, telegram_id, sender, message_text, channel, created_at) VALUES ('{{ $('Prepare Data').item.json.chat_id || $('Prepare Data').item.json.sender_identifier }}', '{{ $('Telegram Trigger').isExecuted ? ($json.message?.message_id || $json.callback_query?.message?.message_id || '') : '' }}', '{{ $('Prepare Data').item.json.telegram_id }}', '{{ $('Prepare Data').item.json.tenant_name }}', '{{ $('Prepare Data').item.json.message }}', '{{ $('Prepare Data').item.json.channel }}', NOW()) RETURNING *",
+        "options": {}
+      },
+      "id": "6cb26bba-bb65-429e-9ef5-33404f102b1e",
+      "name": "Log Message",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        600,
+        900
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE messages SET ticket_id = '{{ $json.ticket_id }}' WHERE chat_id = '{{ $('Prepare Data').item.json.chat_id || $('Prepare Data').item.json.sender_identifier }}' AND ticket_id IS NULL ORDER BY created_at DESC LIMIT 1 RETURNING *",
+        "options": {}
+      },
+      "id": "ec0f652b-12fb-4c10-8a6a-53b9a52a466a",
+      "name": "Update Message Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1000,
+        900
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM messages WHERE chat_id = '{{ $('Prepare Data').item.json.chat_id }}' ORDER BY created_at DESC LIMIT 10",
+        "options": {}
+      },
+      "id": "222068f3-9234-4357-b6cb-b1e332239fda",
+      "name": "Get Message History",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        600,
+        -200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "66f076e7-f595-4197-9c9f-53f6d784f564",
+      "name": "Aggregate Messages",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tenant: {{ $('Prepare Data').item.json.tenant_name }}\nIssue: {{ $('Classify Message').item.json.output.summary }}\n\nMessage history:\n{{ JSON.stringify($json.data, null, 2) }}",
+        "hasOutputParser": false,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an assistant helping a landlord review an urgent tenant issue.\nSummarize the conversation history concisely:\n1. What the issue is\n2. Key details (location, severity)\n3. Any relevant context from message history\nKeep it 3-4 sentences. Be factual and actionable."
+            }
+          ]
+        }
+      },
+      "id": "53803d5c-a90d-48c1-a62e-7f408a2bdfeb",
+      "name": "AI Landlord Briefing",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1000,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "id": "7e68929b-f748-4497-84dc-24d90f7d0011",
+      "name": "Haiku - Briefing",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1000,
+        20
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=6216258938",
+        "text": "=\ud83d\udea8 URGENT TICKET\n\n{{ $('Classify Message').item.json.output.summary }}\n\n\ud83d\udccb Context:\n{{ $json.text }}\n\n\ud83d\udcac Tenant Message:\n{{ $('Prepare Data').item.json.message }}\n\nTenant: {{ $('Prepare Data').item.json.tenant_name }}\nPhone: {{ $('Prepare Data').item.json.phone }}\nAddress: {{ $('Prepare Data').item.json.property }}\nUnit: {{ $('Prepare Data').item.json.unit }}\n\nDispatch {{ $('Classify Message').item.json.output.category }} contractors?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "accept",
+                    "additionalFields": {
+                      "callback_data": "=accept||{{ $('Create Ticket').item.json.ticket_id }}"
+                    }
+                  },
+                  {
+                    "text": "decline",
+                    "additionalFields": {
+                      "callback_data": "=decline||{{ $('Create Ticket').item.json.ticket_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "91d3581b-2154-4912-a42d-fa20a7542f47",
+      "name": "Owner Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        -200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteMessage",
+        "chatId": "={{ $('Prepare Data').item.json.chat_id }}",
+        "messageId": "={{ $('Processing...1').item.json.result?.message_id || $('Processing').item.json.result?.message_id || '' }}",
+        "additionalFields": {}
+      },
+      "id": "d6c9044a-2bb0-4344-b250-07a5c830c389",
+      "name": "Delete Processing Msg",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1400,
+        -200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "871037e1-2cfc-441c-ab1e-086406d5b316",
+              "leftValue": "={{ $json.message_text }}",
+              "rightValue": "=Which ticket is this photo for?",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5904,
+        1392
+      ],
+      "id": "7c776611-5212-47f3-aaa6-ae33fb9ccf1f",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data }}",
+                    "rightValue": "||TK-",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "2296d81e-6940-4ea1-902b-2d49c28974eb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ticket"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f78983d0-e20d-4289-913f-fc6e509a339c",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.photo }}",
+                    "rightValue": "photo",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "photo"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -5680,
+        2224
+      ],
+      "id": "fa7a739d-eb7e-4fe4-b948-05e432da0f2c",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Set Telegram Data').item.json.chat_id }}",
+        "messageId": "={{ $('Set Telegram Data').item.json.message_id }}",
+        "text": "={{ $json.message_text }}\n\n\u2699\ufe0f Processing...",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -5456,
+        2608
+      ],
+      "id": "da424e31-baad-424b-b998-1cee34101861",
+      "name": "Edit a text message2",
+      "webhookId": "92bf26d5-3490-4876-b05c-3ad280b1ebc9",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -5680,
+        736
+      ],
+      "id": "fd23f8d5-45dd-4075-bd0d-fc2b5e4d78fb",
+      "name": "When Tenant Click on button to add Photo"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5f3ac659-6165-40a8-9924-d56dbbf1bb1f",
+              "leftValue": "={{ $('Set Telegram Data').item.json.data }}",
+              "rightValue": "ignore",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5456,
+        736
+      ],
+      "id": "a57abddb-d136-47c0-8d55-21e76bc67c91",
+      "name": "Ignore?"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -5232,
+        640
+      ],
+      "id": "4ba3bf04-7afd-45e9-9531-cb4d39219eb8",
+      "name": "Wait",
+      "webhookId": "fa1e4876-a951-464d-9476-b46b42a7dbfb"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Set Telegram Data').item.json.chat_id }}",
+        "messageId": "={{ $('Set Telegram Data').item.json.message_id }}",
+        "text": "=Photo was not saved",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -5008,
+        640
+      ],
+      "id": "38b05472-fe50-47f8-9411-890c1eabe347",
+      "name": "Ignored",
+      "webhookId": "ea91ff07-e6d9-48e9-8614-91b9ef722328",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, ticket_id, tenant_name, COALESCE(phone, tenant_phone) AS phone, COALESCE(unit, unit_number) AS unit, property, COALESCE(telegram_id, telegram_chat_id) AS telegram, category, summary, status FROM maintenance_requests WHERE ticket_id = '{{ $(\"Set Telegram Data\").item.json.data.split(\"||\")[1] }}'",
+        "options": {}
+      },
+      "id": "3fac89bb-bacc-4eb2-8b1e-9c9e6974ac04",
+      "name": "Lookup Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4800,
+        2400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "57c987e4-a55b-4218-99e2-9e2fb3af688f",
+                    "leftValue": "={{ $('Set Telegram Data').item.json.data }}",
+                    "rightValue": "accept",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "accept"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "45384be6-9a89-4888-9597-07c7ed14052c",
+                    "leftValue": "={{ $('Set Telegram Data').item.json.data }}",
+                    "rightValue": "decline",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "decline"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3c7873da-e624-479a-848e-44db54cd06a1",
+      "name": "Accept or Decline?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -4400,
+        2400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET status = 'vendor_contacted', updated_at = NOW() WHERE ticket_id = '{{ $(\"Set Telegram Data\").item.json.data.split(\"||\")[1] }}' RETURNING *",
+        "options": {}
+      },
+      "id": "1c3b47f6-cb1f-4ffa-842f-c97a025fa200",
+      "name": "Update Ticket: Accepted",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4000,
+        2200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET status = 'manual_review', updated_at = NOW() WHERE ticket_id = '{{ $(\"Set Telegram Data\").item.json.data.split(\"||\")[1] }}' RETURNING *",
+        "options": {}
+      },
+      "id": "cbbe7ec3-4923-45c9-a612-22b6823cc7a0",
+      "name": "Update Ticket: Declined",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4000,
+        2600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT vendor_name AS \"Vendor Name\", email AS \"Email\", phone AS \"Phone\" FROM vendors WHERE category = '{{ $('Lookup Ticket').item.json.category }}'",
+        "options": {}
+      },
+      "id": "cd5b2a85-206f-4f6b-afbb-58b39d76422b",
+      "name": "Lookup Vendor for Approval",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3600,
+        2200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Issue category: {{ $('Lookup Ticket').item.json.category }}\nIssue summary: {{ $('Lookup Ticket').item.json.summary }}\nVendor name: {{ $json['Vendor Name'] }}\nProperty address: {{ $('Lookup Ticket').item.json.property }}\nUnit: {{ $('Lookup Ticket').item.json.unit }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a property management coordinator. Write a brief, professional message to a vendor about an urgent tenant issue.\n\nWrite a concise message that:\n1. Short introduction identifying this as an urgent request from Julia Inc\n2. Describes the issue clearly\n3. Asks them to respond ASAP with availability\n4. Includes the property address on a new line\n5. Provides callback number: 514-831-9058 on a new line\n6. Signs off as Julia\n\nKeep it under 5 sentences. Be direct and professional. Format as HTML."
+            }
+          ]
+        }
+      },
+      "id": "aad6ed3d-b77e-4ed4-ac5a-49a186cac4e3",
+      "name": "AI Vendor Msg (Approval)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -3200,
+        2200
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "id": "caae868d-b915-4732-88e6-587f828e8acf",
+      "name": "Haiku - Vendor Approval",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -3200,
+        2420
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "jOOjmB3sv6fwkbDV",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"subject\": \"Urgent Service Request\",\n  \"body\": \"<p>Hi...</p>\"\n}"
+      },
+      "id": "55df31ae-a932-4793-9d81-531a0c1cba16",
+      "name": "Vendor Approval Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -3070,
+        2420
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Lookup Vendor for Approval').item.json['Email'] }}",
+        "subject": "={{ $json.output.subject }}",
+        "message": "={{ $json.output.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "f9a152cb-71e9-49d0-888a-514f92e4a75c",
+      "name": "Email Vendor (Approval)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2800,
+        2100
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ib5ffoxInNyz8gYt",
+          "name": "dionbuildsai gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "=+14389009998",
+        "to": "={{ $('Lookup Vendor for Approval').item.json['Phone'] }}",
+        "message": "={{ $json.output.body.replace(/<br\\s*\\/?>/gi, '\\n').replace(/<\\/p>/gi, '\\n\\n').replace(/<[^>]*>/g, '') }}",
+        "options": {}
+      },
+      "id": "0daeea6e-8ae1-4fa1-b7df-84efd6262e97",
+      "name": "SMS Vendor (Approval)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -2800,
+        2300
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "ijmhKNa9AFRv7Rjr",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Lookup Ticket').item.json.telegram }}",
+        "text": "=Your urgent issue has been reviewed and we have contacted specialists. You should hear back shortly.\n\n\u2014 Julia Inc",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "c480ca80-8689-4149-8fc8-3f53af40bc10",
+      "name": "Send Approval Ack",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2400,
+        2200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Lookup Ticket').item.json.telegram }}",
+        "text": "=Your issue is being reviewed by management. We will follow up shortly.\n\n\u2014 Julia Inc",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "947349bc-2c8c-4f20-a8b0-39f0bb654f14",
+      "name": "Send Decline Ack",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -3600,
+        2600
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY",
+          "mode": "list",
+          "cachedResultName": "Tenants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1367448199,
+          "mode": "list",
+          "cachedResultName": "pending_media",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY/edit#gid=1367448199"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "chat_id",
+              "lookupValue": "={{ $('Set Telegram Data').item.json.chat_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -5232,
+        832
+      ],
+      "id": "06179ec4-eca9-4b4c-b90c-0c217cbe82a5",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WNOgZsgLVbrx2XuZ",
+          "name": "dionbuildsai Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "timestamp",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        -5008,
+        832
+      ],
+      "id": "f412fb93-55ad-472b-b53f-c044befff201",
+      "name": "Sort"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -4784,
+        832
+      ],
+      "id": "22641eef-d4d3-4beb-a7fe-12030f990f31",
+      "name": "Limit2"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/getFile?file_id={{ $json.file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -4496,
+        832
+      ],
+      "id": "18e99f31-98ba-491a-b555-4f1e5653db3b",
+      "name": "Get Picture"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/{{ $json.result.file_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -4208,
+        832
+      ],
+      "id": "5b3c0552-b9c8-4d95-9e14-f5b18a052060",
+      "name": "Download Picture"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "677c3d6f-df72-44a2-af92-9ab12a691be5",
+              "name": "data",
+              "value": "data",
+              "type": "binary"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3984,
+        832
+      ],
+      "id": "5e9b7faf-07e0-4503-8b9a-f67e70e0a335",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY",
+          "mode": "list",
+          "cachedResultName": "Tenants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1654455059,
+          "mode": "list",
+          "cachedResultName": "Open tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY/edit#gid=1654455059"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ticket_id",
+              "lookupValue": "={{ $('Telegram Trigger').item.json.callback_query.data.split('||')[1] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3408,
+        832
+      ],
+      "id": "bc8adf67-fe15-45f5-ba67-fb0b4f2eef3e",
+      "name": "Get Ticket Info1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WNOgZsgLVbrx2XuZ",
+          "name": "dionbuildsai Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $('Get Tenant Info2').item.json.Property }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m",
+            "mode": "id"
+          },
+          "includeTrashed": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3184,
+        832
+      ],
+      "id": "5389f53c-ee55-4cd4-b6d1-e5be2ab7f73f",
+      "name": "Does Property Folder Exist?",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "p7I1i2fnrnCjI4kX",
+          "name": "dionbuildsai comparable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d9094d4a-3412-4fd1-aab2-3c8ad6dc4b0a",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2896,
+        832
+      ],
+      "id": "039c1d21-9b8e-4fba-8e61-09c20ad087c5",
+      "name": "Does it Exist?"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Get Tenant Info2').item.json.Property }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1b55sOtly38N2sJPr6RqHv5GAqC8aXH3m",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2544,
+        976
+      ],
+      "id": "ecac30eb-0c79-4f57-b23a-9ceee06718d7",
+      "name": "Create Property Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "p7I1i2fnrnCjI4kX",
+          "name": "dionbuildsai comparable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $('Get Tenant Info2').item.json['Tenant Name'] }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2256,
+        832
+      ],
+      "id": "ffb97ed4-6cc5-4bee-ba77-fb1789c9be42",
+      "name": "Does Tenant Folder Exist?",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "p7I1i2fnrnCjI4kX",
+          "name": "dionbuildsai comparable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a3113859-b8ba-4445-b5d2-5569c9661299",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1968,
+        832
+      ],
+      "id": "3437f069-3669-44ac-89ac-b00ecae4ec46",
+      "name": "Does it Exist?1"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Get Tenant Info2').item.json['Tenant Name'] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create Property Folder').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1680,
+        1024
+      ],
+      "id": "74a8d97d-a2e5-49f8-9b0c-39d35372c450",
+      "name": "Create Tenant Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "p7I1i2fnrnCjI4kX",
+          "name": "dionbuildsai comparable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ $('Edit Fields').item.binary['data'] }}",
+        "name": "={{ $('Get Ticket Info1').item.json.keywords }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1456,
+        832
+      ],
+      "id": "867384fa-9088-4751-b8b3-48a93cd044f5",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "p7I1i2fnrnCjI4kX",
+          "name": "dionbuildsai comparable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Set Telegram Data').first().json.chat_id }}",
+        "messageId": "={{ $('Processing').item.json.result.message_id }}",
+        "text": "=\ud83d\udcf8 Picture logged to:\n{{ $('Telegram Trigger').first().json.callback_query.data.split(\"||\")[1] }} - {{ $('Telegram Trigger').first().json.callback_query.message.reply_markup.inline_keyboard.flat().find(btn => btn.callback_data === $('Telegram Trigger').first().json.callback_query.data).text.split(\" - \")[1] }}.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        832
+      ],
+      "id": "333a192c-fab4-4940-98bc-f9ce529c1ccb",
+      "name": "Edit a text message1",
+      "webhookId": "ea91ff07-e6d9-48e9-8614-91b9ef722328",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -3984,
+        2000
+      ],
+      "id": "9b09617a-2493-4acb-9b87-d853f6986229",
+      "name": "No Operation, do nothing",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst chatId = $('Telegram Trigger').first().json.message?.chat?.id \n  || $('Telegram Trigger').first().json.callback_query?.message?.chat?.id;\nconst tickets = items.filter(item => item.json.ticket_id);\nconst hasTickets = tickets.length > 0;\n\nif (!hasTickets) {\n  return [{\n    json: {\n      chat_id: chatId,\n      text: \"\ud83d\udccb No open tickets found. Please describe your issue first and we'll create a ticket for you.\",\n      reply_markup: JSON.stringify({ inline_keyboard: [] }),\n      hasTickets: false\n    }\n  }];\n}\n\nconst buttons = tickets.map(item => ([{\n  text: `${item.json.ticket_id} - ${item.json.keywords}`,\n  callback_data: `m||${item.json.ticket_id}`\n}]));\n\nbuttons.push([{\n  text: \"Don't Upload\",\n  callback_data: \"m||ignore\"\n}]);\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: \"Which ticket is this photo for?\",\n    reply_markup: JSON.stringify({ inline_keyboard: buttons }),\n    hasTickets: true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3184,
+        2160
+      ],
+      "id": "5af276be-5a09-4fe1-b3c5-6c40c0f52a8d",
+      "name": "Get Ticket Info"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8460031715:AAE1IQYICVYo3BfDcOjY4IKYVu0iI4V9lZ8/editMessageText",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{$('Telegram Trigger').first().json.message?.chat?.id \n  || $('Telegram Trigger').first().json.callback_query?.message?.chat?.id;}}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "reply_markup",
+              "value": "={{ $json.reply_markup }}"
+            },
+            {
+              "name": "message_id",
+              "value": "={{ $('Processing...1').first().json.result.message_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2896,
+        2160
+      ],
+      "id": "4746821a-f0db-4986-a82d-c75f39fa2d76",
+      "name": "Send Telegram Buttons to Tenant",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "21a77c18-9fe3-409c-aaea-322f605912b8",
+              "leftValue": "={{ $('Get Ticket Info').item.json.hasTickets }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2544,
+        2160
+      ],
+      "id": "34487895-785b-45bd-89a8-978b06318933",
+      "name": "Does Ticket Exist?1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY",
+          "mode": "list",
+          "cachedResultName": "Tenants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1367448199,
+          "mode": "list",
+          "cachedResultName": "pending_media",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1be3u-2jYUYnyRGs2AhcZP07qlrLmCIDW-o0_HO8LvpY/edit#gid=1367448199"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "file_id": "={{ $('Telegram Trigger').first().json.message.photo.last().file_id }}",
+            "timestamp": "={{ $now.setZone('America/New_York').format('yyyy-MM-dd HH:mm') }}",
+            "chat_id": "={{ $('Set Telegram Data').first().json.chat_id }}",
+            "caption": "={{ $('Set Telegram Data').first().json.caption }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "file_id",
+              "displayName": "file_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "caption",
+              "displayName": "caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2256,
+        2064
+      ],
+      "id": "4644cf67-9f29-4b62-a48f-acf015c8247d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WNOgZsgLVbrx2XuZ",
+          "name": "dionbuildsai Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        2272
+      ],
+      "id": "99eda58f-ab19-45e6-8485-8003a6932137",
+      "name": "Don't Log"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.*, t.name AS \"Tenant Name\", t.phone AS \"Phone\", t.unit_number AS \"Unit\", t.email AS \"Email\", p.address AS \"Property\", t.telegram_id AS \"Telegram\" FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.telegram_id = '{{ $('Set Telegram Data').item.json.chat_id }}'",
+        "options": {}
+      },
+      "id": "23c72f1f-3a82-4889-b468-e2fd8ee46398",
+      "name": "Get Tenant Info (Photo)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3500,
+        2800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, ticket_id, tenant_name, COALESCE(phone, tenant_phone) AS phone, category, summary, keywords, status FROM maintenance_requests WHERE (telegram_id = '{{ $('Set Telegram Data').item.json.chat_id }}' OR telegram_chat_id = '{{ $('Set Telegram Data').item.json.chat_id }}') AND status NOT IN ('closed') ORDER BY created_at DESC",
+        "options": {}
+      },
+      "id": "9883b595-1ecd-4a86-832d-783d0eab4c5c",
+      "name": "Get Open Tickets (Photo)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3200,
+        2800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET media = 'https://drive.google.com/drive/folders/{{ $json.parents[0] }}', updated_at = NOW() WHERE ticket_id = '{{ $(\"Set Telegram Data\").item.json.data.split(\"||\")[1] }}' RETURNING *",
+        "options": {}
+      },
+      "id": "368ff738-03de-4daf-a8cc-237e0d11d7aa",
+      "name": "Update Ticket Media",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1200,
+        2800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE pending_media SET ticket_id = '{{ $(\"Set Telegram Data\").item.json.data.split(\"||\")[1] }}' WHERE file_id = '{{ $(\"Download Picture\").item.json.result.file_id }}' AND chat_id = '{{ $(\"Set Telegram Data\").item.json.chat_id }}' RETURNING *",
+        "options": {}
+      },
+      "id": "25fbc42b-5e58-4214-815a-3a388921fd83",
+      "name": "Log Pending Media",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1000,
+        2800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -4784,
+        1024
+      ],
+      "id": "5e555280-233b-482b-aca1-e7e9507bbf9e",
+      "name": "REGISTRATION"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc123462-2b65-4790-9671-1cf7957eecf9",
+              "name": "phone",
+              "value": "={{ $('Telegram Trigger').item.json.message.text.slice(-11)}}",
+              "type": "string"
+            },
+            {
+              "id": "d44ad502-6004-4f95-967a-c1d3114f7a10",
+              "name": "tenant_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4496,
+        1024
+      ],
+      "id": "c9d61544-df65-4043-bfe8-fac996b44840",
+      "name": "Get Phone/ID"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -5232,
+        2096
+      ],
+      "id": "67c8f69a-51ad-41a8-8407-ce2a113a69c5",
+      "name": "Wait1",
+      "webhookId": "2e917cf4-fef5-4dcc-ad8b-8b18cfb484b9"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Processing...1').item.json.result.chat.id }}",
+        "messageId": "={{ $('Processing...1').item.json.result.message_id }}",
+        "text": "=Hello, \nCould you describe your issue in a few sentences? The more detail you give, the faster we can get the right help to you.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -5008,
+        2096
+      ],
+      "id": "9fadb1d0-5d94-4f7b-9951-b4017c6c0537",
+      "name": "Edit a text message3",
+      "webhookId": "b7e54fd8-a0a3-4380-ac44-1d7d58948c3e",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.*, t.name AS \"Tenant Name\", t.phone AS \"Phone\" FROM tenants t WHERE t.phone LIKE '%' || '{{ $json.phone }}' || '%'",
+        "options": {}
+      },
+      "id": "70a35c06-0980-42a4-8abc-1889141bde98",
+      "name": "Lookup by Phone",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3600,
+        1600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=\u2705 Registration successful! You are now linked to your tenant account. Send us a message to create a ticket.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "f0f8edea-dae7-4375-8ab8-0ac651f46b1e",
+      "name": "Welcome Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -3200,
+        1600
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE tenants SET telegram_id = '{{ $('Telegram Trigger').item.json.message.from.id }}' WHERE phone = '{{ $('Telegram Trigger').item.json.message.text.split('/start TEN_')[1] }}' RETURNING *",
+        "options": {}
+      },
+      "id": "7daf006c-3d0e-47bd-8077-d93c3d44e29f",
+      "name": "Update Tenant Telegram ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2800,
+        1600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "492f5e20-f0a5-4ee8-8b2d-01c94fe69a22",
+              "leftValue": "={{ $('Telegram Trigger').item?.json?.message?.text.length > 15 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a7cb8221-3e29-42b6-9594-87b5bed345ce",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "=/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5456,
+        1488
+      ],
+      "id": "8c89ecd7-3f4c-4c8c-b403-4f7128ad13d7",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6528d542-90c5-44f9-82b4-5ac9c9b0d5e5",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "=/start TEN_",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5008,
+        1392
+      ],
+      "id": "c94d9d2a-a3ed-48d1-b395-928d390b712e",
+      "name": "First Time?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.*, t.name AS \"Tenant Name\", t.phone AS \"Phone\", t.unit_number AS \"Unit\", t.email AS \"Email\", p.address AS \"Property\", t.telegram_id AS \"Telegram\", t.language_pref FROM tenants t LEFT JOIN properties p ON t.property_id = p.id WHERE t.telegram_id = '{{ $('Set Telegram Data').item.json.chat_id }}'",
+        "options": {}
+      },
+      "id": "d582bf3f-56e7-427e-a509-e903bbebaf85",
+      "name": "Get Tenant Info",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4800,
+        1600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "073bdeb3-7cef-459c-af55-fac6e360220d",
+      "name": "CHECK IF TICKET EXISTS",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -4400,
+        1600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8cd757fa-fcfc-4dde-a2d6-087d553029e9",
+              "leftValue": "={{ $json.callback_query.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "106013c4-addf-47ea-a501-bb2036413701",
+              "leftValue": "={{ $json.message.entities[0].type }}",
+              "rightValue": "=bot_command",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -6576,
+        1104
+      ],
+      "id": "019bddf3-797c-4f76-8b03-3debf740cfb2",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO messages (chat_id, message_id, telegram_id, sender, message_text, channel, created_at) VALUES ('{{ $json.message?.chat?.id || $json.callback_query?.message?.chat?.id }}', '{{ $json.message?.message_id || $json.callback_query?.message?.message_id }}', '{{ $json.message?.from?.id || $json.callback_query?.from?.id }}', '{{ $json.message?.from?.first_name || $json.callback_query?.from?.first_name }}', '{{ $json.message?.text || $json.callback_query?.message?.text }}', 'telegram', NOW()) RETURNING *",
+        "options": {}
+      },
+      "id": "d19fc99f-4cd7-4b81-b3d0-d1470221c50f",
+      "name": "Log Telegram Message",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -6200,
+        1600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7dc7c100-04d9-4d49-b179-ebafd1bf1bd9",
+              "name": "tenant_name",
+              "value": "={{ $('Get Tenant Info').item.json['Tenant Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "ccf67850-4767-4496-a486-9b1b87be99ab",
+              "name": "phone",
+              "value": "={{ $('Get Tenant Info').item.json.Phone }}",
+              "type": "string"
+            },
+            {
+              "id": "7475986f-77de-41b6-bf8f-384fb76b5bb1",
+              "name": "unit",
+              "value": "={{ $('Get Tenant Info').item.json.Unit }}",
+              "type": "string"
+            },
+            {
+              "id": "85015d87-67df-4faa-b389-c1d5c91f1112",
+              "name": "property",
+              "value": "={{ $('Get Tenant Info').item.json.Property }}",
+              "type": "string"
+            },
+            {
+              "id": "89714310-3ce9-476a-951e-beaf6d019b79",
+              "name": "email",
+              "value": "={{ $('Get Tenant Info').item.json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "56172744-82be-488c-b2ca-23acecae39b1",
+              "name": "telegram_id",
+              "value": "={{ $('Get Tenant Info').item.json.Telegram }}",
+              "type": "string"
+            },
+            {
+              "id": "c69fa1cf-c01d-421f-8eea-bbb038dd172d",
+              "name": "language_pref",
+              "value": "={{ $('Get Tenant Info').item.json.language_pref || 'fr' }}",
+              "type": "string"
+            },
+            {
+              "id": "fc416dd4-6c80-494e-a1a3-b060bc99cb01",
+              "name": "channel",
+              "value": "telegram",
+              "type": "string"
+            },
+            {
+              "id": "06f98cea-8106-40b7-98fc-db461e668c1e",
+              "name": "message",
+              "value": "={{ $('Set Telegram Data').item.json.message_text }}",
+              "type": "string"
+            },
+            {
+              "id": "d85365a4-0523-478b-9e0e-9043152ac763",
+              "name": "subject",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "baf91452-0cda-4ea5-b278-06ef797fce2b",
+              "name": "chat_id",
+              "value": "={{ $('Set Telegram Data').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4ba9d008-69df-4256-9d07-eb68f4f6e1bf",
+              "name": "sender_identifier",
+              "value": "={{ $('Set Telegram Data').item.json.chat_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8095915b-3b4c-49b8-8a63-e90207ba5e51",
+      "name": "Prepare Telegram Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        1300
+      ]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgent": {
+      "main": [
+        [
+          {
+            "node": "Normalize SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "General": {
+      "main": [
+        [
+          {
+            "node": "Normalize SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Other": {
+      "main": [
+        [
+          {
+            "node": "Normalize SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Processing...1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processing": {
+      "main": [
+        [
+          {
+            "node": "Set Telegram Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processing...1": {
+      "main": [
+        [
+          {
+            "node": "Set Telegram Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Telegram Data": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "When Tenant Click on button to add Photo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Edit a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Tenant Info (Photo)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Get Tenant Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Edit a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Log Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Point",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize SMS": {
+      "main": [
+        [
+          {
+            "node": "Merge Point",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Telegram": {
+      "main": [
+        [
+          {
+            "node": "Merge Point",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Point": {
+      "main": [
+        [
+          {
+            "node": "Lookup Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Tenant": {
+      "main": [
+        [
+          {
+            "node": "Is Tenant?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Tenant?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unknown Sender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "Get Open Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Open Tickets": {
+      "main": [
+        [
+          {
+            "node": "Has Open Tickets?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Open Tickets?": {
+      "main": [
+        [
+          {
+            "node": "Classify Relatability",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classify Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Relatability": {
+      "main": [
+        [
+          {
+            "node": "Is New Ticket?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New Ticket?": {
+      "main": [
+        [
+          {
+            "node": "Classify Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ticket Exists Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Message": {
+      "main": [
+        [
+          {
+            "node": "Route by Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Classification": {
+      "main": [
+        [
+          {
+            "node": "Urgent Ack Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Non-Urgent Ack Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Conversational Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Responsibility Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Non-Urgent Ack Template": {
+      "main": [
+        [
+          {
+            "node": "Channel Dispatcher",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Ticket ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversational Template": {
+      "main": [
+        [
+          {
+            "node": "Channel Dispatcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Response": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Responsibility Response": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format AI Response": {
+      "main": [
+        [
+          {
+            "node": "Channel Dispatcher",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Ticket ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket Exists Ack": {
+      "main": [
+        [
+          {
+            "node": "Channel Dispatcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgent Ack Template": {
+      "main": [
+        [
+          {
+            "node": "Channel Dispatcher",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lookup Vendor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Ticket ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Message History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Channel Dispatcher": {
+      "main": [
+        [
+          {
+            "node": "Send Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send SMS Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Telegram Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Response": {
+      "main": [
+        [
+          {
+            "node": "Log Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS Response": {
+      "main": [
+        [
+          {
+            "node": "Log Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Response": {
+      "main": [
+        [
+          {
+            "node": "Log Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Vendor": {
+      "main": [
+        [
+          {
+            "node": "AI Vendor Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Vendor Message": {
+      "main": [
+        [
+          {
+            "node": "Email Vendor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SMS Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Ticket ID": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Mirror Ticket to Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Message Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Message History": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Messages": {
+      "main": [
+        [
+          {
+            "node": "AI Landlord Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Landlord Briefing": {
+      "main": [
+        [
+          {
+            "node": "Owner Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner Notification": {
+      "main": [
+        [
+          {
+            "node": "Delete Processing Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit a text message2": {
+      "main": [
+        [
+          {
+            "node": "Lookup Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Ticket": {
+      "main": [
+        [
+          {
+            "node": "Accept or Decline?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accept or Decline?": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket: Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Ticket: Declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket: Accepted": {
+      "main": [
+        [
+          {
+            "node": "Lookup Vendor for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Vendor for Approval": {
+      "main": [
+        [
+          {
+            "node": "AI Vendor Msg (Approval)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Vendor Msg (Approval)": {
+      "main": [
+        [
+          {
+            "node": "Email Vendor (Approval)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SMS Vendor (Approval)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS Vendor (Approval)": {
+      "main": [
+        [
+          {
+            "node": "Send Approval Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket: Declined": {
+      "main": [
+        [
+          {
+            "node": "Send Decline Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tenant Info (Photo)": {
+      "main": [
+        [
+          {
+            "node": "Get Open Tickets (Photo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Open Tickets (Photo)": {
+      "main": [
+        [
+          {
+            "node": "Get Ticket Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ticket Info": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Buttons to Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Buttons to Tenant": {
+      "main": [
+        [
+          {
+            "node": "Does Ticket Exist?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Does Ticket Exist?1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Don't Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Tenant Click on button to add Photo": {
+      "main": [
+        [
+          {
+            "node": "Ignore?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ignore?": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Ignored",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit2": {
+      "main": [
+        [
+          {
+            "node": "Get Picture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Picture": {
+      "main": [
+        [
+          {
+            "node": "Download Picture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Picture": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get Ticket Info1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ticket Info1": {
+      "main": [
+        [
+          {
+            "node": "Does Property Folder Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Does Property Folder Exist?": {
+      "main": [
+        [
+          {
+            "node": "Does it Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Does it Exist?": {
+      "main": [
+        [
+          {
+            "node": "Does Tenant Folder Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Property Folder": {
+      "main": [
+        [
+          {
+            "node": "Does Tenant Folder Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Does Tenant Folder Exist?": {
+      "main": [
+        [
+          {
+            "node": "Does it Exist?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Does it Exist?1": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Tenant Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tenant Folder": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Media": {
+      "main": [
+        [
+          {
+            "node": "Log Pending Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Pending Media": {
+      "main": [
+        [
+          {
+            "node": "Edit a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Get Tenant Info (Photo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tenant Info": {
+      "main": [
+        [
+          {
+            "node": "First Time?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "First Time?": {
+      "main": [
+        [
+          {
+            "node": "REGISTRATION",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CHECK IF TICKET EXISTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REGISTRATION": {
+      "main": [
+        [
+          {
+            "node": "Get Phone/ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Phone/ID": {
+      "main": [
+        [
+          {
+            "node": "Lookup by Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup by Phone": {
+      "main": [
+        [
+          {
+            "node": "Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Welcome Message": {
+      "main": [
+        [
+          {
+            "node": "Update Tenant Telegram ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CHECK IF TICKET EXISTS": {
+      "main": [
+        [
+          {
+            "node": "Get Open Tickets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Telegram Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Telegram Data": {
+      "main": [
+        [
+          {
+            "node": "Get Open Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku - Classify": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Message",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classification Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify Message",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku - Relatability": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Relatability",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Relatability Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify Relatability",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku - Vendor": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Vendor Message",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vendor Message Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Vendor Message",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku - Briefing": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Landlord Briefing",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Haiku - Vendor Approval": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Vendor Msg (Approval)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vendor Approval Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Vendor Msg (Approval)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "850b0a58-4035-4a9e-90f4-2f7cb3213f5e",
+  "tags": []
+}
