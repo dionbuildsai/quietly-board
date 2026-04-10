@@ -567,10 +567,22 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Dev WhatsApp Meta fix:** `Forward to WA Intake` URL changed to use `$env.WEBHOOK_URL` instead of non-existent `Get Config` node reference (was throwing "Referenced node doesn't exist" error on dev).
 - **Live still pending credential refactor deployment:** All 8 PM workflows on live still have hardcoded `8460031715:AAE1...` Telegram tokens (20 occurrences), hardcoded `971537566052793` WhatsApp phone IDs (7), saved Telegram credential refs (5), and saved WhatsApp credential refs (7). Refactor is ready in LOCAL/DEV; deployment is the next session's task.
 
+## Changelog (2026-04-10 session — Twilio deploy, SMS follow-up, changelog)
+- **Twilio credential refactor deployed to LIVE:** Both `Send SMS` nodes (Response Dispatcher + Owner Message Sender) now use `$env.TWILIO_*` Code nodes instead of native Twilio. `URLSearchParams` replaced with `encodeURIComponent` (n8n sandbox inconsistency).
+- **Owner Message Sender SMS routing fixed:** `Route by Channel` switch expression changed from `$json.channel` (broken — Postgres strips fields) to `$('Normalize Input').item.json.channel`. All 4 channel routes now work.
+- **Phone SMS follow-up feature:** Phone-channel tickets now show call recording + conversation panel + SMS text input. Owner can send SMS follow-ups to tenants who called. Messages logged to same ticket with `channel='sms'`.
+- **Cross-channel message linking:** `Link Ongoing Messages` in AI Agent changed from `AND channel = '...'` to `AND channel IN ('...', 'phone')` — SMS replies from tenants now link to the original phone ticket.
+- **WA Ticket Prompt template literal fix:** Single quotes → backticks around `${$env.WHATSAPP_PHONE_NUMBER_ID}` URL. Was causing 400 errors when tenants sent WhatsApp photos. Deployed to both dev + live.
+- **Credentials reference dashboard:** New "What's Configured" section on Settings page (PM dashboard) with plain-English descriptions per credential. Vault dashboard at `/pm-credentials` shows operator-focused multi-environment view (dev + live side-by-side).
+- **Env Status Webhook deployed to LIVE:** `[System] Env Status Webhook` (`env-status-webhook-001`) now on live n8n. Dashboard Environment card shows both dashboard + n8n env vars.
+- **Dashboard changelog + versioning:** `/changelog` page with timeline view (v1.0–v1.5). Version tag `v1.5 · Apr 10, 2026` in sidebar footer. "What's New" link in sidebar footer.
+- **AI chat bubble moved to bottom-right:** Was bottom-left, overlapping sidebar content.
+- **Dashboard version:** v1.5
+
 ## Credential Architecture (Telegram + WhatsApp + Twilio DONE, Gmail planned)
 - **Telegram: COMPLETE** — All nodes use `$env.TELEGRAM_BOT_TOKEN` except `Telegram Trigger` (must stay native for webhook registration).
 - **WhatsApp: COMPLETE** — All nodes use `$env.WHATSAPP_TOKEN` via Bearer auth header. No native WhatsApp nodes remaining.
-- **Twilio: COMPLETE** — Both `Send SMS` nodes (Response Dispatcher + Owner Message Sender) converted from native Twilio nodes to Code nodes using `$env.TWILIO_ACCOUNT_SID` + `$env.TWILIO_AUTH_TOKEN` + `$env.TWILIO_FROM_NUMBER`. Uses same Basic Auth + URLSearchParams pattern as `Download Media Immediate`.
+- **Twilio: COMPLETE** — Both `Send SMS` nodes (Response Dispatcher + Owner Message Sender) converted from native Twilio nodes to Code nodes using `$env.TWILIO_ACCOUNT_SID` + `$env.TWILIO_AUTH_TOKEN` + `$env.TWILIO_FROM_NUMBER`. Uses Basic Auth + `encodeURIComponent` (not `URLSearchParams` — unavailable in n8n sandbox).
 - **Current state:** Telegram + WhatsApp + Twilio fully migrated. Gmail, Postgres still use saved credentials.
 - **Target state:** Secrets (API keys, tokens) → `$env` vars in docker-compose (secure, not exposed in UI). Config (chat IDs, phone numbers, feature flags) → `settings` table (editable from dashboard).
 - **Migration approach:** Incremental — convert native nodes to Code/HTTP nodes using `$env`/settings one service at a time. Next: Gmail.
