@@ -567,11 +567,12 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **Dev WhatsApp Meta fix:** `Forward to WA Intake` URL changed to use `$env.WEBHOOK_URL` instead of non-existent `Get Config` node reference (was throwing "Referenced node doesn't exist" error on dev).
 - **Live still pending credential refactor deployment:** All 8 PM workflows on live still have hardcoded `8460031715:AAE1...` Telegram tokens (20 occurrences), hardcoded `971537566052793` WhatsApp phone IDs (7), saved Telegram credential refs (5), and saved WhatsApp credential refs (7). Refactor is ready in LOCAL/DEV; deployment is the next session's task.
 
-## Credential Architecture (Telegram + WhatsApp DONE, others planned)
+## Credential Architecture (Telegram + WhatsApp + Twilio DONE, Gmail planned)
 - **Telegram: COMPLETE** — All nodes use `$env.TELEGRAM_BOT_TOKEN` except `Telegram Trigger` (must stay native for webhook registration).
 - **WhatsApp: COMPLETE** — All nodes use `$env.WHATSAPP_TOKEN` via Bearer auth header. No native WhatsApp nodes remaining.
-- **Current state:** Telegram + WhatsApp fully migrated. Twilio, Gmail, Postgres still use saved credentials.
+- **Twilio: COMPLETE** — Both `Send SMS` nodes (Response Dispatcher + Owner Message Sender) converted from native Twilio nodes to Code nodes using `$env.TWILIO_ACCOUNT_SID` + `$env.TWILIO_AUTH_TOKEN` + `$env.TWILIO_FROM_NUMBER`. Uses same Basic Auth + URLSearchParams pattern as `Download Media Immediate`.
+- **Current state:** Telegram + WhatsApp + Twilio fully migrated. Gmail, Postgres still use saved credentials.
 - **Target state:** Secrets (API keys, tokens) → `$env` vars in docker-compose (secure, not exposed in UI). Config (chat IDs, phone numbers, feature flags) → `settings` table (editable from dashboard).
-- **Migration approach:** Incremental — convert native nodes to Code/HTTP nodes using `$env`/settings one service at a time. Next: Twilio, then Gmail.
+- **Migration approach:** Incremental — convert native nodes to Code/HTTP nodes using `$env`/settings one service at a time. Next: Gmail.
 - **Why:** Eliminates credential encryption mismatch between dev/live. Makes workflows fully portable. Secrets never visible in dashboard UI.
 - **n8n native node limitation:** Native nodes (Postgres, Telegram, Gmail, WhatsApp) only accept saved credentials from dropdown — cannot use `$env` directly. Must convert to Code or HTTP Request nodes.
