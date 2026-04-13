@@ -244,25 +244,14 @@
     {
       "id": "send-email-001",
       "name": "Send Email",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         880,
         580
       ],
       "parameters": {
-        "sendTo": "={{ $json.email }}",
-        "subject": "Julia Inc - Property Management",
-        "message": "={{ $json.text }}",
-        "options": {
-          "appendAttribution": false
-        }
-      },
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "ws18m1zty0x1WwiD",
-          "name": "dionfwang"
-        }
+        "jsCode": "// Send email via dashboard Gmail OAuth token\nconst tokenRes = await this.helpers.httpRequest({\n  method: 'GET',\n  url: ($env.DASHBOARD_INTERNAL_URL || 'http://pm-dash:3000') + '/api/auth/google/token',\n  json: true,\n  timeout: 10000\n});\n\nif (!tokenRes.access_token) {\n  // Gmail not connected \u2014 notify owner via Telegram\nconst ownerChatId = $env.TELEGRAM_OWNER_CHAT_ID || '6216258938';\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage',\n    body: { chat_id: ownerChatId, text: '\u26a0\ufe0f Gmail disconnected \u2014 email could not be sent. Please reconnect Gmail on the dashboard Settings page.' },\n    json: true,\n    timeout: 10000\n  });\n} catch (e) {}\nreturn [{ json: { sent: false, error: 'Gmail not connected' } }];\n}\n\nconst to = $json.email;\nconst subject = 'Julia Inc - Property Management';\nconst body = $json.text || '';\nconst fromEmail = tokenRes.email || '';\n\nconst rawEmail = `From: ${fromEmail}\\r\\nTo: ${to}\\r\\nSubject: ${subject}\\r\\nContent-Type: text/plain; charset=utf-8\\r\\n\\r\\n${body}`;\nconst encoded = Buffer.from(rawEmail).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\nconst sendRes = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',\n  headers: { 'Authorization': 'Bearer ' + tokenRes.access_token, 'Content-Type': 'application/json' },\n  body: JSON.stringify({ raw: encoded }),\n  json: true,\n  timeout: 15000\n});\n\nreturn [{ json: { sent: true, id: sendRes.id, to, subject } }];"
       }
     }
   ],

@@ -1,0 +1,79 @@
+{
+  "id": "broadcast-email-001",
+  "name": "[Broadcast] Email Sender",
+  "active": true,
+  "nodes": [
+    {
+      "id": "bc-email-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "bc-email-webhook-uuid",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "broadcast-email",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "bc-email-send",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Send broadcast email via dashboard Gmail OAuth token\nconst tokenRes = await this.helpers.httpRequest({\n  method: 'GET',\n  url: ($env.DASHBOARD_INTERNAL_URL || 'http://pm-dash:3000') + '/api/auth/google/token',\n  json: true,\n  timeout: 10000\n});\n\nif (!tokenRes.access_token) {\n  // Gmail not connected \u2014 notify owner via Telegram\nconst ownerChatId = $env.TELEGRAM_OWNER_CHAT_ID || '6216258938';\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage',\n    body: { chat_id: ownerChatId, text: '\u26a0\ufe0f Gmail disconnected \u2014 email could not be sent. Please reconnect Gmail on the dashboard Settings page.' },\n    json: true,\n    timeout: 10000\n  });\n} catch (e) {}\nreturn [{ json: { sent: false, error: 'Gmail not connected' } }];\n}\n\nconst body = $json.body || $json;\nconst to = body.email || $json.email;\nconst subject = body.subject || $json.subject || 'Julia Inc - Property Management';\nconst text = body.text || $json.text || '';\nconst fromEmail = tokenRes.email || '';\n\nconst rawEmail = `From: ${fromEmail}\\r\\nTo: ${to}\\r\\nSubject: ${subject}\\r\\nContent-Type: text/plain; charset=utf-8\\r\\n\\r\\n${text}`;\nconst encoded = Buffer.from(rawEmail).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\nconst sendRes = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',\n  headers: { 'Authorization': 'Bearer ' + tokenRes.access_token, 'Content-Type': 'application/json' },\n  body: JSON.stringify({ raw: encoded }),\n  json: true,\n  timeout: 15000\n});\n\nreturn [{ json: { sent: true, id: sendRes.id, to, subject } }];"
+      }
+    },
+    {
+      "id": "bc-email-respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ sent: true, to: $json.to }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
