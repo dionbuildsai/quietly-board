@@ -445,19 +445,108 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **2026-04-12:** Lease management (upload PDF + AI extraction + manual entry), property detail page (unit-first view with occupancy, stat cards, collapsible sections), property form (civic number, street, postal code), rent increase notice system (TAL form PDF generation + email delivery + response tracking + auto-accept), signature upload for documents, UI polish (card shadows, table styling, sidebar cleanup)
 - **2026-04-13/14:** Dashboard v3 overhaul on dev only. Sprint A/B/C1 delivered on feature branches (`sprint-a-ux`, `sprint-b-depth`, `sprint-c1-glance`). Main and live untouched. Master roadmap at `TODO.md` (55 items in 4 tiers). See "Dashboard v3" section below.
 
-## Dashboard v3 Rework (dev-only, 2026-04-13+)
+## Dashboard v3 Rework (dev-only, 2026-04-13 → 2026-04-14)
 
-Branch flow: `main` → `sprint-a-ux` → `sprint-b-depth` → `sprint-c1-glance` → (next: C2, C3, D).
+**Live is untouched since 2026-04-12.** All work is on five feature branches never merged to main. Dev VPS `pm.srv1466948.hstgr.cloud` runs the `sprint-c3-comms` tip.
 
-- **sprint-a-ux** — Global keyboard layer (`⌘K`/`/`/`?`/Esc), cmd-K palette + `/api/search` across tickets/tenants/properties/vendors/messages, Smart Summary on ticket detail (Haiku 3-line catch-up), saved-view chips + custom views on Tickets, action-framed stat cards, reusable `<HelpBadge>`, Inbox Today/This week/Later grouping, Inbox triage (expand-to-summary → Open thread / Dismiss — no inline reply to avoid replying without context).
-- **sprint-b-depth** — Smart Summary caching (per-ticket JSONB + msg-count invalidation, ~90% fewer Haiku calls), `audit_log` + 30-day undo for deletes at `/settings/audit`, tenant detail drawer (Chat/Tickets/Lease) on `/tenants`, filter chips (language/property/search), CSV export for tickets/tenants/leases, bulk ticket actions (sticky floating bar), test-integration button for Telegram, 7-day integration health strip on Settings, Preferences form (quiet hours + timezone + UI language), `src/lib/tz.ts` helper — all server-side date strings route through `America/Toronto` (handles EDT↔EST transitions; never hardcode "EST").
-- **sprint-c1-glance** — Morning Huddle (Haiku day-ahead narrative cached per local day at `/api/huddle`), 7-day ticket-volume sparkline, `TicketTimeline` 5-stage progress strip (received → AI replied → owner → vendor → resolved) with row + detail variants, urgency visual weight on Inbox (urgent = 3px red left border + larger name; info_request = 70% opacity), All Clear celebration with weekly resolved count, property audit timeline (reads `audit_log` via `/api/audit/entity`), Property financial snapshot card (monthly income + occupancy % + vacant-value estimate + sparkline).
+### Branch ledger
 
-**Schema on `pm_dev_db` only (all additive):**
-- `migrations/sprint-b.sql`: `maintenance_requests.smart_summary* cols`, `audit_log`, 6 preference rows in `settings`.
-- `migrations/sprint-c1.sql`: `morning_huddle_cache (date PK, text, generated_at)`.
+| Branch | Tip | Status | What it adds (on top of the one above) |
+|--------|-----|--------|------------------------------------------|
+| `main` | `75a1e23` | frozen | Dashboard v2.0 (2026-04-12) |
+| `sprint-a-ux` | `070a40a` | merged into b | UX foundation |
+| `sprint-b-depth` | `baef181` | merged into c1 | Schema depth + tz helper |
+| `sprint-c1-glance` | `f724b0a` | merged into c2 | At-a-glance polish (dashboard reverted, non-dashboard kept) |
+| `sprint-c2-metrics` | `20d79b3` | merged into c3 | Reporting, vendor perf, snooze |
+| `sprint-c3-comms` | `4edd857` | **current dev tip** | Templates, preview, FAQ, collapsed videos |
 
-**Dev deploy flow — ALWAYS exclude docker-compose.yml:**
+Each branch is committed + pushed to `origin`. No branch has ever been merged to main — they're stacked.
+
+### Feature-by-feature inventory (all on dev)
+
+#### Sprint A (`sprint-a-ux`) — UX foundation
+- Global keyboard layer (`⌘K` / `/` / `?` / Esc) with cheat-sheet overlay
+- cmd-K command palette + `/api/search` (ILIKE across tickets/tenants/properties/vendors/messages)
+- Smart Summary on ticket detail — Haiku 3-line catch-up above the conversation
+- Saved views + quick-filter chips on Tickets (Urgent / Waiting / Last 24h / Resolved this week + localStorage custom views)
+- Action-framed stat cards ("Needs your reply", "Waiting on vendor") with zero-state green check and help badges
+- Reusable `<HelpBadge>` component for inline `?` tooltips
+- Inbox Today / This week / Later grouping + triage flow (click row → expand Smart Summary → Open thread / Dismiss; no inline reply to prevent replying without context)
+
+#### Sprint B (`sprint-b-depth`) — schema + tz
+- Smart Summary caching on `maintenance_requests` (JSONB + msg-count invalidation → ~90% fewer Haiku calls)
+- Audit log (`audit_log` table) wrapping all delete actions; 30-day undo at `/settings/audit`
+- Tenant detail drawer (Chat / Tickets / Lease tabs) on `/tenants`
+- Tenant filter chips (language EN/FR, property, search)
+- CSV export endpoints for tickets, tenants, leases (`/api/export/*`)
+- Bulk select + sticky floating bar on Tickets (Mark resolved / Waiting vendor / Reopen)
+- Test-integration button for Telegram on Settings
+- 7-day integration health strip (messages per channel per day)
+- Preferences form: quiet hours + timezone + UI language, urgent-overrides-quiet toggle
+- `src/lib/tz.ts` — centralized timezone helper; all server-side date strings route through `America/Toronto` (handles EDT↔EST automatically; never hardcode `"EST"`). Migrated the Telegram test message, CSV filenames, rent-increase response deadlines, and integration-health day buckets
+
+#### Sprint C1 (`sprint-c1-glance`) — at-a-glance (dashboard reverted)
+- **Dashboard page:** all experimental dashboard redesigns were rolled back. The dashboard page is currently the Sprint B version (Time Saved banner + 5 stat cards + category pills + Recent tickets).
+- **Non-dashboard items kept:**
+  - `TicketTimeline` 5-stage progress strip (received → AI replied → owner → vendor → resolved) — compact variant on the Tickets list (xl+ column), labeled variant on the ticket detail header
+  - Urgency visual weight in Inbox (urgent = 3px red left border + larger tenant name; info_request = 70% opacity)
+  - All Clear celebration with weekly resolved count
+  - Property audit timeline (collapsible section on property detail, reads `audit_log` via `/api/audit/entity`)
+  - Property financial snapshot card (monthly income + occupancy % + vacant-value estimate)
+- **Unused dead code still present:** `MorningHuddle`, `CategoryDonut`, `TicketVolumeChart`, `ActionInbox`, `Sparkline`. They can be garbage-collected or reused later.
+
+#### Sprint C2 (`sprint-c2-metrics`) — reporting + vendor perf + snooze
+- `/reporting` page: 30-day KPIs (total tickets, resolved count, avg + median resolution, tickets per tenant, urgent rate %, occupancy %), top-categories bar meter, slowest-open tickets list. Sidebar link with BarChart3 icon.
+- Vendor performance columns on `/vendors`: avg resolution, job count, resolved count, last job
+- "Fast" badge on top-20% of vendors (min 2 jobs) by avg resolution time
+- Preferred vendor starring — click the star; starred vendors sort to top of their category
+- Availability dot on vendor rows: green = job in last 30d, grey = quiet
+- Inbox snooze menu on each triaged row: 1 hour / Tomorrow 9 AM / Next Monday 9 AM. Snoozed tickets hidden from Inbox via `getUnreadTickets` filter until `snoozed_until <= NOW()`.
+
+#### Sprint C3 (`sprint-c3-comms`) — communication polish
+- Announcement template library: `TemplatePicker` dropdown in the broadcast compose box. 8 bilingual templates (snow removal, water shutoff, heating start, renewal window, fire alarm test, garbage schedule, elevator maintenance, welcome new tenant). One click fills EN + FR.
+- Channel preview before send: "Send Announcement" button became "Preview & send". Shows mockups of the final message per channel (Telegram bubble, WhatsApp bubble, SMS with char count + part warning, Email with subject).
+- Searchable FAQ on `/help`: markdown source at `src/content/faq.md` → parsed by `/api/faq` → `FaqSearch` component at top of Help page with debounced query and expandable answers.
+- Collapsed video playlist: videos section now defaults closed. Compact rows with YouTube thumbnail + title. Click plays inline autoplay iframe; close returns to list.
+
+### Schema applied to `pm_dev_db` only (all additive)
+
+```
+migrations/sprint-b.sql
+  · maintenance_requests.smart_summary JSONB + _msg_count + _at
+  · audit_log (id, created_at, actor, action, entity_type, entity_id,
+              entity_label, before_data, after_data, undoable_until,
+              undone_at, notes)
+  · settings rows for quiet_hours_*, timezone, ui_language, urgent_overrides_quiet
+
+migrations/sprint-c1.sql
+  · morning_huddle_cache (date PK, text, generated_at, owner_hint)
+
+migrations/sprint-c2.sql
+  · vendors.is_preferred BOOLEAN DEFAULT FALSE
+  · vendors.last_job_at TIMESTAMPTZ
+  · maintenance_requests.snoozed_until TIMESTAMPTZ + partial index
+
+migrations/sprint-c3.sql
+  · announcement_templates (id, slug, title_en, body_en, title_fr,
+                            body_fr, category, icon, is_builtin)
+  · broadcasts.status + scheduled_for + template_id + body_fr + created_by
+  · 8 seed templates in announcement_templates
+```
+
+### Known unfinished (deferred or not started)
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Dashboard redesign | Rolled back to Sprint B | Every v3 attempt was rejected. Tree of deferred components (MorningHuddle, charts) remains in codebase for reuse. |
+| #56 "Who did the job?" on resolve | Not started | Added to TODO.md. Would feed vendor stats for jobs done outside dispatch. |
+| #22 Scheduled broadcasts | Schema ready, runner missing | Needs n8n workflow or Next.js cron to fire due `scheduled_for` rows. |
+| #24 AI translation polish diff view | Not started | Existing `/api/translate` covers the basic case. |
+| #47 "Ask Julia AI" help agent (docs-scoped) | Not started | Chat widget already answers data questions. Adding a "Help" tab to it is small. |
+| Sprint D (careful ones) | Not started | RL-31, finish renewal wizard, late-rent detection, tenant portal, vendor magic link, Postgres `$env` refactor, webhook auth |
+| Tier 4 | Park | Drag-drop tenants, full vendor portal, OCR media, A/B broadcasts, loading skeletons, error boundaries |
+
+### Dev deploy flow — ALWAYS exclude docker-compose.yml
 ```bash
 cd ~/Desktop/Projects/quietly-dash
 rsync -az --exclude node_modules --exclude .next --exclude .git \
@@ -465,12 +554,15 @@ rsync -az --exclude node_modules --exclude .next --exclude .git \
   ./ root@srv1466948.hstgr.cloud:/docker/projects/pm/
 ssh root@srv1466948.hstgr.cloud "cd /docker/projects/pm && docker compose build pm-dash && docker compose up -d pm-dash"
 ```
-Secrets (DB password, Telegram/WhatsApp/Twilio/Anthropic/ElevenLabs keys, Gmail OAuth creds) live ONLY in the server's compose file. An rsync with `--delete` or without the exclude will wipe it and require manual recreation from memory.
+Secrets (DB password, Telegram/WhatsApp/Twilio/Anthropic/ElevenLabs keys, Gmail OAuth creds) live ONLY in the server's compose file. An rsync with `--delete` or without the exclude will wipe it.
 
-**Upcoming:**
-- **C2** — `/reporting` tab, vendor performance/starring/availability, Inbox snooze
-- **C3** — announcement templates + schedule + preview, AI translation polish, Help agent, FAQ
-- **D** — RL-31 generator, finish renewal wizard, late-rent detection, tenant portal + vendor magic link, Postgres `$env` refactor, webhook auth
+### Seed data on `pm_dev_db`
+
+- 5 demo tickets (TK-DEMO001-005) — mixed urgency, varied dates, one info_request
+- 19 seed "completed" tickets (TK-SEED001-019) dispatched to demo vendors with varying resolution times for Sprint C2 stats
+- 13 demo vendors across plumbing / electrical / hvac / appliance / pest / locksmith / general — 3 pre-starred
+- 8 announcement templates (bilingual, seasonal)
+- Cleanup (when needed): `DELETE FROM maintenance_requests WHERE ticket_id LIKE 'TK-DEMO%' OR ticket_id LIKE 'TK-SEED%';` and vendor cleanup per `seed comments in script history`.
 
 ## Dev Server Setup (srv1466948.hstgr.cloud)
 - **PM Dashboard:** pm.srv1466948.hstgr.cloud (password: quietly2024)
