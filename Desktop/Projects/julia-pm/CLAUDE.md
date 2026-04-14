@@ -443,6 +443,34 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **2026-04-10:** Twilio refactor deployed to live, phone SMS follow-up feature, dashboard v1.5
 - **2026-04-11:** CLAUDE.md audit + cleanup, Gmail OAuth refactor (4 send nodes → dashboard token), announcements per-channel breakdown, advanced settings page, broadcast channel brand icons
 - **2026-04-12:** Lease management (upload PDF + AI extraction + manual entry), property detail page (unit-first view with occupancy, stat cards, collapsible sections), property form (civic number, street, postal code), rent increase notice system (TAL form PDF generation + email delivery + response tracking + auto-accept), signature upload for documents, UI polish (card shadows, table styling, sidebar cleanup)
+- **2026-04-13/14:** Dashboard v3 overhaul on dev only. Sprint A/B/C1 delivered on feature branches (`sprint-a-ux`, `sprint-b-depth`, `sprint-c1-glance`). Main and live untouched. Master roadmap at `TODO.md` (55 items in 4 tiers). See "Dashboard v3" section below.
+
+## Dashboard v3 Rework (dev-only, 2026-04-13+)
+
+Branch flow: `main` → `sprint-a-ux` → `sprint-b-depth` → `sprint-c1-glance` → (next: C2, C3, D).
+
+- **sprint-a-ux** — Global keyboard layer (`⌘K`/`/`/`?`/Esc), cmd-K palette + `/api/search` across tickets/tenants/properties/vendors/messages, Smart Summary on ticket detail (Haiku 3-line catch-up), saved-view chips + custom views on Tickets, action-framed stat cards, reusable `<HelpBadge>`, Inbox Today/This week/Later grouping, Inbox triage (expand-to-summary → Open thread / Dismiss — no inline reply to avoid replying without context).
+- **sprint-b-depth** — Smart Summary caching (per-ticket JSONB + msg-count invalidation, ~90% fewer Haiku calls), `audit_log` + 30-day undo for deletes at `/settings/audit`, tenant detail drawer (Chat/Tickets/Lease) on `/tenants`, filter chips (language/property/search), CSV export for tickets/tenants/leases, bulk ticket actions (sticky floating bar), test-integration button for Telegram, 7-day integration health strip on Settings, Preferences form (quiet hours + timezone + UI language), `src/lib/tz.ts` helper — all server-side date strings route through `America/Toronto` (handles EDT↔EST transitions; never hardcode "EST").
+- **sprint-c1-glance** — Morning Huddle (Haiku day-ahead narrative cached per local day at `/api/huddle`), 7-day ticket-volume sparkline, `TicketTimeline` 5-stage progress strip (received → AI replied → owner → vendor → resolved) with row + detail variants, urgency visual weight on Inbox (urgent = 3px red left border + larger name; info_request = 70% opacity), All Clear celebration with weekly resolved count, property audit timeline (reads `audit_log` via `/api/audit/entity`), Property financial snapshot card (monthly income + occupancy % + vacant-value estimate + sparkline).
+
+**Schema on `pm_dev_db` only (all additive):**
+- `migrations/sprint-b.sql`: `maintenance_requests.smart_summary* cols`, `audit_log`, 6 preference rows in `settings`.
+- `migrations/sprint-c1.sql`: `morning_huddle_cache (date PK, text, generated_at)`.
+
+**Dev deploy flow — ALWAYS exclude docker-compose.yml:**
+```bash
+cd ~/Desktop/Projects/quietly-dash
+rsync -az --exclude node_modules --exclude .next --exclude .git \
+  --exclude files --exclude dash --exclude docker-compose.yml \
+  ./ root@srv1466948.hstgr.cloud:/docker/projects/pm/
+ssh root@srv1466948.hstgr.cloud "cd /docker/projects/pm && docker compose build pm-dash && docker compose up -d pm-dash"
+```
+Secrets (DB password, Telegram/WhatsApp/Twilio/Anthropic/ElevenLabs keys, Gmail OAuth creds) live ONLY in the server's compose file. An rsync with `--delete` or without the exclude will wipe it and require manual recreation from memory.
+
+**Upcoming:**
+- **C2** — `/reporting` tab, vendor performance/starring/availability, Inbox snooze
+- **C3** — announcement templates + schedule + preview, AI translation polish, Help agent, FAQ
+- **D** — RL-31 generator, finish renewal wizard, late-rent detection, tenant portal + vendor magic link, Postgres `$env` refactor, webhook auth
 
 ## Dev Server Setup (srv1466948.hstgr.cloud)
 - **PM Dashboard:** pm.srv1466948.hstgr.cloud (password: quietly2024)
