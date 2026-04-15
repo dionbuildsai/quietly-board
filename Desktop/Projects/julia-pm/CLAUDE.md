@@ -349,7 +349,7 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - If unsure whether a change is safe, ASK before deploying
 - n8n workflow changes: backup → import → publish → restart → verify
 
-**App went live: 2026-03-27**
+**App went live: 2026-03-27** · **Dashboard v3 shipped to live: 2026-04-15** (40 commits + 8 schema migrations, all additive)
 
 ### Post-Launch Monitoring
 - Watch for Claude API failures (tenant gets no reply)
@@ -443,17 +443,18 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **2026-04-10:** Twilio refactor deployed to live, phone SMS follow-up feature, dashboard v1.5
 - **2026-04-11:** CLAUDE.md audit + cleanup, Gmail OAuth refactor (4 send nodes → dashboard token), announcements per-channel breakdown, advanced settings page, broadcast channel brand icons
 - **2026-04-12:** Lease management (upload PDF + AI extraction + manual entry), property detail page (unit-first view with occupancy, stat cards, collapsible sections), property form (civic number, street, postal code), rent increase notice system (TAL form PDF generation + email delivery + response tracking + auto-accept), signature upload for documents, UI polish (card shadows, table styling, sidebar cleanup)
-- **2026-04-13/14:** Dashboard v3 overhaul on dev only. Sprint A/B/C1 delivered on feature branches (`sprint-a-ux`, `sprint-b-depth`, `sprint-c1-glance`). Main and live untouched. Master roadmap at `TODO.md` (55 items in 4 tiers). See "Dashboard v3" section below.
+- **2026-04-13/14:** Dashboard v3 overhaul built on dev. Sprints A/B/C1–C10 delivered on stacked feature branches.
+- **2026-04-15:** **Dashboard v3 deployed to live.** 10 sprint branches fast-forwarded onto `main` (40 commits), all 7 schema migrations applied to `quietly_db` plus a `sprint-v2-backfill.sql` to catch up the v2.0 schema that had never been migrated to live (live was still on pre-v2.0 code). `julia-dash` rebuilt + recreated cleanly. All pages return 200. Existing data preserved (64 tenants, 3 properties, 23 tickets, 241 messages). Rollback assets kept for 7 days: `/root/backups/quietly_db_20260415_154519.sql.gz`, `/docker/quietly-dash.bak-20260415_154519/`, docker image tag `n8n-dashboard:pre-c10-20260415`. Audit: `MIGRATION_AUDIT_2026-04-15.md`.
 
-## Dashboard v3 Rework (dev-only, 2026-04-13 → 2026-04-14)
+## Dashboard v3 (live since 2026-04-15)
 
-**Live is untouched since 2026-04-12.** All work is on five feature branches never merged to main. Dev VPS `pm.srv1466948.hstgr.cloud` runs the `sprint-c3-comms` tip.
+All sprint branches are merged into `main`. Live and dev run the same code (intentional data/credential split — live uses Julia's real Gmail/Telegram/WhatsApp/Twilio; dev uses test bot + Meta sandbox).
 
 ### Branch ledger
 
 | Branch | What it adds (stacked on the one above) |
 |--------|------------------------------------------|
-| `main` (`75a1e23`) | Frozen since 2026-04-12 — Dashboard v2.0 |
+| `main` (now at `a76a4fe`, deployed to live 2026-04-15) | All 10 sprints merged; live running this |
 | `sprint-a-ux` | Keyboard layer + cmd-K + Smart Summary + saved views + action stats + help badges + inbox triage |
 | `sprint-b-depth` | Smart Summary cache + audit log + tenant drawer + CSV export + bulk ticket actions + test-integration + health strip + preferences + `lib/tz.ts` |
 | `sprint-c1-glance` | Ticket timeline + urgency weight + All Clear + property audit timeline + financial card (dashboard experiments rolled back, non-dashboard kept) |
