@@ -1,18 +1,18 @@
 # Julia PM — Product TODO
 
-**Status as of 2026-04-15:** Dashboard v3 is live. 10 sprint branches (A → C10) merged into `main` and deployed. Most of the original 55-item backlog shipped.
+**Status as of 2026-04-15:** Dashboard v2.0 is live. 10 sprint branches (A → C10) merged into `main` and deployed. Most of the original 55-item backlog shipped.
 
 Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platform/infra, `[qc]` = Quebec-specific.
 
 ---
 
-## ✅ Shipped 2026-04-13 → 2026-04-15 (v3)
+## ✅ Shipped 2026-04-13 → 2026-04-15 (v2.0)
 
 **Sprint A — UX foundation:** keyboard layer + `⌘K`/`Ctrl+K` search · Smart Summary on tickets · saved views + filter chips · action-framed stat cards · `?` help badges · Inbox Today/This week/Later grouping · triage flow.
 
 **Sprint B — depth + schema:** audit log + 30-day undo · tenant drawer (Chat/Tickets/Lease) · CSV export · bulk ticket actions · test-integration buttons · 7-day integration health strip · quiet hours / timezone / UI language preferences · `lib/tz.ts` centralized timezone.
 
-**Sprint C1 — at-a-glance:** ticket timeline · urgency visual weight · All Clear celebration · property audit timeline · property financial snapshot. (Dashboard v3 experiments rolled back — Morning Huddle / donut / sparkline shelved; unused components cleaned up.)
+**Sprint C1 — at-a-glance:** ticket timeline · urgency visual weight · All Clear celebration · property audit timeline · property financial snapshot. (Dashboard redesign experiments rolled back — Morning Huddle / donut / sparkline shelved; unused components cleaned up.)
 
 **Sprint C2 — reporting + metrics:** `/reporting` page (30-day KPIs) · vendor performance columns · Fast badge · preferred vendor starring · availability dot · inbox snooze.
 
@@ -46,7 +46,7 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
 - [ ] **G. AI translation polish diff view** `[dash][qc]` — originally #24. Toggle that shows FR ↔ EN diff for broadcasts.
 - [ ] **H. Vendor magic-link Accept/Decline/Done** `[dash][n8n]` — tokenized links in dispatch email. Low scope vs full portal.
 - [ ] **I. Ask Julia AI help agent** `[dash]` — docs-scoped tab on existing chat widget.
-- [ ] **J. First-visit guided tour** `[dash]` — 60-second overlay walkthrough of v3 features for Julia.
+- [ ] **J. First-visit guided tour** `[dash]` — 60-second overlay walkthrough of v2.0 features for Julia.
 
 ### Big projects (multi-day, higher risk)
 - [ ] **K. RL-31 tax slip generator** `[dash][qc]` — seasonal. **Prereq: register Quietly as Revenu Québec partner** (https://www.revenuquebec.ca/en/partners/registering-as-a-partner/) well before end-of-Feb filing deadline.

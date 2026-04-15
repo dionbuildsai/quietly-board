@@ -349,7 +349,7 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - If unsure whether a change is safe, ASK before deploying
 - n8n workflow changes: backup → import → publish → restart → verify
 
-**App went live: 2026-03-27** · **Dashboard v3 shipped to live: 2026-04-15** (40 commits + 8 schema migrations, all additive)
+**App went live: 2026-03-27** · **Dashboard v2 shipped to live: 2026-04-15** (40 commits + 8 schema migrations, all additive)
 
 ### Post-Launch Monitoring
 - Watch for Claude API failures (tenant gets no reply)
@@ -443,10 +443,10 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **2026-04-10:** Twilio refactor deployed to live, phone SMS follow-up feature, dashboard v1.5
 - **2026-04-11:** CLAUDE.md audit + cleanup, Gmail OAuth refactor (4 send nodes → dashboard token), announcements per-channel breakdown, advanced settings page, broadcast channel brand icons
 - **2026-04-12:** Lease management (upload PDF + AI extraction + manual entry), property detail page (unit-first view with occupancy, stat cards, collapsible sections), property form (civic number, street, postal code), rent increase notice system (TAL form PDF generation + email delivery + response tracking + auto-accept), signature upload for documents, UI polish (card shadows, table styling, sidebar cleanup)
-- **2026-04-13/14:** Dashboard v3 overhaul built on dev. Sprints A/B/C1–C10 delivered on stacked feature branches.
-- **2026-04-15:** **Dashboard v3 deployed to live.** 10 sprint branches fast-forwarded onto `main` (40 commits), all 7 schema migrations applied to `quietly_db` plus a `sprint-v2-backfill.sql` to catch up the v2.0 schema that had never been migrated to live (live was still on pre-v2.0 code). `julia-dash` rebuilt + recreated cleanly. All pages return 200. Existing data preserved (64 tenants, 3 properties, 23 tickets, 241 messages). Rollback assets kept for 7 days: `/root/backups/quietly_db_20260415_154519.sql.gz`, `/docker/quietly-dash.bak-20260415_154519/`, docker image tag `n8n-dashboard:pre-c10-20260415`. Audit: `MIGRATION_AUDIT_2026-04-15.md`.
+- **2026-04-13/14:** Dashboard v2 overhaul built on dev. Sprints A/B/C1–C10 delivered on stacked feature branches.
+- **2026-04-15:** **Dashboard v2 deployed to live.** 10 sprint branches fast-forwarded onto `main` (40 commits), all 7 schema migrations applied to `quietly_db` plus a `sprint-v2-backfill.sql` to catch up the v2.0 schema that had never been migrated to live (live was still on pre-v2.0 code). `julia-dash` rebuilt + recreated cleanly. All pages return 200. Existing data preserved (64 tenants, 3 properties, 23 tickets, 241 messages). Rollback assets kept for 7 days: `/root/backups/quietly_db_20260415_154519.sql.gz`, `/docker/quietly-dash.bak-20260415_154519/`, docker image tag `n8n-dashboard:pre-c10-20260415`. Audit: `MIGRATION_AUDIT_2026-04-15.md`.
 
-## Dashboard v3 (live since 2026-04-15)
+## Dashboard v2 (live since 2026-04-15)
 
 All sprint branches are merged into `main`. Live and dev run the same code (intentional data/credential split — live uses Julia's real Gmail/Telegram/WhatsApp/Twilio; dev uses test bot + Meta sandbox).
 
@@ -572,7 +572,7 @@ migrations/sprint-c7.sql
 | #22 Scheduled broadcasts | Schema ready, runner missing | Needs n8n cron or `/api/cron/broadcast-fire` route. |
 | #24 AI translation polish diff view | Not started | Existing `/api/translate` is fine. |
 | #47 "Ask Julia AI" help agent docs tab | Not started | Chat widget answers data questions; adding a "Help" tab scope is small. |
-| Dashboard redesign | Rolled back to Sprint B | Every v3 attempt was rejected. Unused components (MorningHuddle, sparkline, charts) remain in codebase for reuse. |
+| Dashboard redesign | Rolled back to Sprint B | Every redesign attempt was rejected. Unused components (MorningHuddle, sparkline, charts) remain in codebase for reuse. |
 | Tier 4 | Park | Drag-drop tenants, full vendor portal, OCR media, A/B broadcasts, loading skeletons, error boundaries |
 
 ### Platform prerequisites (still pending)
