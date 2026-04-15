@@ -9,6 +9,10 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
 ## TIER 1 — Build first, next 2 sprints
 
 - [ ] **1. RL-31 tax slip generator + bulk email** `[dash][qc]` — legally required annually; lease data already exists.
+  - Prerequisite: register Quietly as a Revenu Québec partner at
+    https://www.revenuquebec.ca/en/partners/registering-as-a-partner/
+    before any production RL-31 filing. Apply well before next tax
+    season (filings due end of Feb). Not blocking for dev work.
 - [ ] **2. Inbox "Today View"** `[dash]` — Today / This Week / Later grouping; default Today expanded.
 - [ ] **3. cmd-K full-text search** `[dash]` — tickets, messages, tenants; grouped results, live.
 - [ ] **4. Smart Summary on ticket detail** `[dash]` — 3-line Haiku catch-up above conversation.
@@ -63,6 +67,10 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
 - [ ] **47. "Ask Julia AI" help agent (docs-scoped)** `[dash]` — reuses existing widget, Data / Help tabs.
 - [ ] **48. Searchable FAQ markdown** `[dash]` — search bar above Help videos.
 - [ ] **49. First-visit guided tour replay** `[dash]` — 60-sec overlay walkthrough, dismissable.
+
+## TIER 1.5 — Post-C2 addition (backlog, not yet scheduled)
+
+- [ ] **56. "Who did the job?" on ticket completion** `[dash][n8n]` — when a ticket is marked resolved/closed, prompt the owner to attribute the work. If a vendor was dispatched through the system, prefill that vendor. If no dispatch happened, show a free-text field + recent-vendors dropdown so they can pick or type a name (e.g., "Self", "Friend of tenant", new vendor). Writes back to `maintenance_requests.vendor` (or a new `resolved_by` column) so vendor performance stats reflect reality, including work done by vendors never dispatched through the platform. Needed so the Sprint C2 vendor KPIs stay accurate.
 
 ## TIER 4 — Park until 2+ clients or clear demand
 

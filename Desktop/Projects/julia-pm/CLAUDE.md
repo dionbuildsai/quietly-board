@@ -451,16 +451,21 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 
 ### Branch ledger
 
-| Branch | Tip | Status | What it adds (on top of the one above) |
-|--------|-----|--------|------------------------------------------|
-| `main` | `75a1e23` | frozen | Dashboard v2.0 (2026-04-12) |
-| `sprint-a-ux` | `070a40a` | merged into b | UX foundation |
-| `sprint-b-depth` | `baef181` | merged into c1 | Schema depth + tz helper |
-| `sprint-c1-glance` | `f724b0a` | merged into c2 | At-a-glance polish (dashboard reverted, non-dashboard kept) |
-| `sprint-c2-metrics` | `20d79b3` | merged into c3 | Reporting, vendor perf, snooze |
-| `sprint-c3-comms` | `4edd857` | **current dev tip** | Templates, preview, FAQ, collapsed videos |
+| Branch | What it adds (stacked on the one above) |
+|--------|------------------------------------------|
+| `main` (`75a1e23`) | Frozen since 2026-04-12 — Dashboard v2.0 |
+| `sprint-a-ux` | Keyboard layer + cmd-K + Smart Summary + saved views + action stats + help badges + inbox triage |
+| `sprint-b-depth` | Smart Summary cache + audit log + tenant drawer + CSV export + bulk ticket actions + test-integration + health strip + preferences + `lib/tz.ts` |
+| `sprint-c1-glance` | Ticket timeline + urgency weight + All Clear + property audit timeline + financial card (dashboard experiments rolled back, non-dashboard kept) |
+| `sprint-c2-metrics` | `/reporting` + vendor performance + preferred starring + availability dot + inbox snooze |
+| `sprint-c3-comms` | Announcement templates + channel preview + searchable FAQ + collapsed video playlist |
+| `sprint-c4-polish` | Greeting in Crimson Pro + contextual alerts strip + today-divider + inbox renewals demoted + stacked action buttons + property health stripe + tenant avatars (EN clay / FR sage) + open-ticket badge + View Lease button + vendors single sortable table + starred-row tint + phone/email quick-action buttons + theme tweaks (warm red, sage tint softened, "vacancyies"→"vacancies") |
+| `sprint-c5-units` | `units` table + `tenants.unit_id` + multi-tenant per unit + co-tenants subtitle on unit cards + occupancy math fix (distinct unit_id, not tenant rows) |
+| `sprint-c6-lessees` | `lease_tenants` join + multi-lessee per lease capped at 4 + `LesseeChips` component + `/api/leases/[id]/lessees` |
+| `sprint-c7-expenses` | `expenses` table + `ExpenseForm` + `PropertyExpenses` collapsible + receipt uploads (PDF/image) + per-property yearly spend + portfolio-wide spent-this-year on properties header |
+| **`sprint-c8-resolve-renew`** (tip) | `ResolveTicketDialog` (who-did-the-job prompt on resolve + inline expense + receipt upload) + multi-lessee rent-increase distribution (To: all lessees with auto-formatted greeting) + clickable tenant/property/phone/email on ticket detail + dashboard greeting reword + RL-31 partner-registration note |
 
-Each branch is committed + pushed to `origin`. No branch has ever been merged to main — they're stacked.
+Each branch is committed + pushed to origin. No branch has ever been merged to main — they're stacked linearly. Dev server runs the C8 tip.
 
 ### Feature-by-feature inventory (all on dev)
 
@@ -509,7 +514,7 @@ Each branch is committed + pushed to `origin`. No branch has ever been merged to
 - Searchable FAQ on `/help`: markdown source at `src/content/faq.md` → parsed by `/api/faq` → `FaqSearch` component at top of Help page with debounced query and expandable answers.
 - Collapsed video playlist: videos section now defaults closed. Compact rows with YouTube thumbnail + title. Click plays inline autoplay iframe; close returns to list.
 
-### Schema applied to `pm_dev_db` only (all additive)
+### Schema applied to `pm_dev_db` only (all additive, all idempotent)
 
 ```
 migrations/sprint-b.sql
@@ -532,19 +537,52 @@ migrations/sprint-c3.sql
                             body_fr, category, icon, is_builtin)
   · broadcasts.status + scheduled_for + template_id + body_fr + created_by
   · 8 seed templates in announcement_templates
+
+migrations/sprint-c5.sql
+  · units (id, property_id, unit_number, bedrooms, sqft, notes)
+    with UNIQUE (property_id, unit_number)
+  · tenants.unit_id UUID FK to units(id)
+  · backfill: 15 unit rows created from existing tenants,
+    16 tenants linked. tenants.unit_number kept as denormalized
+    cache so n8n workflows unaffected.
+
+migrations/sprint-c6.sql
+  · lease_tenants (lease_id, tenant_id, added_at PK)
+  · backfill: every lease.tenant_id → lease_tenants row
+  · MAX_LESSEES_PER_LEASE = 4 (lives in lib/constants.ts)
+
+migrations/sprint-c7.sql
+  · expenses (id, property_id, vendor_id?, ticket_id?, amount,
+              currency, expense_date, category, description,
+              receipt_path, notes)
+  · indexes on property_id, expense_date, and (property_id, year)
+  · 8 categories: repair/maintenance/utility/insurance/
+    property_tax/mgmt_fee/supplies/other
 ```
 
 ### Known unfinished (deferred or not started)
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Dashboard redesign | Rolled back to Sprint B | Every v3 attempt was rejected. Tree of deferred components (MorningHuddle, charts) remains in codebase for reuse. |
-| #56 "Who did the job?" on resolve | Not started | Added to TODO.md. Would feed vendor stats for jobs done outside dispatch. |
-| #22 Scheduled broadcasts | Schema ready, runner missing | Needs n8n workflow or Next.js cron to fire due `scheduled_for` rows. |
-| #24 AI translation polish diff view | Not started | Existing `/api/translate` covers the basic case. |
-| #47 "Ask Julia AI" help agent (docs-scoped) | Not started | Chat widget already answers data questions. Adding a "Help" tab to it is small. |
-| Sprint D (careful ones) | Not started | RL-31, finish renewal wizard, late-rent detection, tenant portal, vendor magic link, Postgres `$env` refactor, webhook auth |
+| **#1 RL-31 tax slip generator** | Not started | **Prerequisite: register Quietly as a Revenu Québec partner** at https://www.revenuquebec.ca/en/partners/registering-as-a-partner/ — can't file production RL-31s until that's in place. Apply well before end-of-Feb tax deadline. Not blocking dev work. |
+| **#6 Late-rent detection** | Not started | Pairs naturally with C7 expenses — owners can now see income vs spend, adding rent-collection visibility closes the money loop. |
+| **#13 Tenant portal** | Not started | Tokenized magic links, read-only view of tickets + rent + lease PDF + photo uploads. Deflects 30–50% of inbound. |
+| **#14 Vendor magic-link** | Not started | Tokenized Accept/Decline/Done links in dispatch emails. Simpler than a full portal. |
+| #22 Scheduled broadcasts | Schema ready, runner missing | Needs n8n cron or `/api/cron/broadcast-fire` route. |
+| #24 AI translation polish diff view | Not started | Existing `/api/translate` is fine. |
+| #47 "Ask Julia AI" help agent docs tab | Not started | Chat widget answers data questions; adding a "Help" tab scope is small. |
+| Dashboard redesign | Rolled back to Sprint B | Every v3 attempt was rejected. Unused components (MorningHuddle, sparkline, charts) remain in codebase for reuse. |
 | Tier 4 | Park | Drag-drop tenants, full vendor portal, OCR media, A/B broadcasts, loading skeletons, error boundaries |
+
+### Platform prerequisites (still pending)
+
+| | |
+|---|---|
+| **P1** | Postgres credentials refactor to `$env` — last credential refactor before multi-client templating |
+| **P2** | Auth on `/ticket-management` and `/sms-intake` webhooks (open surface today) |
+| **P3** | Gmail incoming polling — re-enable after fixing |
+| **P4** | Region pack abstraction (Quebec = Pack #1) |
+| **P5** | Per-client provisioning script (5h manual → 30min automated) |
 
 ### Visual reference: dashboard screenshots
 
