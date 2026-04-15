@@ -546,6 +546,16 @@ migrations/sprint-c3.sql
 | Sprint D (careful ones) | Not started | RL-31, finish renewal wizard, late-rent detection, tenant portal, vendor magic link, Postgres `$env` refactor, webhook auth |
 | Tier 4 | Park | Drag-drop tenants, full vendor portal, OCR media, A/B broadcasts, loading skeletons, error boundaries |
 
+### Visual reference: dashboard screenshots
+
+The folder `~/Desktop/Projects/julia-pm/screenshots/` holds ONE current PNG per primary dashboard page (14 pages total). Regenerate after any UI-affecting deploy so the reference stays honest:
+
+```bash
+~/Desktop/Projects/julia-pm/tools/screenshot-dashboard.sh
+```
+
+Takes ~30s using macOS Chrome headless at 1440×900, passes basic-auth via URL. Files overwrite in place — no versioning. `screenshots/README.md` lists what each file maps to. Use these as visual reference when reasoning about design changes — code diffs alone don't catch "this feels cramped" or "the green fights the palette."
+
 ### Dev deploy flow — ALWAYS exclude docker-compose.yml
 ```bash
 cd ~/Desktop/Projects/quietly-dash
