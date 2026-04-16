@@ -34,10 +34,16 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
 
 ## 🟡 OPEN — ranked by ROI
 
+### Next priority — Tax snapshot / annual financial export
+- [ ] **A. Tax snapshot: "Generate annual summary" button** `[dash][qc]` — one-click per-property-per-year financial export for accountant. Target format: Quebec TP-128-V (Rental Income & Expenses). ~1 full day.
+  - **Data model additions:** `mortgages` table (property_id, principal, rate, start_date, monthly_payment — app calculates interest paid YTD via amortization). New expense categories: `school_tax`, `mortgage_interest`, `advertising`, `legal`, `utilities_landlord`.
+  - **UI:** button on `/reporting` + each property page → pick year → preview per-property table with revenue (from confirmed leases) + expenses grouped by TP-128 line items + net income.
+  - **Output:** ZIP containing: `summary.pdf` (printable, property-by-property), `summary.csv` (accountant import), `receipts/` folder (every receipt renamed `YYYY-MM-DD_category_vendor.ext`).
+  - **Privacy note:** financial data stored in DB same as tenant data; Dion has DB access. No financial data sent to Claude API — summary is pure SQL + PDF generation. Consider a 1-page DPA (Data Processing Agreement) for Julia to sign.
+
 ### Quick wins (≤ half day each)
-- [ ] **A. Late-rent detection** `[dash]` — flag tenants past due date, surface on Reporting + property cards. ~3h.
-- [ ] **B. Auto-accept cron for rent increases** `[dash][plat]` — nightly call to `autoAcceptExpiredRentIncreases()` so it doesn't require visiting the property page. ~30min.
-- [ ] **C. Recurring property expenses** `[dash]` — insurance / property tax / school tax entries that auto-regenerate monthly/yearly. Gives Monthly income → net income. ~4h.
+- [ ] **B. Late-rent detection** `[dash]` — flag tenants past due date, surface on Reporting + property cards. ~3h.
+- [ ] **C. Auto-accept cron for rent increases** `[dash][plat]` — nightly call to `autoAcceptExpiredRentIncreases()` so it doesn't require visiting the property page. ~30min.
 - [ ] **D. Disk usage alert (>80%)** `[plat]` — Telegram ping to Dion when live VPS crosses threshold. ~30min.
 - [ ] **E. Expense receipt path test on live** `[plat]` — verify uploads actually persist. ~15min.
 
@@ -49,7 +55,7 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
 - [ ] **J. First-visit guided tour** `[dash]` — 60-second overlay walkthrough of v2.0 features for Julia.
 
 ### Big projects (multi-day, higher risk)
-- [ ] **K. RL-31 tax slip generator** `[dash][qc]` — seasonal. **Prereq: register Quietly as Revenu Québec partner** (https://www.revenuquebec.ca/en/partners/registering-as-a-partner/) well before end-of-Feb filing deadline.
+- [ ] **K. RL-31 tax slip generator** `[dash][qc]` — seasonal. **Prereq: register Quietly as Revenu Québec partner** (https://www.revenuquebec.ca/en/partners/registering-as-a-partner/) well before end-of-Feb filing deadline. Note: tax snapshot (item A) provides the financial data RL-31 will reference.
 - [ ] **L. Tenant web portal** `[dash]` — tokenized magic links, read-only tickets/rent/lease. Biggest feature. Defer until Julia asks.
 - [ ] **M. Lease renewal wizard** `[dash][qc]` — 90-day countdown → notice → track → auto-accept. (Rent-increase piece shipped; countdown UI is the gap.)
 - [ ] **N. Full vendor portal** `[dash]` — upgrade from H when scale justifies. Tier 4.
