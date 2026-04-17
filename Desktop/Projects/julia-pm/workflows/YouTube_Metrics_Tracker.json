@@ -1,0 +1,103 @@
+{
+  "name": "[Metrics] YouTube Video Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "yt-cron-001",
+      "name": "Every Day 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/youtube/v3/playlistItems",
+        "qs": {
+          "part": "contentDetails",
+          "playlistId": "UUe2nL4hjv3d_rPva4Vt0P-w",
+          "maxResults": 50,
+          "key": "={{ $env.YOUTUBE_API_KEY }}"
+        },
+        "options": {}
+      },
+      "id": "yt-playlist-001",
+      "name": "Get All Video IDs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.items || [];\nconst videoIds = items.map(i => i.contentDetails.videoId).join(',');\nreturn [{ json: { videoIds } }];"
+      },
+      "id": "yt-extract-001",
+      "name": "Extract Video IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "qs": {
+          "part": "snippet,statistics",
+          "id": "={{ $json.videoIds }}",
+          "key": "={{ $env.YOUTUBE_API_KEY }}"
+        },
+        "options": {}
+      },
+      "id": "yt-stats-001",
+      "name": "Get Video Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.items || [];\nconst today = new Date().toISOString().split('T')[0];\n\nconst videos = items.map((v, i) => {\n  const s = v.snippet;\n  const st = v.statistics;\n  return {\n    video_id: v.id,\n    title: s.title,\n    published_at: s.publishedAt.split('T')[0],\n    views: parseInt(st.viewCount || '0'),\n    likes: parseInt(st.likeCount || '0'),\n    comments: parseInt(st.commentCount || '0'),\n    snapshot_date: today,\n    position: i + 1\n  };\n});\n\n// Build Telegram message\nconst totalViews = videos.reduce((s, v) => s + v.views, 0);\nconst totalLikes = videos.reduce((s, v) => s + v.likes, 0);\n\nlet msg = `📊 Daily Video Report — ${today}\\n\\n`;\nmsg += `Channel: ${videos.length} videos | ${totalViews.toLocaleString()} total views\\n\\n`;\n\n// Sort by views descending\nconst sorted = [...videos].sort((a, b) => b.views - a.views);\n\nfor (const v of sorted.slice(0, 10)) {\n  const daysOld = Math.floor((Date.now() - new Date(v.published_at).getTime()) / 86400000);\n  const isNew = daysOld <= 2;\n  msg += `${isNew ? '⭐ ' : ''}${v.title.slice(0, 50)}\\n`;\n  msg += `  👀 ${v.views.toLocaleString()} | 👍 ${v.likes} | 💬 ${v.comments}`;\n  msg += ` | ${daysOld}d old\\n\\n`;\n}\n\nreturn [{ json: { message: msg, videos } }];"
+      },
+      "id": "yt-format-001",
+      "name": "Format Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "body": {
+          "chat_id": "6216258938",
+          "text": "={{ $json.message }}",
+          "parse_mode": "HTML"
+        },
+        "options": {}
+      },
+      "id": "yt-notify-001",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300]
+    }
+  ],
+  "connections": {
+    "Every Day 9AM": { "main": [[{ "node": "Get All Video IDs", "type": "main", "index": 0 }]] },
+    "Get All Video IDs": { "main": [[{ "node": "Extract Video IDs", "type": "main", "index": 0 }]] },
+    "Extract Video IDs": { "main": [[{ "node": "Get Video Stats", "type": "main", "index": 0 }]] },
+    "Get Video Stats": { "main": [[{ "node": "Format Report", "type": "main", "index": 0 }]] },
+    "Format Report": { "main": [[{ "node": "Send to Telegram", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
