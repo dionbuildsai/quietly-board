@@ -1128,7 +1128,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT apply_history_fix.py backup_before_address_migration_20260326_214543.sql budibase fix_acceptance_finalized.sql fix_conversation_history_db.py fix_ezsign.sql fix_fetch_doc.sql fix_signed_format.sql matrix-scraper rv1285597:~# systemctl status caddy update_full_extract.sql FROM maintenance_requests WHERE ticket_id = '{{ $('Parse Callback').item.json.ticket_id }}' LIMIT 1",
+        "query": "SELECT ticket_id, tenant_name, phone, category, urgency, summary, property, unit_number, status FROM maintenance_requests WHERE ticket_id = '{{ $(\"Parse Callback\").item.json.ticket_id }}' LIMIT 1",
         "options": {}
       },
       "id": "7b7d1b8e-281c-4f39-8f94-e1f73bbee161",
@@ -1198,7 +1198,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Send vendor dispatch via SMS + WhatsApp (replaces email)\nconst vendorPhone = $('Confirm Vendor').item.json.phone;\nconst vendorName = $('Confirm Vendor').item.json.vendor_name || 'Vendor';\nconst messageBody = ($json.text || $json.response || '')\n  .replace(/<br\\s*\\/?>/gi, '\\n')\n  .replace(/<\\/p>/gi, '\\n\\n')\n  .replace(/<[^>]*>/g, '')\n  .trim();\n\nif (!vendorPhone) {\n  // No phone \u2014 notify owner and skip\n  const ownerChatId = $('Parse Callback').item.json.chat_id || '6216258938';\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage',\n      body: { chat_id: ownerChatId, text: '\\u26a0\\ufe0f Vendor ' + vendorName + ' has no phone number \u2014 dispatch could not be sent. Add their phone in the Vendors page.' },\n      json: true,\n      timeout: 10000\n    });\n  } catch (e) {}\n  return [{ json: { sent: false, error: 'No vendor phone' } }];\n}\n\nconst cleanPhone = vendorPhone.replace(/[^0-9+]/g, '');\nconst results = { sms: false, whatsapp: false };\n\n// \u2500\u2500 SMS via Twilio \u2500\u2500\ntry {\n  const sid = $env.TWILIO_ACCOUNT_SID;\n  const token = $env.TWILIO_AUTH_TOKEN;\n  const fromNumber = $env.TWILIO_FROM_NUMBER || '+14389009998';\n  if (sid && token) {\n    const auth = Buffer.from(sid + ':' + token).toString('base64');\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.twilio.com/2010-04-01/Accounts/' + sid + '/Messages.json',\n      headers: { 'Authorization': 'Basic ' + auth, 'Content-Type': 'application/x-www-form-urlencoded' },\n      body: 'From=' + encodeURIComponent(fromNumber) + '&To=' + encodeURIComponent(cleanPhone) + '&Body=' + encodeURIComponent(messageBody),\n      json: false,\n      timeout: 15000\n    });\n    results.sms = true;\n  }\n} catch (e) {\n  results.sms = false;\n}\n\n// \u2500\u2500 WhatsApp via Meta \u2500\u2500\ntry {\n  const waPhoneId = $env.WHATSAPP_PHONE_NUMBER_ID;\n  const waToken = $env.WHATSAPP_TOKEN;\n  if (waPhoneId && waToken) {\n    const waPhone = cleanPhone.replace(/^\\+/, '');\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://graph.facebook.com/v21.0/' + waPhoneId + '/messages',\n      headers: { 'Authorization': 'Bearer ' + waToken, 'Content-Type': 'application/json' },\n      body: JSON.stringify({ messaging_product: 'whatsapp', to: waPhone, type: 'text', text: { body: messageBody } }),\n      json: true,\n      timeout: 15000\n    });\n    results.whatsapp = true;\n  }\n} catch (e) {\n  results.whatsapp = false;\n}\n\nreturn [{ json: { sent: results.sms || results.whatsapp, sms: results.sms, whatsapp: results.whatsapp, phone: cleanPhone, vendor: vendorName } }];"
+        "jsCode": "// Send vendor dispatch via SMS + WhatsApp (replaces email)\nconst vendorPhone = $('Confirm Vendor').item.json.phone;\nconst vendorName = $('Confirm Vendor').item.json.vendor_name || 'Vendor';\nconst messageBody = ($json.text || $json.response || '')\n  .replace(/<br\\s*\\/?>/gi, '\\n')\n  .replace(/<\\/p>/gi, '\\n\\n')\n  .replace(/<[^>]*>/g, '')\n  .trim();\n\nif (!vendorPhone) {\n  // No phone \u2014 notify owner and skip\n  const ownerChatId = $('Parse Callback').item.json.chat_id || '6216258938';\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage',\n      body: { chat_id: ownerChatId, text: '\\u26a0\\ufe0f Vendor ' + vendorName + ' has no phone number \u2014 dispatch could not be sent. Add their phone in the Vendors page.' },\n      json: true,\n      timeout: 10000\n    });\n  } catch (e) {}\n  return [{ json: { sent: false, error: 'No vendor phone' } }];\n}\n\nconst cleanPhone = vendorPhone.replace(/[^0-9+]/g, '');\n// Ensure E.164 format for Twilio (must start with +)\nif (cleanPhone && !cleanPhone.startsWith('+')) {\n  cleanPhone = '+' + (cleanPhone.startsWith('1') ? cleanPhone : '1' + cleanPhone);\n}\n\nconst results = { sms: false, whatsapp: false };\n\n// \u2500\u2500 SMS via Twilio \u2500\u2500\ntry {\n  const sid = $env.TWILIO_ACCOUNT_SID;\n  const token = $env.TWILIO_AUTH_TOKEN;\n  const fromNumber = $env.TWILIO_FROM_NUMBER || '+14389009998';\n  if (sid && token) {\n    const auth = Buffer.from(sid + ':' + token).toString('base64');\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.twilio.com/2010-04-01/Accounts/' + sid + '/Messages.json',\n      headers: { 'Authorization': 'Basic ' + auth, 'Content-Type': 'application/x-www-form-urlencoded' },\n      body: 'From=' + encodeURIComponent(fromNumber) + '&To=' + encodeURIComponent(cleanPhone) + '&Body=' + encodeURIComponent(messageBody),\n      json: false,\n      timeout: 15000\n    });\n    results.sms = true;\n  }\n} catch (e) {\n  results.sms = false;\n}\n\n// \u2500\u2500 WhatsApp via Meta \u2500\u2500\ntry {\n  const waPhoneId = $env.WHATSAPP_PHONE_NUMBER_ID;\n  const waToken = $env.WHATSAPP_TOKEN;\n  if (waPhoneId && waToken) {\n    const waPhone = cleanPhone.replace(/^\\+/, '');\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://graph.facebook.com/v21.0/' + waPhoneId + '/messages',\n      headers: { 'Authorization': 'Bearer ' + waToken, 'Content-Type': 'application/json' },\n      body: JSON.stringify({ messaging_product: 'whatsapp', to: waPhone, type: 'text', text: { body: messageBody } }),\n      json: true,\n      timeout: 15000\n    });\n    results.whatsapp = true;\n  }\n} catch (e) {\n  results.whatsapp = false;\n}\n\nconst channels = [results.sms ? 'SMS' : null, results.whatsapp ? 'WhatsApp' : null].filter(Boolean).join(' + ') || 'NONE';\nreturn [{ json: { sent: results.sms || results.whatsapp, sms: results.sms, whatsapp: results.whatsapp, phone: cleanPhone, vendor: vendorName, channels } }];"
       },
       "id": "604d8fa4-1126-40d2-95a3-41255f2e6d64",
       "name": "Send Vendor SMS + WhatsApp",
@@ -1222,7 +1222,7 @@
             },
             {
               "name": "text",
-              "value": "=Dispatched! SMS + WhatsApp sent to {{ $('Confirm Vendor').item.json.vendor_name }} ({{ $('Confirm Vendor').item.json.phone }}). Ticket {{ $('Parse Callback').item.json.ticket_id }} updated."
+              "value": "=\u2705 Dispatched via {{ $('Send Vendor SMS + WhatsApp').item.json.channels }}! Sent to {{ $('Confirm Vendor').item.json.vendor_name }} ({{ $('Confirm Vendor').item.json.phone }}). Ticket {{ $('Parse Callback').item.json.ticket_id }} updated."
             }
           ]
         },
@@ -2258,7 +2258,7 @@
         ]
       ]
     },
-    "Email Vendor": {
+    "Send Vendor SMS + WhatsApp": {
       "main": [
         [
           {
@@ -2707,7 +2707,7 @@
       "main": [
         [
           {
-            "node": "Email Vendor",
+            "node": "Send Vendor SMS + WhatsApp",
             "type": "main",
             "index": 0
           }
