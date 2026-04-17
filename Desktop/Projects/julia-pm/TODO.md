@@ -96,3 +96,15 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
   - `srv1285597:/docker/quietly-dash.bak-20260415_154519/`
   - docker image `n8n-dashboard:pre-c10-20260415`
 - [ ] Watch live logs in the next 72h for real-data edge cases
+
+## 📒 2026-04-16 session
+
+- [x] Tenant drawer: matching colors + media support (deployed to live + dev)
+- [x] Ticket timeline: "Owner notified" lights up (deployed to dev only)
+- [x] Vendor dispatch: email → SMS + WhatsApp (deployed to dev n8n only)
+- [x] WhatsApp `vendor_dispatch` template created on both WABAs (PENDING approval)
+- [x] Audit: connection chain fix, phone E.164 format, Confirm Ticket SQL corruption fixed
+- [x] Legal contract stack created (`legal/` dir): service agreement, privacy policy, incident response plan, onboarding checklist, Quietly privacy policy
+- [ ] WhatsApp template approval — check status, test full dispatch flow once approved
+- [ ] Deploy ticket timeline fix to live (when ready)
+- [ ] Deploy vendor dispatch change to live n8n (when ready + tested on dev)
