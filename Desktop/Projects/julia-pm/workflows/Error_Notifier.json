@@ -1,0 +1,41 @@
+{
+  "name": "[Util] Error Notifier",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger-001",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const wfName = $json.workflow?.name || 'Unknown workflow';\nconst wfId = $json.workflow?.id || '';\nconst errorMsg = $json.execution?.error?.message || 'No error message';\nconst execId = $json.execution?.id || '';\nconst execUrl = $json.execution?.url || '';\nconst nodeName = $json.execution?.lastNodeExecuted || 'Unknown node';\n\nconst chatId = $env.TELEGRAM_OWNER_CHAT_ID || '6216258938';\nconst botToken = $env.TELEGRAM_BOT_TOKEN;\n\nconst text = `\\u26a0\\ufe0f n8n ERROR in: ${wfName}\\nNode: ${nodeName}\\nError: ${errorMsg}\\nExec: ${execUrl || execId}`;\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n  body: { chat_id: chatId, text: text },\n  json: true,\n  timeout: 10000\n});\n\nreturn [{ json: { sent: true, chat_id: chatId } }];"
+      },
+      "id": "error-notify-001",
+      "name": "Send Error Telegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    }
+  ],
+  "connections": {
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Send Error Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "error-notifier-001"
+}
