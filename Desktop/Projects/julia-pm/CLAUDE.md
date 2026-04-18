@@ -447,6 +447,18 @@ WA Message POST → Parse Meta Message → Is WA Callback?
 - **2026-04-15:** **Dashboard v2 deployed to live.** 10 sprint branches fast-forwarded onto `main` (40 commits), all 7 schema migrations applied to `quietly_db` plus a `sprint-v2-backfill.sql` to catch up the v2.0 schema that had never been migrated to live (live was still on pre-v2.0 code). `julia-dash` rebuilt + recreated cleanly. All pages return 200. Existing data preserved (64 tenants, 3 properties, 23 tickets, 241 messages). Rollback assets kept for 7 days: `/root/backups/quietly_db_20260415_154519.sql.gz`, `/docker/quietly-dash.bak-20260415_154519/`, docker image tag `n8n-dashboard:pre-c10-20260415`. Audit: `MIGRATION_AUDIT_2026-04-15.md`. Post-deploy fixes: duplicate "View PDF" removed from property detail, unit count bug (was showing tenant count), changelog renamed to v2.0. Live and dev both updated. Storage audit: 50GB free on live, ~500MB/yr media growth = 40+ years of headroom at current scale.
 - **2026-04-16:** Tenant drawer fix deployed to live (matching conversation colors + media rendering). Ticket timeline "Owner notified" fix deployed to dev only. Vendor dispatch changed from email → SMS + WhatsApp (dev only, n8n workflow). WhatsApp `vendor_dispatch` template created on both WABAs (PENDING approval). Legal contract stack created: service agreement (MSA+DPA), tenant privacy policy (bilingual), incident response plan, onboarding checklist, Quietly privacy policy — all in `legal/`. Next feature planned: **Tax snapshot / annual financial export** (TP-128-V). WABA mapping documented: Live = Quietly Systems Inc. (`1257899402537218`), Dev = Test WABA (`1687845152653314`), Property Management (`2292648661231718`) = unused.
 
+- **2026-04-18:** WhatsApp `vendor_dispatch` template APPROVED on both WABAs. Dev testing isolation audit: all dev notifications go to Dion only (owner_chat_id = 6216258938 in dev settings). "Is Dion?" filter is a no-op on dev (owner already Dion). Dispatch nodes use dynamic chat_id from Parse Callback. Dev WhatsApp is fully separate (phone ID `1002910989571888`, WABA `1687845152653314`). Twilio SMS shared but only sends TO tester. Zero risk of Julia/tenant notification from dev.
+
+## WABA (WhatsApp Business Account) Mapping
+
+| WABA ID | Name | Phone | Phone Number ID | Environment |
+|---|---|---|---|---|
+| `1257899402537218` | Quietly Systems Inc. | +1 438-900-9998 | `971537566052793` | **Live** |
+| `1687845152653314` | Test WhatsApp Business Account | +1 555-183-0681 | `1002910989571888` | **Dev** |
+| `2292648661231718` | Property Management | (none) | — | Unused |
+
+**Template:** `vendor_dispatch` (UTILITY, approved) — exists on both Live and Dev WABAs.
+
 ## Dashboard v2 (live since 2026-04-15)
 
 All sprint branches are merged into `main`. Live and dev run the same code (intentional data/credential split — live uses Julia's real Gmail/Telegram/WhatsApp/Twilio; dev uses test bot + Meta sandbox).
