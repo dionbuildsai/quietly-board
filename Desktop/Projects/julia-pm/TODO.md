@@ -105,6 +105,13 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
 - [x] WhatsApp `vendor_dispatch` template created on both WABAs (PENDING approval)
 - [x] Audit: connection chain fix, phone E.164 format, Confirm Ticket SQL corruption fixed
 - [x] Legal contract stack created (`legal/` dir): service agreement, privacy policy, incident response plan, onboarding checklist, Quietly privacy policy
-- [ ] WhatsApp template approval — check status, test full dispatch flow once approved
+- [x] WhatsApp template approved on both WABAs
+- [x] Dispatch tested on dev: SMS works, WhatsApp works (after fixing double JSON encoding + newline stripping)
+- [x] Error Notifier workflow deployed to dev + live (Telegram alerts on any workflow error)
+- [x] Vendor prompt updated: "Julia, property manager" (removed "Julia Inc property management")
+- [x] WhatsApp template text updated: "Call Julia at [number] to confirm" (not "reply")
+- [x] Voice agent already rejects non-tenant callers (no change needed)
+- [ ] Forward unknown-number replies to Julia's Telegram (safety net — deferred)
+- [ ] 24h no-response vendor reminder (deferred)
 - [ ] Deploy ticket timeline fix to live (when ready)
-- [ ] Deploy vendor dispatch change to live n8n (when ready + tested on dev)
+- [ ] Deploy vendor dispatch change to live n8n (when ready)
