@@ -525,7 +525,7 @@
       "typeVersion": 2.5,
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE messages SET ticket_id = '{{ $json.mediaTicketId }}' WHERE chat_id::text = '{{ $json.phone }}' AND (message_text IS NULL OR message_text = '') AND sender NOT IN ('bot', 'system', 'owner') AND ticket_id IS NULL ORDER BY created_at DESC LIMIT 1 RETURNING id",
+        "query": "UPDATE messages SET ticket_id = '{{ $json.mediaTicketId }}' WHERE id = (\n  SELECT id FROM messages \n  WHERE chat_id::text = '{{ $json.phone }}' \n  AND (message_text IS NULL OR message_text = '') \n  AND sender NOT IN ('bot', 'system', 'owner') \n  AND ticket_id IS NULL \n  ORDER BY created_at DESC LIMIT 1\n) RETURNING id",
         "options": {}
       },
       "credentials": {
