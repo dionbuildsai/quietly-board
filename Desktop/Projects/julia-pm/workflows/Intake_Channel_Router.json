@@ -1083,7 +1083,7 @@
           "parameters": [
             {
               "name": "chat_id",
-              "value": "6216258938"
+              "value": "={{ $('Parse Callback').item.json.chat_id || '6216258938' }}"
             },
             {
               "name": "text",
