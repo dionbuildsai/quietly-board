@@ -91,10 +91,10 @@ Tags: `[dash]` = dashboard feature, `[n8n]` = workflow change, `[plat]` = platfo
 - [x] Deploy dashboard container; all pages return 200
 - [x] Dev/live schema + code parity confirmed
 - [x] Update `CLAUDE.md` + `TODO.md` (this file)
-- [ ] Delete rollback snapshots after 7 days (~2026-04-22):
-  - `srv1285597:/root/backups/quietly_db_20260415_154519.sql.gz`
-  - `srv1285597:/docker/quietly-dash.bak-20260415_154519/`
-  - docker image `n8n-dashboard:pre-c10-20260415`
+- [x] Delete rollback snapshots after 7 days (done 2026-04-22):
+  - `srv1285597:/root/backups/quietly_db_20260415_154519.sql.gz` — deleted
+  - `srv1285597:/docker/quietly-dash.bak-20260415_154519/` — deleted (635MB freed)
+  - docker image `n8n-dashboard:pre-c10-20260415` — already pruned during earlier --force-recreate
 - [ ] Watch live logs in the next 72h for real-data edge cases
 
 ## 📒 2026-04-16 session
