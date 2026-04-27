@@ -60,7 +60,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\nconst changes = body.entry?.[0]?.changes?.[0]?.value || {};\nconst messages = changes.messages || [];\n\n// LIVE-only: drop test number traffic so dev handles it exclusively\n// Test number 1002910989571888 is shared between live and dev Meta apps\nconst incomingPhoneId = changes.metadata?.phone_number_id || '';\nif (incomingPhoneId === '1002910989571888') {\n  // Silently drop \u2014 dev workflow will handle this message\n  return [];\n}\n\nif (messages.length === 0) return [];\n\nconst msg = messages[0];\nconst senderPhone = msg.from;\n\n// Handle interactive button replies (video_yes/no + media ticket selection)\nif (msg.type === 'interactive' && msg.interactive?.button_reply) {\n  const buttonTitle = (msg.interactive.button_reply.title || '').toLowerCase().trim();\n  const buttonId = msg.interactive.button_reply.id || '';\n  let action = '';\n  if (buttonTitle === 'yes') action = 'video_yes';\n  else if (buttonTitle === 'no') action = 'video_no';\n  else action = buttonId;\n  return [{ json: { senderPhone, text: '', messageId: msg.id, buttonReplyId: action, isCallback: true } }];\n}\n\n// Handle interactive list replies (media ticket selection)\nif (msg.type === 'interactive' && msg.interactive?.list_reply) {\n  const listId = msg.interactive.list_reply.id || '';\n  return [{ json: { senderPhone, text: '', messageId: msg.id, buttonReplyId: listId, isCallback: true } }];\n}\n\n// Handle template quick reply buttons\nif (msg.type === 'button' && msg.button) {\n  const buttonText = (msg.button.text || '').toLowerCase().trim();\n  const buttonPayload = msg.button.payload || '';\n  let action = '';\n  if (buttonText === 'yes' || buttonPayload === 'yes') action = 'video_yes';\n  else if (buttonText === 'no' || buttonPayload === 'no') action = 'video_no';\n  else action = buttonPayload || buttonText;\n  return [{ json: { senderPhone, text: '', messageId: msg.id, buttonReplyId: action, isCallback: true } }];\n}\n\n// Handle media (image, video, document, audio)\nif (['image', 'video', 'document', 'audio'].includes(msg.type)) {\n  const mediaObj = msg[msg.type] || {};\n  const caption = mediaObj.caption || '';\n  return [{ json: {\n    senderPhone, text: caption, messageId: msg.id,\n    isCallback: false, isMedia: true,\n    mediaType: msg.type, mediaId: mediaObj.id || ''\n  }}];\n}\n\nconst text = msg.text?.body || msg.caption || '';\nif (!text.trim()) return [];\n\nreturn [{ json: { senderPhone, text, messageId: msg.id, isCallback: false, isMedia: false } }];"
+        "jsCode": "const body = $json.body || $json;\nconst changes = body.entry?.[0]?.changes?.[0]?.value || {};\nconst messages = changes.messages || [];\n\n// LIVE-only: drop test number traffic so dev handles it exclusively\n// Test number 1002910989571888 is shared between live and dev Meta apps\nconst incomingPhoneId = changes.metadata?.phone_number_id || '';\nif (incomingPhoneId === '1002910989571888') {\n  // Silently drop — dev workflow will handle this message\n  return [];\n}\n\nif (messages.length === 0) return [];\n\nconst msg = messages[0];\nconst senderPhone = msg.from;\n\n// Handle interactive button replies (video_yes/no + media ticket selection)\nif (msg.type === 'interactive' && msg.interactive?.button_reply) {\n  const buttonTitle = (msg.interactive.button_reply.title || '').toLowerCase().trim();\n  const buttonId = msg.interactive.button_reply.id || '';\n  let action = '';\n  if (buttonTitle === 'yes') action = 'video_yes';\n  else if (buttonTitle === 'no') action = 'video_no';\n  else action = buttonId;\n  return [{ json: { senderPhone, text: '', messageId: msg.id, buttonReplyId: action, isCallback: true } }];\n}\n\n// Handle interactive list replies (media ticket selection)\nif (msg.type === 'interactive' && msg.interactive?.list_reply) {\n  const listId = msg.interactive.list_reply.id || '';\n  return [{ json: { senderPhone, text: '', messageId: msg.id, buttonReplyId: listId, isCallback: true } }];\n}\n\n// Handle template quick reply buttons\nif (msg.type === 'button' && msg.button) {\n  const buttonText = (msg.button.text || '').toLowerCase().trim();\n  const buttonPayload = msg.button.payload || '';\n  let action = '';\n  if (buttonText === 'yes' || buttonPayload === 'yes') action = 'video_yes';\n  else if (buttonText === 'no' || buttonPayload === 'no') action = 'video_no';\n  else action = buttonPayload || buttonText;\n  return [{ json: { senderPhone, text: '', messageId: msg.id, buttonReplyId: action, isCallback: true } }];\n}\n\n// Handle media (image, video, document, audio)\nif (['image', 'video', 'document', 'audio'].includes(msg.type)) {\n  const mediaObj = msg[msg.type] || {};\n  const caption = mediaObj.caption || '';\n  return [{ json: {\n    senderPhone, text: caption, messageId: msg.id,\n    isCallback: false, isMedia: true,\n    mediaType: msg.type, mediaId: mediaObj.id || ''\n  }}];\n}\n\nconst text = msg.text?.body || msg.caption || '';\nif (!text.trim()) return [];\n\nreturn [{ json: { senderPhone, text, messageId: msg.id, isCallback: false, isMedia: false } }];"
       },
       "id": "9e58d7a4-cd5c-4f15-bf23-65a37acc05fe",
       "name": "Parse Meta Message",
@@ -143,7 +143,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst buttonId = input.buttonReplyId || '';\nconst phone = (input.senderPhone || '').replace(/[^0-9]/g, '');\n\nif (!buttonId || !phone) return [{ json: { handled: false, reason: 'no button or phone' } }];\n\nconst isFrench = false;\nlet msg = '';\nlet resolveTicket = false;\nlet isMediaCallback = false;\nlet mediaTicketId = '';\nlet mediaShortId = '';\n\nif (buttonId.startsWith('video_yes')) {\n  msg = isFrench\n    ? \"Super! Content que la vid\u00e9o ait aid\u00e9. Si vous avez d'autres questions, n'h\u00e9sitez pas.\"\n    : 'Great! Glad the video helped. If you have any other questions, feel free to reach out.';\n  resolveTicket = true;\n} else if (buttonId.startsWith('video_no')) {\n  msg = isFrench\n    ? \"Pas de souci! Quelqu'un de notre \u00e9quipe vous contactera bient\u00f4t.\"\n    : 'No worries! Someone from our team will follow up with you soon.';\n} else if (buttonId.startsWith('mc||')) {\n  // Media category/ticket callback\n  const parts = buttonId.split('||');\n  mediaTicketId = parts[1] || '';\n  mediaShortId = parts[2] || '';\n  isMediaCallback = true;\n  msg = '';\n}\n\nif (!msg && !isMediaCallback) return [{ json: { handled: false, reason: 'unknown button: ' + buttonId } }];\n\nreturn [{ json: { handled: true, action: buttonId, phone, resolveTicket, msg, isMediaCallback, mediaTicketId, mediaShortId } }];"
+        "jsCode": "const input = $input.first().json;\nconst buttonId = input.buttonReplyId || '';\nconst phone = (input.senderPhone || '').replace(/[^0-9]/g, '');\n\nif (!buttonId || !phone) return [{ json: { handled: false, reason: 'no button or phone' } }];\n\nconst isFrench = false;\nlet msg = '';\nlet resolveTicket = false;\nlet isMediaCallback = false;\nlet mediaTicketId = '';\nlet mediaShortId = '';\n\nif (buttonId.startsWith('video_yes')) {\n  msg = isFrench\n    ? \"Super! Content que la vidéo ait aidé. Si vous avez d'autres questions, n'hésitez pas.\"\n    : 'Great! Glad the video helped. If you have any other questions, feel free to reach out.';\n  resolveTicket = true;\n} else if (buttonId.startsWith('video_no')) {\n  msg = isFrench\n    ? \"Pas de souci! Quelqu'un de notre équipe vous contactera bientôt.\"\n    : 'No worries! Someone from our team will follow up with you soon.';\n} else if (buttonId.startsWith('mc||')) {\n  // Media category/ticket callback\n  const parts = buttonId.split('||');\n  mediaTicketId = parts[1] || '';\n  mediaShortId = parts[2] || '';\n  isMediaCallback = true;\n  msg = '';\n}\n\nif (!msg && !isMediaCallback) return [{ json: { handled: false, reason: 'unknown button: ' + buttonId } }];\n\nreturn [{ json: { handled: true, action: buttonId, phone, resolveTicket, msg, isMediaCallback, mediaTicketId, mediaShortId } }];"
       },
       "id": "wa-callback-handler",
       "name": "Handle WA Callback",
@@ -348,7 +348,7 @@
       ],
       "typeVersion": 2,
       "parameters": {
-        "jsCode": "const parsed = $('Parse Meta Message').item.json;\nconst pending = $('Save WA Pending Media').item.json;\nconst tickets = $('Get WA Tickets').all().map(i => i.json).filter(t => t.ticket_id);\nconst phone = parsed.senderPhone;\nconst shortId = pending.id.slice(-12);\n\nconst token = $env.WHATSAPP_TOKEN || '';\n\nif (tickets.length > 0) {\n  const rows = tickets.map(t => ({\n    id: 'mc||' + t.ticket_id + '||' + shortId,\n    title: t.ticket_id,\n    description: (t.keywords || t.category || '').replace(/_/g, ' ').slice(0, 72)\n  }));\n\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `https://graph.facebook.com/v21.0/${$env.WHATSAPP_PHONE_NUMBER_ID}/messages`,\n    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },\n    body: {\n      messaging_product: 'whatsapp', to: phone, type: 'interactive',\n      interactive: {\n        type: 'list',\n        body: { text: '\ud83d\udcf8 Photo received! Which ticket is this for?' },\n        action: { button: 'Select ticket', sections: [{ title: 'Open Tickets', rows: rows }] }\n      }\n    },\n    json: true\n  });\n} else {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `https://graph.facebook.com/v21.0/${$env.WHATSAPP_PHONE_NUMBER_ID}/messages`,\n    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },\n    body: { messaging_product: 'whatsapp', to: phone, type: 'text',\n      text: { body: '\ud83d\udcf8 Photo received! Please describe the issue first, then resend the photo.' }\n    },\n    json: true\n  });\n}\n\nreturn [{ json: { sent: true, phone, pendingId: pending.id, ticketCount: tickets.length } }];"
+        "jsCode": "const parsed = $('Parse Meta Message').item.json;\nconst pending = $('Save WA Pending Media').item.json;\nconst tickets = $('Get WA Tickets').all().map(i => i.json).filter(t => t.ticket_id);\nconst phone = parsed.senderPhone;\nconst shortId = pending.id.slice(-12);\n\nconst token = $env.WHATSAPP_TOKEN || '';\n\nif (tickets.length > 0) {\n  const rows = tickets.map(t => ({\n    id: 'mc||' + t.ticket_id + '||' + shortId,\n    title: t.ticket_id,\n    description: (t.keywords || t.category || '').replace(/_/g, ' ').slice(0, 72)\n  }));\n\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `https://graph.facebook.com/v21.0/${$env.WHATSAPP_PHONE_NUMBER_ID}/messages`,\n    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },\n    body: {\n      messaging_product: 'whatsapp', to: phone, type: 'interactive',\n      interactive: {\n        type: 'list',\n        body: { text: '📸 Photo received! Which ticket is this for?' },\n        action: { button: 'Select ticket', sections: [{ title: 'Open Tickets', rows: rows }] }\n      }\n    },\n    json: true\n  });\n} else {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `https://graph.facebook.com/v21.0/${$env.WHATSAPP_PHONE_NUMBER_ID}/messages`,\n    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },\n    body: { messaging_product: 'whatsapp', to: phone, type: 'text',\n      text: { body: '📸 Photo received! Please describe the issue first, then resend the photo.' }\n    },\n    json: true\n  });\n}\n\nreturn [{ json: { sent: true, phone, pendingId: pending.id, ticketCount: tickets.length } }];"
       }
     },
     {
@@ -553,15 +553,15 @@
           "parameters": [
             {
               "name": "phone",
-              "value": "={{ $('Parse Meta Message').item.json.senderPhone }}"
+              "value": "={{ $('Parse Meta Message').first().json.senderPhone }}"
             },
             {
               "name": "message",
-              "value": "={{ $('Parse Meta Message').item.json.text }}"
+              "value": "={{ $('Parse Meta Message').first().json.text }}"
             },
             {
               "name": "messageId",
-              "value": "={{ $('Parse Meta Message').item.json.messageId }}"
+              "value": "={{ $('Parse Meta Message').first().json.messageId }}"
             },
             {
               "name": "senderName",
@@ -597,12 +597,58 @@
                 "type": "string",
                 "operation": "isNotEmpty"
               },
-              "leftValue": "={{ $('Parse Meta Message').item.json.text }}"
+              "leftValue": "={{ $json.caption }}"
             }
           ]
         },
         "options": {}
       }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE pending_media SET ticket_id = sub.ticket_id FROM (   SELECT ticket_id FROM maintenance_requests   WHERE phone = '{{ $('Parse Meta Message').first().json.senderPhone }}'     AND status NOT IN ('resolved', 'closed')   ORDER BY created_at DESC LIMIT 1 ) sub WHERE pending_media.chat_id::text = '{{ $('Parse Meta Message').first().json.senderPhone }}'   AND pending_media.ticket_id IS NULL   AND pending_media.created_at > NOW() - INTERVAL '5 minutes'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2040,
+        400
+      ],
+      "id": "wa-link-pending-media-001",
+      "name": "Link Pending Media to Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Julia DB"
+        }
+      },
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "caption-assign-001",
+              "name": "caption",
+              "value": "={{ ($('Parse Meta Message').first().json.text || '').trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1460,
+        400
+      ],
+      "id": "capture-caption-001",
+      "name": "Capture Caption"
     }
   ],
   "connections": {
@@ -796,7 +842,7 @@
       "main": [
         [
           {
-            "node": "Has Caption?",
+            "node": "Capture Caption",
             "type": "main",
             "index": 0
           }
@@ -837,6 +883,22 @@
         [
           {
             "node": "Get WA Tickets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Link Pending Media to Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Caption": {
+      "main": [
+        [
+          {
+            "node": "Has Caption?",
             "type": "main",
             "index": 0
           }
