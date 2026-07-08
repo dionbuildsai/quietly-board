@@ -244,6 +244,40 @@
       "name": "Log Unknown Channel"
     },
     {
+      "id": "bot-wa-extract-wamid",
+      "name": "Extract Bot Wamid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        640
+      ],
+      "parameters": {
+        "jsCode": "const wamid = ($json.messages || [])[0]?.id || '';\nconst chatId = $('When Called').item.json.chat_id || $('When Called').item.json.phone || '';\nreturn [{ json: { wamid, chat_id: chatId } }];"
+      }
+    },
+    {
+      "id": "bot-wa-update-delivery",
+      "name": "Update Bot WA Delivery Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        560,
+        640
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE messages SET external_message_id = '{{ $json.wamid }}', delivery_status = 'sent' WHERE '{{ $json.wamid }}' != '' AND id = (SELECT id FROM messages WHERE channel = 'whatsapp' AND sender = 'bot' AND (external_message_id IS NULL OR external_message_id = '') AND RIGHT(chat_id, 10) = RIGHT('{{ $json.chat_id }}', 10) ORDER BY created_at DESC LIMIT 1)",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Julia DB"
+        }
+      }
+    },
+    {
       "parameters": {
         "jsCode": "const botToken = $env.TELEGRAM_BOT_TOKEN;\n// If video was included and channel is telegram, send follow-up with buttons\nconst input = $('When Called').item.json;\nif (!input.has_video || input.channel !== 'telegram') {\n  return [{ json: { video_skipped: true } }];\n}\n\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('votre');\n\nconst questionText = isFrench \n  ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n  : 'Did this video help resolve your issue?';\n\nconst yesText = isFrench ? 'Oui \u2705' : 'Yes \u2705';\nconst noText = isFrench ? 'Non \u274c' : 'No \u274c';\n\nconst ticketLookup = input.ticket_id || input.chat_id || '';\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n  body: {\n    chat_id: input.chat_id,\n    text: questionText,\n    reply_markup: JSON.stringify({\n      inline_keyboard: [[\n        { text: yesText, callback_data: 'video_yes||' + ticketLookup },\n        { text: noText, callback_data: 'video_no||' + ticketLookup }\n      ]]\n    })\n  },\n  json: true\n});\n\nreturn [{ json: result }];"
       },
@@ -336,6 +370,28 @@
       ]
     },
     "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Extract Bot Wamid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Bot Wamid": {
+      "main": [
+        [
+          {
+            "node": "Update Bot WA Delivery Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Bot WA Delivery Status": {
       "main": [
         []
       ]
