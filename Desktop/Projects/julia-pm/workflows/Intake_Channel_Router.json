@@ -2140,6 +2140,39 @@
         }
       },
       "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "should-send-reply-cond-001",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $('Check Bot Paused').item.json.bot_paused }}",
+              "rightValue": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "should-send-reply-001",
+      "name": "Should Send Reply?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2176,
+        1680
+      ],
+      "typeVersion": 2.2
     }
   ],
   "connections": {
@@ -2215,7 +2248,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Restore Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Format List": {
@@ -2389,7 +2428,7 @@
       "main": [
         [
           {
-            "node": "Send AI Response",
+            "node": "Should Send Reply?",
             "type": "main",
             "index": 0
           }
@@ -3030,6 +3069,18 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Should Send Reply?": {
+      "main": [
+        [
+          {
+            "node": "Send AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },
