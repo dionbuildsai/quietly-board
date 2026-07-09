@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-04-11T20:20:08.032Z",
+  "createdAt": "2026-03-20T21:07:30.866Z",
+  "id": "ErGEhkdaWj0zTmQI",
   "name": "[Response] Channel Dispatcher",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -244,6 +250,19 @@
       "name": "Log Unknown Channel"
     },
     {
+      "parameters": {
+        "jsCode": "const botToken = $env.TELEGRAM_BOT_TOKEN;\n// If video was included and channel is telegram, send follow-up with buttons\nconst input = $('When Called').item.json;\nif (!input.has_video || input.channel !== 'telegram') {\n  return [{ json: { video_skipped: true } }];\n}\n\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('votre');\n\nconst questionText = isFrench \n  ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n  : 'Did this video help resolve your issue?';\n\nconst yesText = isFrench ? 'Oui \u2705' : 'Yes \u2705';\nconst noText = isFrench ? 'Non \u274c' : 'No \u274c';\n\nconst ticketLookup = input.ticket_id || input.chat_id || '';\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n  body: {\n    chat_id: input.chat_id,\n    text: questionText,\n    reply_markup: JSON.stringify({\n      inline_keyboard: [[\n        { text: yesText, callback_data: 'video_yes||' + ticketLookup },\n        { text: noText, callback_data: 'video_no||' + ticketLookup }\n      ]]\n    })\n  },\n  json: true\n});\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "id": "f43062f0-e17b-458b-b960-1013dcfd8e55",
+      "name": "Video Follow-up"
+    },
+    {
       "id": "bot-wa-extract-wamid",
       "name": "Extract Bot Wamid",
       "type": "n8n-nodes-base.code",
@@ -276,19 +295,6 @@
           "name": "Julia DB"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "const botToken = $env.TELEGRAM_BOT_TOKEN;\n// If video was included and channel is telegram, send follow-up with buttons\nconst input = $('When Called').item.json;\nif (!input.has_video || input.channel !== 'telegram') {\n  return [{ json: { video_skipped: true } }];\n}\n\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('votre');\n\nconst questionText = isFrench \n  ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n  : 'Did this video help resolve your issue?';\n\nconst yesText = isFrench ? 'Oui \u2705' : 'Yes \u2705';\nconst noText = isFrench ? 'Non \u274c' : 'No \u274c';\n\nconst ticketLookup = input.ticket_id || input.chat_id || '';\n\nconst result = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n  body: {\n    chat_id: input.chat_id,\n    text: questionText,\n    reply_markup: JSON.stringify({\n      inline_keyboard: [[\n        { text: yesText, callback_data: 'video_yes||' + ticketLookup },\n        { text: noText, callback_data: 'video_no||' + ticketLookup }\n      ]]\n    })\n  },\n  json: true\n});\n\nreturn [{ json: result }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        720,
-        300
-      ],
-      "id": "f43062f0-e17b-458b-b960-1013dcfd8e55",
-      "name": "Video Follow-up"
     }
   ],
   "connections": {
@@ -403,5 +409,35 @@
     "availableInMCP": false,
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
   },
-  "id": "ErGEhkdaWj0zTmQI"
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "a826b01f-8f7b-4d90-bcae-cb58baa955a3",
+  "activeVersionId": "a826b01f-8f7b-4d90-bcae-cb58baa955a3",
+  "versionCounter": 225,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T21:07:30.866Z",
+      "createdAt": "2026-03-20T21:07:30.866Z",
+      "role": "workflow:owner",
+      "workflowId": "ErGEhkdaWj0zTmQI",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version a826b01f",
+    "description": ""
+  }
 }

@@ -1,7 +1,11 @@
 {
+  "updatedAt": "2026-04-08T22:45:19.180Z",
+  "createdAt": "2026-03-22T03:03:23.390Z",
   "id": "JO26ruzPNp1MQThL",
   "name": "Voice Agent \u2014 Log Maintenance Request",
+  "description": null,
   "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -175,7 +179,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -275,7 +279,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -446,7 +450,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -595,7 +599,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -631,7 +635,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -910,5 +914,36 @@
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ",
     "availableInMCP": false,
     "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "b8061001-4dd9-436b-a3b0-c2e7480516fb",
+  "activeVersionId": "b8061001-4dd9-436b-a3b0-c2e7480516fb",
+  "versionCounter": 280,
+  "triggerCount": 4,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-22T03:03:23.390Z",
+      "createdAt": "2026-03-22T03:03:23.390Z",
+      "role": "workflow:owner",
+      "workflowId": "JO26ruzPNp1MQThL",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
   }
 }

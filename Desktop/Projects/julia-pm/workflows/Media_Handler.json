@@ -1,0 +1,481 @@
+{
+  "updatedAt": "2026-03-14T20:58:38.794Z",
+  "createdAt": "2026-03-14T19:24:27.514Z",
+  "id": "Iyv7PotiAq2beRae",
+  "name": "[Media] Handler",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -600,
+        300
+      ],
+      "id": "7d4468d9-ceff-4e24-b856-eb18ab173fb0",
+      "name": "When Called"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "912553f8-f859-4af4-9b70-34d3fc154434",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2d9c6fcd-ca41-4e72-bb56-0f0b0643d80d",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -360,
+        300
+      ],
+      "id": "9fcf5a86-f01d-435b-8f1a-de93e8883d61",
+      "name": "Media Channel"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $credentials.telegramApi.token }}/getFile",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $json.media_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "telegramApi"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        200
+      ],
+      "id": "f00a590d-0b11-4b63-9386-2ba67177f634",
+      "name": "Get Telegram File",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot{{ $credentials.telegramApi.token }}/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "telegramApi"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        200
+      ],
+      "id": "ef1aaa5f-b6ef-4822-bc8a-1b7491a81399",
+      "name": "Download Telegram File",
+      "credentials": {
+        "telegramApi": {
+          "id": "5uwoGp7iX1GQkMcu",
+          "name": "property_management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v17.0/{{ $json.media_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        450
+      ],
+      "id": "e0e2dbfc-a5a1-41cc-9bd0-13871b4b0dbb",
+      "name": "Get WA Download URL",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "we3yhVhUwWRnkTGz",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        450
+      ],
+      "id": "bd00f75e-7df5-42db-a212-0db725a55473",
+      "name": "Download WA File",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "we3yhVhUwWRnkTGz",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "queryString": "={{ $('When Called').item.json.property }}",
+        "limit": 1,
+        "options": {
+          "driveId": {
+            "__rl": true,
+            "mode": "list"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        400,
+        300
+      ],
+      "id": "51748376-60d1-4950-8869-c17d5445c20e",
+      "name": "Find Property Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rKeQNswXdzB3bMwf",
+          "name": "dionfwang"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5742911c-3f91-47af-a5f5-86e1d3bac117",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        300
+      ],
+      "id": "046ef008-cfed-42a7-9b63-8a50ad8e21be",
+      "name": "Property Exists?"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('When Called').item.json.property }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        880,
+        400
+      ],
+      "id": "f62998cf-5010-454c-b3fb-c7150e3d05d8",
+      "name": "Create Property Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rKeQNswXdzB3bMwf",
+          "name": "dionfwang"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('When Called').item.json.tenant_name }}_{{ $now.format('yyyyMMdd_HHmmss') }}",
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        300
+      ],
+      "id": "695b8f29-ec16-4653-8b42-9e4f313c7d82",
+      "name": "Upload File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rKeQNswXdzB3bMwf",
+          "name": "dionfwang"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET media_url = '{{ ($json.webViewLink || $json.webContentLink || '').replace(/'/g, \"''\") }}', media = '{{ ($json.name || '').replace(/'/g, \"''\") }}', updated_at = NOW() WHERE ticket_id = '{{ $('When Called').item.json.ticket_id }}' RETURNING *",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1360,
+        300
+      ],
+      "id": "4dd76786-90cc-4593-8a93-4ffacd3e5e03",
+      "name": "Log Media to Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Quietly DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## [Media] Handler\n\nDownloads media from Telegram/WhatsApp, uploads to Google Drive (Property > Tenant folder), logs to ticket.\n\nSupports: images, videos, documents",
+        "width": 350,
+        "height": 120
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        100
+      ],
+      "id": "b03737d1-8b35-42ea-aaa7-678660dc04d6",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "When Called": {
+      "main": [
+        [
+          {
+            "node": "Media Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Media Channel": {
+      "main": [
+        [
+          {
+            "node": "Get Telegram File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get WA Download URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Telegram File": {
+      "main": [
+        [
+          {
+            "node": "Download Telegram File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Telegram File": {
+      "main": [
+        [
+          {
+            "node": "Find Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get WA Download URL": {
+      "main": [
+        [
+          {
+            "node": "Download WA File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download WA File": {
+      "main": [
+        [
+          {
+            "node": "Find Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Property Folder": {
+      "main": [
+        [
+          {
+            "node": "Property Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Property Exists?": {
+      "main": [
+        [
+          {
+            "node": "Upload File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Property Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Property Folder": {
+      "main": [
+        [
+          {
+            "node": "Upload File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload File": {
+      "main": [
+        [
+          {
+            "node": "Log Media to Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "ZK5jzQ8cMlLiMdeZ",
+    "availableInMCP": false,
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "fe5c1805-1b84-475a-a5f0-a6d0ddf8c760",
+  "activeVersionId": "fe5c1805-1b84-475a-a5f0-a6d0ddf8c760",
+  "versionCounter": 79,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [],
+  "versionMetadata": null
+}

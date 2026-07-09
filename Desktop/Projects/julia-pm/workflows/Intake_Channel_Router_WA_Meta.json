@@ -1,11 +1,6 @@
 {
-  "updatedAt": "2026-07-08T23:32:49.155Z",
-  "createdAt": "2026-03-27T03:32:40.239Z",
   "id": "x6LjYZQ2l05BS8uP",
   "name": "[Intake] WhatsApp Meta",
-  "description": null,
-  "active": true,
-  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -996,35 +991,5 @@
     "executionOrder": "v1",
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
   },
-  "staticData": null,
-  "meta": null,
-  "pinData": {},
-  "versionId": "135e172a-0afb-4d29-a499-79670352e508",
-  "activeVersionId": "135e172a-0afb-4d29-a499-79670352e508",
-  "versionCounter": 167,
-  "triggerCount": 2,
-  "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2026-03-27T03:32:40.239Z",
-      "createdAt": "2026-03-27T03:32:40.239Z",
-      "role": "workflow:owner",
-      "workflowId": "x6LjYZQ2l05BS8uP",
-      "projectId": "OG7kkLwgqLqxkXvS",
-      "project": {
-        "updatedAt": "2026-03-20T21:19:18.843Z",
-        "createdAt": "2026-03-20T21:05:50.448Z",
-        "id": "OG7kkLwgqLqxkXvS",
-        "name": "Dion Wang <dionbuildsai@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
-      }
-    }
-  ],
-  "versionMetadata": {
-    "name": "Version 135e172a",
-    "description": ""
-  }
+  "active": "active"
 }

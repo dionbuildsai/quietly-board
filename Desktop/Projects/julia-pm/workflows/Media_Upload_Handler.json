@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-04-08T22:46:16.154Z",
+  "createdAt": "2026-03-20T21:07:25.172Z",
+  "id": "media-upload-handler-001",
   "name": "[Media] Upload Handler",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -522,7 +528,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -759,8 +765,37 @@
     "availableInMCP": false,
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
   },
+  "staticData": null,
   "meta": {
     "instanceId": "a1b2c3d4e5f6g7h8i9j0"
   },
-  "id": "media-upload-handler-001"
+  "pinData": null,
+  "versionId": "93c34fb9-242d-4ab1-af55-a4cb3bc1208f",
+  "activeVersionId": "93c34fb9-242d-4ab1-af55-a4cb3bc1208f",
+  "versionCounter": 202,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T21:07:25.172Z",
+      "createdAt": "2026-03-20T21:07:25.172Z",
+      "role": "workflow:owner",
+      "workflowId": "media-upload-handler-001",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }

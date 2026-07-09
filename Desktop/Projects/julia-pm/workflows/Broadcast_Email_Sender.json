@@ -1,7 +1,11 @@
 {
+  "updatedAt": "2026-04-11T20:20:15.475Z",
+  "createdAt": "2026-04-11T20:07:41.360Z",
   "id": "broadcast-email-001",
   "name": "[Broadcast] Email Sender",
+  "description": null,
   "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "id": "bc-email-webhook",
@@ -75,5 +79,36 @@
   },
   "settings": {
     "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d5864bda-c70a-47bb-b18c-28957a604a4d",
+  "activeVersionId": "d5864bda-c70a-47bb-b18c-28957a604a4d",
+  "versionCounter": 23,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-11T20:07:41.360Z",
+      "createdAt": "2026-04-11T20:07:41.360Z",
+      "role": "workflow:owner",
+      "workflowId": "broadcast-email-001",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version d5864bda",
+    "description": ""
   }
 }

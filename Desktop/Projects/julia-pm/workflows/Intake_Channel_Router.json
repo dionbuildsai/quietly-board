@@ -1,7 +1,11 @@
 {
+  "updatedAt": "2026-05-27T20:15:57.793Z",
+  "createdAt": "2026-03-20T21:07:22.171Z",
   "id": "6uqrzVIcH8GFznDf",
   "name": "[Intake] Channel Router",
+  "description": null,
   "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -1420,7 +1424,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT title, video_url, keywords::text as keywords, category FROM repair_videos ORDER BY title",
+        "query": "SELECT v.title, v.video_url, v.keywords::text as keywords, v.category\nFROM repair_videos v\nWHERE NOT EXISTS (\n  SELECT 1 FROM messages m\n  WHERE m.ticket_id = '{{ $('Call AI Agent').first().json.ticket_id || '' }}'\n    AND m.sender = 'bot'\n    AND m.message_text LIKE '%' || v.video_url || '%'\n)\nORDER BY v.title",
         "options": {}
       },
       "id": "a52d1cd2-2c86-4bfe-b3dc-a4a3fc9487b5",
@@ -1440,7 +1444,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// AI-powered video matching using Claude Haiku\nconst videos = $('Search Repair Videos').all().map(v => v.json);\n\nlet message = '';\nlet channel = '';\nlet chat_id = '';\nlet phone = '';\nlet email = '';\nlet responseText = '';\n\ntry {\n const payload = $('Build AI Payload').item.json;\n message = (payload.message || '').trim();\n channel = payload.channel || '';\n chat_id = payload.chat_id || '';\n phone = payload.phone || '';\n email = payload.email || '';\n} catch(e) {\n try {\n const merged = $('Merge Tenant + Message').item.json;\n message = (merged.norm_message || '').trim();\n channel = merged.norm_channel || '';\n chat_id = merged.norm_chat_id || '';\n phone = merged.phone || '';\n email = merged.email || '';\n } catch(e2) {}\n}\n\ntry {\n responseText = $('Call AI Agent').item.json.response_text || '';\n} catch(e) {}\n\nif (!message || message.length < 5) return [{ json: { has_video: false } }];\n\nconst videoList = videos.map((v, i) => i + ': \"' + v.title + '\"').join('\\n');\n\nlet bestVideo = null;\ntry {\n const response = await this.helpers.httpRequest({\n method: 'POST',\n url: 'https://api.anthropic.com/v1/messages',\n headers: {\n 'x-api-key': $env.ANTHROPIC_API_KEY,\n 'anthropic-version': '2023-06-01',\n 'content-type': 'application/json'\n },\n body: JSON.stringify({\n model: 'claude-haiku-4-5-20251001',\n max_tokens: 20,\n messages: [{\n role: 'user',\n content: 'The tenant sent this message: \"' + message + '\"\\n\\nAvailable repair videos:\\n' + videoList + '\\n\\nRULES:\\n- Reply with ONLY a number OR \"none\"\\n- If the tenant\\'s message mentions a problem that a video covers, reply with that video\\'s number\\n- If multiple issues are mentioned, pick the ONE video most likely to help them right now\\n- If tenant says \"thank you\", \"ok\", \"yes\", or just confirms something - reply \"none\"\\n- Only reply \"none\" if truly no video is relevant'\n }]\n }),\n returnFullResponse: false\n });\n\n const parsed = typeof response === 'string' ? JSON.parse(response) : response;\n const aiAnswer = (parsed.content?.[0]?.text || '').trim().toLowerCase().split(/[\\s\\n]/)[0];\n if (aiAnswer !== 'none' && !isNaN(parseInt(aiAnswer))) {\n const idx = parseInt(aiAnswer);\n if (idx >= 0 && idx < videos.length) bestVideo = videos[idx];\n }\n} catch(e) {\n return [{ json: { has_video: false } }];\n}\n\nreturn [{\n json: {\n has_video: bestVideo !== null,\n video_url: bestVideo?.video_url || '',\n video_title: bestVideo?.title || '',\n channel: channel,\n chat_id: chat_id,\n phone: phone,\n email: email,\n response_text: responseText\n }\n}];"
+        "jsCode": "// AI-powered video matching using Claude Haiku\nconst videos = $('Search Repair Videos').all().map(v => v.json);\n// Pull current ticket_id from the AI Conv Agent return so we can mark video_sent_url after.\nlet currentTicketId = '';\ntry { currentTicketId = $('Call AI Agent').first().json.ticket_id || ''; } catch(e) {}\n\nlet message = '';\nlet channel = '';\nlet chat_id = '';\nlet phone = '';\nlet email = '';\nlet responseText = '';\n\ntry {\n const payload = $('Build AI Payload').item.json;\n message = (payload.message || '').trim();\n channel = payload.channel || '';\n chat_id = payload.chat_id || '';\n phone = payload.phone || '';\n email = payload.email || '';\n} catch(e) {\n try {\n const merged = $('Merge Tenant + Message').item.json;\n message = (merged.norm_message || '').trim();\n channel = merged.norm_channel || '';\n chat_id = merged.norm_chat_id || '';\n phone = merged.phone || '';\n email = merged.email || '';\n } catch(e2) {}\n}\n\ntry {\n responseText = $('Call AI Agent').item.json.response_text || '';\n} catch(e) {}\n\nif (!message || message.length < 5) return [{ json: { has_video: false, ticket_id: currentTicketId } }];\n\nconst videoList = videos.map((v, i) => i + ': \"' + v.title + '\"').join('\\n');\n\nlet bestVideo = null;\ntry {\n const response = await this.helpers.httpRequest({\n method: 'POST',\n url: 'https://api.anthropic.com/v1/messages',\n headers: {\n 'x-api-key': $env.ANTHROPIC_API_KEY,\n 'anthropic-version': '2023-06-01',\n 'content-type': 'application/json'\n },\n body: JSON.stringify({\n model: 'claude-haiku-4-5-20251001',\n max_tokens: 20,\n messages: [{\n role: 'user',\n content: 'The tenant sent this message: \"' + message + '\"\\n\\nAvailable repair videos:\\n' + videoList + '\\n\\nRULES:\\n- Reply with ONLY a number OR \"none\"\\n- If the tenant\\'s message mentions a problem that a video covers, reply with that video\\'s number\\n- If multiple issues are mentioned, pick the ONE video most likely to help them right now\\n- If tenant says \"thank you\", \"ok\", \"yes\", or just confirms something - reply \"none\"\\n- Only reply \"none\" if truly no video is relevant'\n }]\n }),\n returnFullResponse: false\n });\n\n const parsed = typeof response === 'string' ? JSON.parse(response) : response;\n const aiAnswer = (parsed.content?.[0]?.text || '').trim().toLowerCase().split(/[\\s\\n]/)[0];\n if (aiAnswer !== 'none' && !isNaN(parseInt(aiAnswer))) {\n const idx = parseInt(aiAnswer);\n if (idx >= 0 && idx < videos.length) bestVideo = videos[idx];\n }\n} catch(e) {\n return [{ json: { has_video: false, ticket_id: currentTicketId } }];\n}\n\nreturn [{\n json: {\n has_video: bestVideo !== null,\n video_url: bestVideo?.video_url || '',\n video_title: bestVideo?.title || '',\n channel: channel,\n chat_id: chat_id,\n phone: phone,\n email: email,\n response_text: responseText,\n ticket_id: currentTicketId\n }\n}];"
       },
       "id": "3c8b7c76-d825-4a23-bffc-c99b42de55b3",
       "name": "Match Video AI",
@@ -1453,7 +1457,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const botToken = $env.TELEGRAM_BOT_TOKEN;\nconst input = $input.first().json;\nif (!input.has_video || !input.video_url) return [{ json: { sent: false } }];\n\nconst channel = input.channel;\nconst chat_id = input.chat_id;\nconst phone = (input.phone || '').replace(/[^0-9]/g, '');\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('merci');\n\nconst videoMsg = isFrench\n  ? 'Cette vid\u00e9o pourrait vous aider :\\n' + input.video_title + '\\n' + input.video_url\n  : 'This video might help:\\n' + input.video_title + '\\n' + input.video_url;\n\nconst ticketLookup = input.chat_id || '';\n\nconst questionText = isFrench \n  ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n  : 'Did this video help resolve your issue?';\n\ntry {\n  if (channel === 'telegram') {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n      body: { chat_id: chat_id, text: videoMsg },\n      json: true\n    });\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n      body: {\n        chat_id: chat_id,\n        text: questionText,\n        reply_markup: JSON.stringify({\n          inline_keyboard: [[\n            { text: isFrench ? 'Oui \u2705' : 'Yes \u2705', callback_data: 'video_yes||' + ticketLookup },\n            { text: isFrench ? 'Non \u274c' : 'No \u274c', callback_data: 'video_no||' + ticketLookup }\n          ]]\n        })\n      },\n      json: true\n    });\n  } else if (channel === 'whatsapp') {\n    // For WhatsApp, just output the video data - a subsequent Execute Workflow node will send it\n    return [{ json: { \n      sent: false, \n      needs_wa_send: true,\n      video_message: videoMsg,\n      question_text: questionText,\n      channel, phone, chat_id, ticketLookup, isFrench,\n      video_title: input.video_title, video_url: input.video_url\n    }}];\n  }\n} catch(e) {\n  console.error('Send Video Followup error:', e.message);\n  return [{ json: { sent: false, error: e.message, channel, chat_id } }];\n}\n\nreturn [{ json: { sent: true, channel, video_title: input.video_title, chat_id, video_url: input.video_url } }];"
+        "jsCode": "const botToken = $env.TELEGRAM_BOT_TOKEN;\nconst input = $input.first().json;\nif (!input.has_video || !input.video_url) return [{ json: { sent: false } }];\n\nconst channel = input.channel;\nconst chat_id = input.chat_id;\nconst phone = (input.phone || '').replace(/[^0-9]/g, '');\nconst isFrench = (input.response_text || '').includes('Bonjour') || (input.response_text || '').includes('merci');\n\nconst videoMsg = isFrench\n  ? 'Cette vid\u00e9o pourrait vous aider :\\n' + input.video_title + '\\n' + input.video_url\n  : 'This video might help:\\n' + input.video_title + '\\n' + input.video_url;\n\nconst ticketLookup = input.chat_id || '';\n\nconst questionText = isFrench \n  ? 'Est-ce que cette vid\u00e9o a aid\u00e9 \u00e0 r\u00e9soudre votre probl\u00e8me?'\n  : 'Did this video help resolve your issue?';\n\ntry {\n  if (channel === 'telegram') {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n      body: { chat_id: chat_id, text: videoMsg },\n      json: true\n    });\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: `https://api.telegram.org/bot${botToken}/sendMessage`,\n      body: {\n        chat_id: chat_id,\n        text: questionText,\n        reply_markup: JSON.stringify({\n          inline_keyboard: [[\n            { text: isFrench ? 'Oui \u2705' : 'Yes \u2705', callback_data: 'video_yes||' + ticketLookup },\n            { text: isFrench ? 'Non \u274c' : 'No \u274c', callback_data: 'video_no||' + ticketLookup }\n          ]]\n        })\n      },\n      json: true\n    });\n  } else if (channel === 'whatsapp') {\n    // For WhatsApp, just output the video data - a subsequent Execute Workflow node will send it\n    return [{ json: { \n      sent: false, \n      needs_wa_send: true,\n      video_message: videoMsg,\n      question_text: questionText,\n      channel, phone, chat_id, ticketLookup, isFrench,\n      video_title: input.video_title, video_url: input.video_url\n    }}];\n  }\n} catch(e) {\n  console.error('Send Video Followup error:', e.message);\n  return [{ json: { sent: false, error: e.message, channel, chat_id } }];\n}\n\nreturn [{ json: { sent: true, channel, video_title: input.video_title, chat_id, video_url: input.video_url, ticket_id: input.ticket_id || '' } }];"
       },
       "id": "16b90a2b-53af-4f07-a7e7-5f6b532a910e",
       "name": "Send Video Followup",
@@ -1514,7 +1518,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO messages (chat_id, sender, message_text, channel, created_at) SELECT '{{ $json.chat_id }}', 'bot', '{{ ($json.videoMsg || '').replace(/'/g, \"''\") }}', '{{ $json.channel }}', NOW() WHERE '{{ $json.sent }}' = 'true'",
+        "query": "INSERT INTO messages (chat_id, sender, message_text, channel, ticket_id, created_at) SELECT '{{ $json.chat_id }}', 'bot', 'This video might help: ' || '{{ ($json.video_title || '').replace(/'/g, \"''\") }}' || E'\\n' || '{{ $json.video_url || '' }}', '{{ $json.channel }}', NULLIF('{{ $json.ticket_id || '' }}', ''), NOW() WHERE '{{ $json.sent }}' = 'true'",
         "options": {}
       },
       "id": "746f1e4d-7ce1-437a-b452-ecd85bac3ce1",
@@ -3035,5 +3039,116 @@
     "availableInMCP": false,
     "executionOrder": "v1",
     "maxConcurrency": 1
+  },
+  "staticData": {
+    "node:Gmail Trigger": {
+      "lastTimeChecked": 1774966029,
+      "possibleDuplicates": [
+        "19d44383c7298551",
+        "19d4433d1e16412b"
+      ]
+    },
+    "node:Email Poll Schedule": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {
+    "Gmail Trigger": [
+      {
+        "json": {
+          "id": "19d2b0c932914674",
+          "threadId": "19d2b0c932914674",
+          "snippet": "Review a summary of what&#39;s changing \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c \u200c",
+          "payload": {
+            "mimeType": "text/html"
+          },
+          "sizeEstimate": 57952,
+          "historyId": "28985864",
+          "internalDate": "1774543737000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "\"Chess.com\" <account@chess.com>",
+          "Subject": "Updates to Chess.com Policies",
+          "To": "dionfwang@gmail.com"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "WA Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1285597.hstgr.cloud",
+            "user-agent": "axios/1.13.5",
+            "content-length": "139",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/x-www-form-urlencoded",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "n8n.srv1285597.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "9107d994594f",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "phone": "15145468865",
+            "message": "D'accord",
+            "messageId": "wamid.HBgLMTUxNDU0Njg4NjUVAgASGCBBQzhBODhCODZBRTQ1QzlBNzhDMTk4MEYzRjU2QzgyMAA=",
+            "senderName": ""
+          },
+          "webhookUrl": "https://n8n.srv1285597.hstgr.cloud/webhook/wa-intake",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "2ce34d80-053d-4bab-bc10-1916e7d906dc",
+  "activeVersionId": "2ce34d80-053d-4bab-bc10-1916e7d906dc",
+  "versionCounter": 1313,
+  "triggerCount": 3,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T21:07:22.171Z",
+      "createdAt": "2026-03-20T21:07:22.171Z",
+      "role": "workflow:owner",
+      "workflowId": "6uqrzVIcH8GFznDf",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
   }
 }

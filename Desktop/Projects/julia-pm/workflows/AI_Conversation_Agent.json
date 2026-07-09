@@ -1,7 +1,11 @@
 {
+  "updatedAt": "2026-05-27T20:15:54.483Z",
+  "createdAt": "2026-03-20T21:07:19.237Z",
   "id": "5WW7m5IiqvJoHWZ1",
   "name": "[AI] Conversation Agent",
+  "description": null,
   "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -11,7 +15,7 @@
       "typeVersion": 1.1,
       "position": [
         -800,
-        208
+        280
       ],
       "id": "e505e879-3a52-4cba-9638-9fdbc1004dbc",
       "name": "When Called"
@@ -26,7 +30,7 @@
       "typeVersion": 2.5,
       "position": [
         -576,
-        208
+        280
       ],
       "id": "da036ead-0ebd-4a07-acfb-6ceba33e84aa",
       "name": "Get Conversation History",
@@ -49,7 +53,7 @@
       "typeVersion": 2.5,
       "position": [
         -352,
-        208
+        280
       ],
       "id": "fd1d0600-64cd-43b3-a650-d8d6d31a99dc",
       "name": "Get Open Tickets",
@@ -70,7 +74,7 @@
       "typeVersion": 2,
       "position": [
         -128,
-        208
+        280
       ],
       "id": "a2a04d57-b096-4dd2-ad7b-2ac6704c1427",
       "name": "Format Context"
@@ -83,7 +87,7 @@
       "typeVersion": 2,
       "position": [
         448,
-        208
+        280
       ],
       "id": "9817ef2e-31de-4f76-bae9-7e7c66d97266",
       "name": "Format Output"
@@ -97,8 +101,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1560,
-        500
+        1120,
+        280
       ],
       "id": "8c25e2df-70b8-4870-adea-3e22e3c8fe53",
       "name": "Log AI Response",
@@ -118,8 +122,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -816,
-        112
+        -865,
+        240
       ],
       "id": "f36acc7f-88cb-4cd5-9dc7-94b5cc434703",
       "name": "Sticky Note"
@@ -131,7 +135,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "You are Julia, a bilingual (French/English) AI property management assistant for Julia Inc, operating in Quebec.\n\n## Conversation Structure\nYou have exactly 3 exchanges with the tenant to understand their issue:\n- Message 1: Greet them, acknowledge what they said, ask 1-2 key diagnostic questions to understand the situation better.\n- Message 2: Based on their answer, ask any final clarifying questions or confirm your understanding.\n- Message 3 (FINAL): Thank them for the information. Let them know the issue has been noted and someone will be in touch. Keep it simple and warm.\n\nIf the context says \"THIS IS THE FINAL MESSAGE\", you MUST wrap up. Do not ask more questions.\n\n## CRITICAL: Always Ask First, Never Assume\nThis is the most important rule. You are a DIAGNOSTIC assistant, not an emergency responder.\n\nWhen a tenant reports ANYTHING, your FIRST response must ALWAYS be a clarifying question. Never jump to conclusions or emergency responses on the first message.\n\nExamples of what to do:\n- \"There's smoke\" \u2192 \"Can you tell me more? Is it smoke from cooking, a smell from a neighbor's unit, or something else?\"\n- \"There's water\" \u2192 \"Where exactly is the water coming from? Is it a small drip or is it actively flowing?\"\n- \"Something smells\" \u2192 \"What does it smell like? Is it a burning smell, gas, or something else?\"\n- \"I hear a noise\" \u2192 \"Can you describe the noise? Where is it coming from?\"\n\nALWAYS ask a clarifying question first. Never jump to emergency responses.\n\nWords that are AMBIGUOUS and require questions first:\n- smoke, smoking, fum\u00e9e \u2192 could be cooking, cigarette, vape, neighbor, BBQ\n- water, leak, eau \u2192 could be condensation, small drip, rain, spill\n- smell, odeur \u2192 could be cooking, cleaning products, neighbor\n- noise, bruit \u2192 could be neighbors, pipes, construction\n\n## For Dangerous Situations\nIf the tenant confirms a genuinely dangerous situation (fire, gas leak, flooding, electrical sparking):\n- Tell them to leave the unit and go somewhere safe\n- Reassure them that the property management team is being notified immediately\n- NEVER suggest calling any emergency phone numbers or services\n- Focus on: \"Please leave the unit for your safety. We are notifying the team right now.\"\n\n\n## IMPORTANT RULES\n- NEVER say \"this is the landlord's responsibility\" or \"this falls under tenant responsibility\"\n- NEVER promise specific timelines (\"within 24 hours\", \"in 1-3 business days\")\n- NEVER give out phone numbers\n- NEVER reference the Civil Code or legal obligations\n- Stay warm but slightly ambiguous about next steps \u2014 just say \"we'll look into it\" or \"someone will be in touch\"\n- Do NOT over-promise or set expectations about response times\n\n## Guidelines\n- Default to English. If the tenant writes in French, respond in French. Match whatever language the tenant uses.\n- Be warm, professional, and empathetic\n- Keep responses concise (2-4 sentences)\n- Focus on understanding the issue through questions, not jumping to conclusions\n- Do NOT sign messages with any name (no 'Julia', no 'Julia Inc', no company name). Just end the message naturally."
+              "message": "You are Julia, a bilingual (French/English) AI property management assistant for Julia Inc, operating in Quebec.\n\n## Conversation Structure\nYou have exactly 3 exchanges with the tenant to understand their issue:\n- Message 1: Greet them, acknowledge what they said, ask 1-2 key diagnostic questions to understand the situation better. If the issue clearly is NOT an emergency (no fire, gas, flooding, lockout, no-heat in winter, electrical sparking, or other immediate danger), end this first response with the standard SLA reassurance: \"Someone will follow up within 24-48 hours to coordinate next steps.\" \u2014 or in French: \"Quelqu'un fera un suivi dans les 24 \u00e0 48 heures pour coordonner les prochaines \u00e9tapes.\" Skip this line if the situation might be dangerous; ask questions first.\n- Message 2: Based on their answer, ask any final clarifying questions or confirm your understanding.\n- Message 3 (FINAL): Thank them for the information. Let them know the issue has been noted and someone will be in touch. Keep it simple and warm.\n\nIf the context says \"THIS IS THE FINAL MESSAGE\", you MUST wrap up. Do not ask more questions.\n\n## CRITICAL: Always Ask First, Never Assume\nThis is the most important rule. You are a DIAGNOSTIC assistant, not an emergency responder.\n\nWhen a tenant reports ANYTHING, your FIRST response must ALWAYS be a clarifying question. Never jump to conclusions or emergency responses on the first message.\n\nExamples of what to do:\n- \"There's smoke\" \u2192 \"Can you tell me more? Is it smoke from cooking, a smell from a neighbor's unit, or something else?\"\n- \"There's water\" \u2192 \"Where exactly is the water coming from? Is it a small drip or is it actively flowing?\"\n- \"Something smells\" \u2192 \"What does it smell like? Is it a burning smell, gas, or something else?\"\n- \"I hear a noise\" \u2192 \"Can you describe the noise? Where is it coming from?\"\n\nALWAYS ask a clarifying question first. Never jump to emergency responses.\n\nWords that are AMBIGUOUS and require questions first:\n- smoke, smoking, fum\u00e9e \u2192 could be cooking, cigarette, vape, neighbor, BBQ\n- water, leak, eau \u2192 could be condensation, small drip, rain, spill\n- smell, odeur \u2192 could be cooking, cleaning products, neighbor\n- noise, bruit \u2192 could be neighbors, pipes, construction\n\n## For Dangerous Situations\nIf the tenant confirms a genuinely dangerous situation (fire, gas leak, flooding, electrical sparking):\n- Tell them to leave the unit and go somewhere safe\n- Reassure them that the property management team is being notified immediately\n- NEVER suggest calling any emergency phone numbers or services\n- Focus on: \"Please leave the unit for your safety. We are notifying the team right now.\"\n\n\n## IMPORTANT RULES\n- NEVER say \"this is the landlord's responsibility\" or \"this falls under tenant responsibility\"\n- The ONLY allowed timeline promise is the standard \"24-48 hours\" SLA line on the first message of non-urgent tickets (see Message 1 above). NEVER promise any other specific timeline.\n- NEVER give out phone numbers\n- NEVER reference the Civil Code or legal obligations\n- Stay warm but slightly ambiguous about next steps \u2014 just say \"we'll look into it\" or \"someone will be in touch\"\n- Do NOT over-promise or set expectations about response times\n\n## Guidelines\n- Default to English. If the tenant writes in French, respond in French. Match whatever language the tenant uses.\n- Be warm, professional, and empathetic\n- Keep responses concise (2-4 sentences)\n- Focus on understanding the issue through questions, not jumping to conclusions\n- Do NOT sign messages with any name (no 'Julia', no 'Julia Inc', no company name). Just end the message naturally.\\n- The \\\"Open Tickets\\\" list in your context is for AWARENESS ONLY. NEVER reference, recap, or list other open tickets in your reply. NEVER write things like \\\"I've noted all your issues\\\" or \\\"the team will coordinate the heater, the light, and the leak.\\\" Each tenant message is its own conversation \u2014 respond ONLY to the issue raised in the current message. Other tickets stay invisible to the tenant."
             }
           ]
         }
@@ -140,7 +144,7 @@
       "typeVersion": 1.4,
       "position": [
         96,
-        208
+        280
       ],
       "id": "086043e4-1688-400d-8c01-2dc683e896d1",
       "name": "Julia AI"
@@ -150,7 +154,7 @@
         "model": {
           "__rl": true,
           "mode": "list",
-          "value": "claude-sonnet-4-5-20250929",
+          "value": "claude-sonnet-4-6",
           "cachedResultName": "Claude Sonnet 4.5"
         },
         "options": {
@@ -162,7 +166,7 @@
       "typeVersion": 1.3,
       "position": [
         168,
-        432
+        504
       ],
       "id": "ed3f3231-9422-480f-8f0a-bf2683cfdc28",
       "name": "Claude Sonnet 4",
@@ -181,7 +185,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "You are a classifier. Based on the tenant message, the AI response, existing tickets, and message count, determine what action to take.\n\nRespond ONLY with valid JSON:\n{\"create_ticket\": true/false, \"upgrade_urgency\": true/false, \"urgency\": \"urgent\"/\"not_urgent\"/\"info_request\", \"category\": \"plumbing\"/\"electrical\"/\"hvac\"/\"appliance\"/\"pest_control\"/\"locksmith\"/\"general_maintenance\"/\"lease_admin\"/\"parking\"/\"general_inquiry\"/\"none\", \"summary\": \"brief summary of the full conversation\", \"keyword\": \"2-6 word label\"}\n\n## TICKET CREATION RULES (most important)\n1. ALWAYS set create_ticket: true when the tenant reports ANY issue, request, or question \u2014 even on the FIRST message, even if the AI is still asking clarifying questions. The ticket tracks the interaction.\n2. The ONLY time create_ticket should be false:\n   - There is already an open ticket for the EXACT SAME specific issue (e.g., same leak in same location). Two different plumbing issues (sink leak vs clogged drain) are DIFFERENT issues and MUST create separate tickets. Same category does NOT mean same issue\n   - The message is just a greeting, thank you, or status check with no new issue\n3. When in doubt, create_ticket: true. It's better to have a ticket than to miss one.\n\n## URGENCY RULES\n- Do NOT classify as urgent on ambiguous first messages\n- \"smoke\", \"water\", \"smell\", \"noise\" = NOT_URGENT (ambiguous, needs clarification)\n- Only classify as URGENT when the tenant CONFIRMS clear danger: \"there are flames\", \"strong gas smell making me dizzy\", \"water pouring from ceiling non-stop\"\n- When in doubt, not_urgent. Urgency can be upgraded later.\n\n## UPGRADE RULES\n- If there IS an existing ticket but situation has ESCALATED with CONFIRMED details, set upgrade_urgency: true\n\n## OTHER RULES\n- Greetings/thank yous/status checks with no new issue = create_ticket: false\n- For the summary, summarize the ENTIRE conversation\n- If the AI response is asking questions, still create the ticket \u2014 just set urgency to not_urgent\n\nURGENCY LEVELS:\n- \"urgent\": ONLY when tenant has CONFIRMED a clear emergency\n- \"not_urgent\": maintenance issues, ambiguous reports, routine repairs\n- \"info_request\": lease questions, document requests, parking, general questions\n\nCATEGORIES:\n- plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance\n- lease_admin, parking, general_inquiry"
+              "message": "You are a classifier. Based on the tenant message, the AI response, existing tickets, and message count, determine what action to take.\n\nRespond ONLY with valid JSON:\n{\"create_ticket\": true/false, \"upgrade_urgency\": true/false, \"urgency\": \"urgent\"/\"not_urgent\"/\"info_request\", \"category\": \"plumbing\"/\"electrical\"/\"hvac\"/\"appliance\"/\"pest_control\"/\"locksmith\"/\"general_maintenance\"/\"lease_admin\"/\"parking\"/\"general_inquiry\"/\"none\", \"summary\": \"brief summary of the full conversation\", \"keyword\": \"2-6 word label\"}\n\n## TICKET CREATION RULES (most important)\n1. ALWAYS set create_ticket: true when the tenant reports ANY issue, request, or question \u2014 even on the FIRST message, even if the AI is still asking clarifying questions. The ticket tracks the interaction.\n2. The ONLY time create_ticket should be false:\n   - There is already an open ticket for the EXACT SAME specific issue (e.g., same leak in same location). Two different plumbing issues (sink leak vs clogged drain) are DIFFERENT issues and MUST create separate tickets. Same category does NOT mean same issue\n   - The message is just a greeting, thank you, or status check with no new issue\n3. When in doubt, create_ticket: true. It's better to have a ticket than to miss one.\n\n## URGENCY RULES\n- Do NOT classify as urgent on ambiguous first messages\n- \"smoke\", \"water\", \"smell\", \"noise\" = NOT_URGENT (ambiguous, needs clarification)\n- Only classify as URGENT when the tenant CONFIRMS clear danger: \"there are flames\", \"strong gas smell making me dizzy\", \"water pouring from ceiling non-stop\"\n- When in doubt, not_urgent. Urgency can be upgraded later.\n\n## UPGRADE RULES\n- If there IS an existing ticket but situation has ESCALATED with CONFIRMED details, set upgrade_urgency: true\n\n## OTHER RULES\n- Greetings/thank yous/status checks with no new issue = create_ticket: false\n- The summary describes ONLY the current message's issue \u2014 do NOT recap, list, or aggregate the existing open tickets. Each ticket has its own summary; this one is for THIS issue alone. If the tenant raised multiple distinct problems in one message, summarize only the primary one (others get their own tickets via separate classifier runs)\n- If the AI response is asking questions, still create the ticket \u2014 just set urgency to not_urgent\n\nURGENCY LEVELS:\n- \"urgent\": ONLY when tenant has CONFIRMED a clear emergency\n- \"not_urgent\": maintenance issues, ambiguous reports, routine repairs\n- \"info_request\": lease questions, document requests, parking, general questions\n\nCATEGORIES:\n- plumbing, electrical, hvac, appliance, pest_control, locksmith, general_maintenance\n- lease_admin, parking, general_inquiry"
             }
           ]
         }
@@ -189,8 +193,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.4,
       "position": [
-        896,
-        208
+        1568,
+        280
       ],
       "id": "9362a32b-512e-47f5-9a76-4e1cce9a721b",
       "name": "Classify Action"
@@ -200,7 +204,7 @@
         "model": {
           "__rl": true,
           "mode": "list",
-          "value": "claude-sonnet-4-5-20250929",
+          "value": "claude-sonnet-4-6",
           "cachedResultName": "Claude Sonnet 4.5"
         },
         "options": {
@@ -210,8 +214,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1.3,
       "position": [
-        904,
-        432
+        1576,
+        504
       ],
       "id": "e4558b49-03ff-4a46-8b78-b61119a80fe0",
       "name": "Haiku Classifier",
@@ -230,8 +234,8 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
       "position": [
-        1032,
-        432
+        1704,
+        504
       ],
       "id": "5d7bc039-8047-4ba0-a307-c4300c6780ce",
       "name": "Action Parser"
@@ -263,8 +267,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1248,
-        208
+        1920,
+        280
       ],
       "id": "60c1f361-c311-43e2-9127-4f494697c7a1",
       "name": "Create Ticket?"
@@ -276,7 +280,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
+        2144,
         208
       ],
       "id": "5561fbf2-72fc-49dd-a652-0e9501da20ba",
@@ -291,7 +295,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1696,
+        2368,
         208
       ],
       "id": "99c6d58e-0153-4c43-a9c2-9d71adf41e3d",
@@ -330,7 +334,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1920,
+        3264,
         208
       ],
       "id": "4f28ebbb-78d6-4ca4-b725-d08b8ec7db3a",
@@ -366,8 +370,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2144,
-        208
+        -800,
+        608
       ],
       "id": "5d66a6c7-a298-4b92-8c73-bb199a4e9ed2",
       "name": "Notify Landlord"
@@ -379,8 +383,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1900,
-        400
+        4384,
+        280
       ],
       "id": "b2a6edd0-b234-40ef-9f1a-c48aa6dcd225",
       "name": "Return to Parent"
@@ -394,8 +398,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1320,
-        300
+        2592,
+        208
       ],
       "id": "d5b3e865-f5f1-4ec2-a453-f43ab24409b6",
       "name": "Link Messages to Ticket",
@@ -413,8 +417,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1560,
-        300
+        2816,
+        208
       ],
       "id": "981e3aa9-cfa3-4fae-b1d2-4d04b1158248",
       "name": "Build Conversation Text"
@@ -428,8 +432,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1800,
-        300
+        3040,
+        208
       ],
       "id": "2fb317ce-011e-45fe-9182-56bcf4c79e6d",
       "name": "Update Ticket with Conversation",
@@ -462,8 +466,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2040,
-        400
+        -800,
+        832
       ],
       "id": "30b2ba33-1a68-474a-bb57-bd9e274b8938",
       "name": "Notify Non-Urgent"
@@ -477,18 +481,18 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1560,
-        700
+        1344,
+        280
       ],
       "id": "274698db-cbde-464e-8fdc-d643af9be900",
       "name": "Link Ongoing Messages",
+      "alwaysOutputData": true,
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
           "name": "Julia DB"
         }
       },
-      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {
@@ -500,46 +504,46 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1080,
-        500
+        672,
+        280
       ],
       "id": "48528204-9677-4c4d-8f10-5ec4541ce110",
       "name": "Search Video",
+      "alwaysOutputData": true,
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
           "name": "Julia DB"
         }
-      },
-      "alwaysOutputData": true
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Match video to tenant's issue using category + keyword relevance\nconst output = $('Format Output').item.json;\nconst videos = $('Search Video').all().map(v => v.json);\nconst message = (output.message || '').toLowerCase();\nconst history = ($('Format Context').item.json.history_text || '').toLowerCase();\nconst fullContext = message + ' ' + history;\n\n// Get classified category from Classify Action\nlet classifiedCategory = '';\ntry {\n  const classifyRaw = $('Classify Action').item.json.output || $('Classify Action').item.json.text || '';\n  const classifyJson = JSON.parse(classifyRaw.replace(/```json/g, '').replace(/```/g, '').trim());\n  classifiedCategory = (classifyJson.category || '').toLowerCase();\n} catch(e) {}\n\n// Get ticket_id if one was created\nlet ticketId = '';\ntry { ticketId = $('Generate Ticket').item.json.ticket_id || ''; } catch(e) {}\n\n// Categories that have no repair videos \u2014 never suggest videos for these\nconst noVideoCategories = ['parking', 'lease_admin', 'general_inquiry', 'pest_control', 'none', ''];\n\nif (noVideoCategories.includes(classifiedCategory)) {\n  return [{\n    json: {\n      ...output,\n      response_text: output.response_text || '',\n      has_video: false,\n      video_url: '',\n      video_title: '',\n      ticket_id: ticketId\n    }\n  }];\n}\n\nlet bestVideo = null;\nlet bestScore = 0;\n\nfor (const video of videos) {\n  const videoCategory = (video.category || '').toLowerCase();\n  const keywords = (video.keywords || '').replace(/[{}\"]/g, '').split(',');\n  let score = 0;\n  \n  for (const kw of keywords) {\n    const words = kw.trim().toLowerCase().split(' ');\n    const allMatch = words.every(w => w.length > 2 && fullContext.includes(w));\n    if (allMatch) score += words.length;\n  }\n  \n  // Boost score if video category matches classified category\n  if (classifiedCategory && videoCategory === classifiedCategory) {\n    score *= 2;\n  }\n  // Penalize if categories don't match at all\n  else if (classifiedCategory && videoCategory !== classifiedCategory && videoCategory !== 'general') {\n    score = Math.floor(score * 0.3);\n  }\n  \n  if (score > bestScore) {\n    bestScore = score;\n    bestVideo = video;\n  }\n}\n\nlet responseText = output.response_text || '';\n// Require higher threshold: score >= 4 (was 2)\nconst hasVideo = bestVideo && bestScore >= 4;\n\nif (hasVideo) {\n  const isFrench = responseText.includes('Bonjour') || responseText.includes('merci') || responseText.includes('votre');\n  responseText += '\\n\\n---\\n';\n  if (isFrench) {\n    responseText += 'Cette vid\u00e9o pourrait vous aider : ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  } else {\n    responseText += 'This video might help: ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  }\n}\n\nreturn [{\n  json: {\n    ...output,\n    response_text: responseText,\n    has_video: hasVideo,\n    video_url: bestVideo?.video_url || '',\n    video_title: bestVideo?.title || '',\n    ticket_id: ticketId\n  }\n}];"
+        "jsCode": "// Match video to tenant's issue using category + keyword relevance\nconst output = $('Format Output').item.json;\nconst videos = $('Search Video').all().map(v => v.json);\nconst message = (output.message || '').toLowerCase();\nconst history = ($('Format Context').item.json.history_text || '').toLowerCase();\nconst fullContext = message + ' ' + history;\n\n// Get classified category from Classify Action\nlet classifiedCategory = '';\ntry {\n  const classifyRaw = $('Classify Action').item.json.output || $('Classify Action').item.json.text || '';\n  const classifyJson = JSON.parse(classifyRaw.replace(/```json/g, '').replace(/```/g, '').trim());\n  classifiedCategory = (classifyJson.category || '').toLowerCase();\n} catch(e) {}\n\n// Get ticket_id from Generate Ticket if a new ticket was created/upgraded.\n// On pure-continuation messages, Generate Ticket doesn't run \u2014 fall back to\n// the most recent open ticket for this tenant so the dedup chain (video,\n// Phase A) still has a ticket_id to work with.\nlet ticketId = '';\ntry { ticketId = $('Generate Ticket').item.json.ticket_id || ''; } catch(e) {}\nif (!ticketId) {\n  try {\n    const open = $('Get Open Tickets').all().map(t => t.json);\n    const fresh = open.find(t => t.ticket_id && !['resolved', 'closed'].includes((t.status || '').toLowerCase()));\n    if (fresh) ticketId = fresh.ticket_id;\n  } catch(e) {}\n}\n\n// Categories that have no repair videos \u2014 never suggest videos for these\nconst noVideoCategories = ['parking', 'lease_admin', 'general_inquiry', 'pest_control', 'none', ''];\n\nif (noVideoCategories.includes(classifiedCategory)) {\n  return [{\n    json: {\n      ...output,\n      response_text: output.response_text || '',\n      has_video: false,\n      video_url: '',\n      video_title: '',\n      ticket_id: ticketId\n    }\n  }];\n}\n\nlet bestVideo = null;\nlet bestScore = 0;\n\nfor (const video of videos) {\n  const videoCategory = (video.category || '').toLowerCase();\n  const keywords = (video.keywords || '').replace(/[{}\"]/g, '').split(',');\n  let score = 0;\n  \n  for (const kw of keywords) {\n    const words = kw.trim().toLowerCase().split(' ');\n    const allMatch = words.every(w => w.length > 2 && fullContext.includes(w));\n    if (allMatch) score += words.length;\n  }\n  \n  // Boost score if video category matches classified category\n  if (classifiedCategory && videoCategory === classifiedCategory) {\n    score *= 2;\n  }\n  // Penalize if categories don't match at all\n  else if (classifiedCategory && videoCategory !== classifiedCategory && videoCategory !== 'general') {\n    score = Math.floor(score * 0.3);\n  }\n  \n  if (score > bestScore) {\n    bestScore = score;\n    bestVideo = video;\n  }\n}\n\nlet responseText = output.response_text || '';\n// Require higher threshold: score >= 4 (was 2)\nconst hasVideo = bestVideo && bestScore >= 4;\n\nif (hasVideo) {\n  const isFrench = responseText.includes('Bonjour') || responseText.includes('merci') || responseText.includes('votre');\n  responseText += '\\n\\n---\\n';\n  if (isFrench) {\n    responseText += 'Cette vid\u00e9o pourrait vous aider : ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  } else {\n    responseText += 'This video might help: ' + bestVideo.title + '\\n' + bestVideo.video_url;\n  }\n}\n\nreturn [{\n  json: {\n    ...output,\n    response_text: responseText,\n    has_video: hasVideo,\n    video_url: bestVideo?.video_url || '',\n    video_title: bestVideo?.title || '',\n    ticket_id: ticketId\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1320,
-        500
+        896,
+        280
       ],
       "id": "bfb9cb0f-8358-40c4-a8cd-b7913b38fb52",
       "name": "Append Video"
     },
     {
-      "id": "get-owner-chat-id",
-      "name": "Get Owner Chat ID",
-      "type": "n8n-nodes-base.postgres",
-      "position": [
-        1800,
-        800
-      ],
-      "typeVersion": 2.5,
       "parameters": {
         "operation": "executeQuery",
         "query": "SELECT value AS owner_chat_id FROM settings WHERE key = 'telegram_owner_chat_id'",
         "options": {}
       },
+      "id": "get-owner-chat-id",
+      "name": "Get Owner Chat ID",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        3488,
+        208
+      ],
+      "typeVersion": 2.5,
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
@@ -548,17 +552,56 @@
       }
     },
     {
+      "parameters": {
+        "jsCode": "const ownerChatId = $('Get Owner Chat ID').first().json.owner_chat_id;\nconst ticket = $('Generate Ticket').item.json;\nconst isUrgent = ticket.urgency === 'urgent';\nconst botToken = $env.TELEGRAM_BOT_TOKEN || 'TELEGRAM_BOT_TOKEN_SET_IN_ENV';\n// Is Dion testing? Route to Dion instead of Julia\nconst tenantPhone = $('Generate Ticket').item.json.phone || '';\nconst isDion = tenantPhone.includes('5148319058');\nconst chatId = isDion ? '6216258938' : ownerChatId;\n\n\nlet text = '';\nlet replyMarkup = null;\n\nif (isUrgent) {\n  text = '\\u{1F6A8} <b>URGENT TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '');\n  replyMarkup = JSON.stringify({\n    inline_keyboard: [[\n      { text: 'Auto Dispatch', callback_data: 'dispatch||' + ticket.ticket_id + '||' + (ticket.category || '') },\n      { text: 'Show Contractors', callback_data: 'manual||' + ticket.ticket_id + '||' + (ticket.category || '') }\n    ]]\n  });\n} else {\n  text = '\\u{1F4CB} <b>NEW TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '');\n}\n\nconst body = { chat_id: chatId, text, parse_mode: 'HTML' };\nif (replyMarkup) body.reply_markup = replyMarkup;\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot' + botToken + '/sendMessage',\n  body,\n  json: true\n});\n\nreturn [{ json: { sent: true, ownerChatId: chatId, ticketId: ticket.ticket_id, isUrgent } }];"
+      },
       "id": "send-owner-notification",
       "name": "Send Owner Notification",
       "type": "n8n-nodes-base.code",
       "position": [
-        2040,
-        800
+        3712,
+        208
       ],
-      "typeVersion": 2,
+      "typeVersion": 2
+    },
+    {
       "parameters": {
-        "jsCode": "const ownerChatId = $('Get Owner Chat ID').first().json.owner_chat_id;\nconst ticket = $('Generate Ticket').item.json;\nconst isUrgent = ticket.urgency === 'urgent';\nconst botToken = $env.TELEGRAM_BOT_TOKEN || 'TELEGRAM_BOT_TOKEN_SET_IN_ENV';\n// Is Dion testing? Route to Dion instead of Julia\nconst tenantPhone = $('Generate Ticket').item.json.phone || '';\nconst isDion = tenantPhone.includes('5148319058');\nconst chatId = isDion ? '6216258938' : ownerChatId;\n\n\nlet text = '';\nlet replyMarkup = null;\n\nif (isUrgent) {\n  text = '\\u{1F6A8} <b>URGENT TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '');\n  replyMarkup = JSON.stringify({\n    inline_keyboard: [[\n      { text: 'Auto Dispatch', callback_data: 'dispatch||' + ticket.ticket_id + '||' + (ticket.category || '') },\n      { text: 'Show Contractors', callback_data: 'manual||' + ticket.ticket_id + '||' + (ticket.category || '') }\n    ]]\n  });\n} else {\n  text = '\\u{1F4CB} <b>NEW TICKET ' + ticket.ticket_id + '</b>\\n\\n'\n    + '<b>Category:</b> ' + (ticket.category || '').replace(/_/g, ' ') + '\\n'\n    + '<b>Tenant:</b> ' + (ticket.tenant_name || '') + '\\n'\n    + '<b>Unit:</b> ' + (ticket.unit || '') + '\\n'\n    + '<b>Summary:</b> ' + (ticket.summary || '');\n}\n\nconst body = { chat_id: chatId, text, parse_mode: 'HTML' };\nif (replyMarkup) body.reply_markup = replyMarkup;\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.telegram.org/bot' + botToken + '/sendMessage',\n  body,\n  json: true\n});\n\nreturn [{ json: { sent: true, ownerChatId: chatId, ticketId: ticket.ticket_id, isUrgent } }];"
-      }
+        "jsCode": "// Phase A \u2014 passive duplicate detection. Uses Haiku to ask \"is the just-\n// created ticket about the same underlying issue as one of this tenant's\n// other OPEN tickets in the same category?\" Logs the verdict on the new\n// ticket via would_have_merged_with WITHOUT changing the workflow flow.\n// On any error returns matched_ticket_id = \"none\" \u2014 never throws.\n\n// Pull ticket data from Create Ticket directly \u2014 $input here is Send Owner\n// Notification's Telegram API response, which has no ticket fields.\nlet newTicket = {};\ntry { newTicket = $('Create Ticket').first().json || {}; } catch(e) { newTicket = {}; }\nconst newTicketId = newTicket.ticket_id || '';\nconst newCategory = (newTicket.category || '').toLowerCase();\nconst newSummary = newTicket.summary || newTicket.tenant_message || '';\n\nif (!newTicketId || !newSummary) {\n  return [{ json: { ticket_id: newTicketId, matched_ticket_id: 'none', skipped: 'no_data' } }];\n}\n\nlet candidates = [];\ntry {\n  const allOpen = $('Get Open Tickets').all().map(t => t.json);\n  candidates = allOpen.filter(t =>\n    t.ticket_id &&\n    t.ticket_id !== newTicketId &&\n    (t.category || '').toLowerCase() === newCategory &&\n    !['resolved', 'closed'].includes((t.status || '').toLowerCase())\n  ).slice(0, 5);\n} catch(e) {\n  return [{ json: { ticket_id: newTicketId, matched_ticket_id: 'none', error: 'no_open_tickets' } }];\n}\n\nif (candidates.length === 0) {\n  return [{ json: { ticket_id: newTicketId, matched_ticket_id: 'none', skipped: 'no_candidates' } }];\n}\n\nconst candidateList = candidates.map((t, i) =>\n  (i + 1) + '. ' + t.ticket_id + ': \"' + (t.summary || '').replace(/\"/g, '\\\\\"') + '\"'\n).join('\\n');\n\nlet matched = 'none';\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.anthropic.com/v1/messages',\n    headers: {\n      'x-api-key': $env.ANTHROPIC_API_KEY,\n      'anthropic-version': '2023-06-01',\n      'content-type': 'application/json'\n    },\n    body: JSON.stringify({\n      model: 'claude-haiku-4-5-20251001',\n      max_tokens: 32,\n      messages: [{\n        role: 'user',\n        content: 'A new maintenance ticket was just created for a tenant.\\n\\nNEW TICKET: \"' + newSummary.replace(/\"/g, '\\\\\"') + '\"\\n\\nThe same tenant has these other OPEN tickets in the same category:\\n' + candidateList + '\\n\\nQUESTION: Is the new ticket the SAME SPECIFIC PROBLEM as one of the existing ones \u2014 i.e. a follow-up, escalation, or restatement of the exact same issue (same fixture, same symptom, same location)?\\n\\nSTRICT MATCHING RULES \u2014 answer \"none\" UNLESS ALL conditions are met:\\n  \u2022 Same FIXTURE or APPLIANCE (e.g. sink \u2260 toilet \u2260 dishwasher; light fixture \u2260 outlet)\\n  \u2022 Same ROOM or LOCATION when relevant (e.g. kitchen sink \u2260 bathroom sink)\\n  \u2022 Same TYPE of problem (e.g. leak \u2260 clog \u2260 low pressure; flickering \u2260 no power)\\n\\nDifferent fixtures or different problems within the same category are SEPARATE TICKETS. Only match if it is clearly the SAME problem continuing or escalating.\\n\\nReply with ONLY the matching ticket_id (e.g. \"TK-ABC12345\") if YES.\\nReply with ONLY \"none\" if NO. When in doubt, reply \"none\".'\n      }]\n    }),\n    returnFullResponse: false,\n    timeout: 5000\n  });\n\n  const parsed = typeof response === 'string' ? JSON.parse(response) : response;\n  const text = (parsed.content?.[0]?.text || '').trim();\n  if (text.startsWith('TK-') && candidates.some(c => c.ticket_id === text)) {\n    matched = text;\n  }\n} catch(e) {\n  return [{ json: { ticket_id: newTicketId, matched_ticket_id: 'none', error: (e.message || 'haiku_error') } }];\n}\n\nreturn [{ json: { ticket_id: newTicketId, matched_ticket_id: matched } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3936,
+        208
+      ],
+      "id": "dup-check-phase-a-001",
+      "name": "Check Duplicate (Phase A)",
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "notes": "Phase A passive observation \u2014 logs Haiku's verdict on whether this new ticket is a duplicate of an existing open ticket in the same category, without changing the flow. Reads from would_have_merged_with column to validate dedup logic before turning on actual merging."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE maintenance_requests SET would_have_merged_with = '{{ ($json.matched_ticket_id || \"\").replace(/'/g, \"''\") }}' WHERE ticket_id = '{{ ($json.ticket_id || \"\").replace(/'/g, \"''\") }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4160,
+        208
+      ],
+      "id": "dup-log-phase-a-001",
+      "name": "Log Dup Check (Phase A)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "JlETYTnhAwFrsmL9",
+          "name": "Julia DB"
+        }
+      },
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -822,6 +865,28 @@
       "main": [
         [
           {
+            "node": "Check Duplicate (Phase A)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate (Phase A)": {
+      "main": [
+        [
+          {
+            "node": "Log Dup Check (Phase A)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Dup Check (Phase A)": {
+      "main": [
+        [
+          {
             "node": "Return to Parent",
             "type": "main",
             "index": 0
@@ -835,5 +900,36 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false,
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "5416d733-d645-4ca0-8ce1-febcd8f10333",
+  "activeVersionId": "5416d733-d645-4ca0-8ce1-febcd8f10333",
+  "versionCounter": 319,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T21:07:19.237Z",
+      "createdAt": "2026-03-20T21:07:19.237Z",
+      "role": "workflow:owner",
+      "workflowId": "5WW7m5IiqvJoHWZ1",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
   }
 }

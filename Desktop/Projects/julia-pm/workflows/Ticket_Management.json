@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-04-08T22:45:40.285Z",
+  "createdAt": "2026-03-14T19:23:43.905Z",
+  "id": "CnUFSXbeIk9GNI5t",
   "name": "[Ticket] Management",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -336,7 +342,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -446,7 +452,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -467,7 +473,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       },
       "alwaysOutputData": true,
@@ -537,7 +543,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       },
       "alwaysOutputData": true,
@@ -574,7 +580,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       },
       "alwaysOutputData": true,
@@ -644,7 +650,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     }
@@ -800,5 +806,35 @@
     "availableInMCP": false,
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
   },
-  "id": "CnUFSXbeIk9GNI5t"
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "55277ca8-3a2d-438a-8dac-629c38a5fd17",
+  "activeVersionId": "55277ca8-3a2d-438a-8dac-629c38a5fd17",
+  "versionCounter": 181,
+  "triggerCount": 5,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-28T14:33:04.925Z",
+      "createdAt": "2026-03-28T14:33:04.925Z",
+      "role": "workflow:owner",
+      "workflowId": "CnUFSXbeIk9GNI5t",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }

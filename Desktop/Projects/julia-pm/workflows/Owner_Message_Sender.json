@@ -1,7 +1,11 @@
 {
+  "updatedAt": "2026-04-11T20:20:12.264Z",
+  "createdAt": "2026-03-23T20:16:08.523Z",
   "id": "owner-msg-sender-001",
   "name": "[Owner] Message Sender",
+  "description": null,
   "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "id": "webhook-owner-001",
@@ -50,7 +54,7 @@
       "credentials": {
         "postgres": {
           "id": "JlETYTnhAwFrsmL9",
-          "name": "Quietly DB"
+          "name": "Julia DB"
         }
       }
     },
@@ -327,7 +331,34 @@
     "errorWorkflow": "ZK5jzQ8cMlLiMdeZ"
   },
   "staticData": null,
+  "meta": null,
   "pinData": {},
-  "versionId": "7620dbf8-e590-4e73-9fbf-8d7c1760aae1",
-  "meta": null
+  "versionId": "b19003bd-f6f4-438c-97ff-733d7c29d9d4",
+  "activeVersionId": "b19003bd-f6f4-438c-97ff-733d7c29d9d4",
+  "versionCounter": 204,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-23T20:41:08.755Z",
+      "createdAt": "2026-03-23T20:41:08.755Z",
+      "role": "workflow:owner",
+      "workflowId": "owner-msg-sender-001",
+      "projectId": "OG7kkLwgqLqxkXvS",
+      "project": {
+        "updatedAt": "2026-03-20T21:19:18.843Z",
+        "createdAt": "2026-03-20T21:05:50.448Z",
+        "id": "OG7kkLwgqLqxkXvS",
+        "name": "Dion Wang <dionbuildsai@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "1331ae1b-9839-4442-b515-c3bfee6e7c95"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version b19003bd",
+    "description": ""
+  }
 }
