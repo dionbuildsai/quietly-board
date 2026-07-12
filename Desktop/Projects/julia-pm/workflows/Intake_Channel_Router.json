@@ -2098,7 +2098,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE messages SET ticket_id = (  SELECT ticket_id FROM maintenance_requests  WHERE (    (LENGTH('{{ ($json.phone || $json.norm_phone || '').replace(/'/g, \"''\") }}') > 5 AND phone LIKE '%' || RIGHT('{{ ($json.phone || $json.norm_phone || '').replace(/'/g, \"''\") }}', 10) || '%')    OR (LENGTH('{{ ($json.email || $json.norm_email || '').replace(/'/g, \"''\") }}') > 3 AND tenant_email = '{{ ($json.email || $json.norm_email || '').replace(/'/g, \"''\") }}')    OR (LENGTH('{{ $json.telegram_id || $json.norm_chat_id || '' }}') > 3 AND telegram_id = '{{ $json.telegram_id || $json.norm_chat_id || '' }}')  )  AND status NOT IN ('closed', 'resolved')  ORDER BY created_at DESC LIMIT 1) WHERE id = '{{ $json.id }}' AND ticket_id IS NULL RETURNING ticket_id",
+        "query": "UPDATE messages SET ticket_id = (  SELECT ticket_id FROM maintenance_requests  WHERE (    (LENGTH('{{ ($json.phone || $json.norm_phone || $json.chat_id || '').replace(/'/g, \"''\") }}') > 5 AND phone LIKE '%' || RIGHT('{{ ($json.phone || $json.norm_phone || $json.chat_id || '').replace(/'/g, \"''\") }}', 10) || '%')    OR (LENGTH('{{ ($json.email || $json.norm_email || '').replace(/'/g, \"''\") }}') > 3 AND tenant_email = '{{ ($json.email || $json.norm_email || '').replace(/'/g, \"''\") }}')    OR (LENGTH('{{ $json.telegram_id || $json.norm_chat_id || '' }}') > 3 AND telegram_id = '{{ $json.telegram_id || $json.norm_chat_id || '' }}')  )  AND status NOT IN ('closed', 'resolved')  ORDER BY created_at DESC LIMIT 1) WHERE id = '{{ $json.id }}' AND ticket_id IS NULL RETURNING ticket_id",
         "options": {}
       },
       "id": "link-to-open-ticket",
@@ -2128,7 +2128,7 @@
       "alwaysOutputData": true,
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT ticket_id, category, keywords, LEFT(summary, 40) as summary FROM maintenance_requests WHERE (phone LIKE '%' || RIGHT('{{ ($json.phone || $json.norm_phone || '').replace(/'/g, \"''\") }}', 10) || '%' OR telegram_id = '{{ $json.telegram_id || $json.norm_chat_id || '' }}') AND status NOT IN ('closed', 'resolved') ORDER BY created_at DESC LIMIT 5",
+        "query": "SELECT ticket_id, category, keywords, LEFT(summary, 40) as summary FROM maintenance_requests WHERE (phone LIKE '%' || RIGHT('{{ ($json.phone || $json.norm_phone || $json.chat_id || '').replace(/'/g, \"''\") }}', 10) || '%' OR telegram_id = '{{ $json.telegram_id || $json.norm_chat_id || '' }}') AND status NOT IN ('closed', 'resolved') ORDER BY created_at DESC LIMIT 5",
         "options": {
           "alwaysOutputData": true
         }
